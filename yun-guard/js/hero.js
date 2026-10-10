@@ -370,7 +370,14 @@ function updateFlyer(dt) {
   const g = state.eagle;
   if (!g) return;
   const F = g.def, owner = g.owner, home = owner.hp > 0 ? owner : owner.spawn;
-  const hover = F.kind === "eagle" ? 58 : F.kind === "loong" ? 170 : 34;   // the eagle and the loong ride high; the little dragon stays low
+  const hover = F.kind === "eagle" ? 58 : F.kind === "loong" ? 170 : 65;    // the eagle, the loong and the dragon all ride high
+  // The dragon trails its owner a little: it follows a point that eases toward her rather than her exact spot
+  if (F.kind === "dragon") {
+    if (!g.anchor) g.anchor = { x: home.x, y: home.y };
+    const ease = 1 - Math.exp(-dt * 1.8);                 // about half a second behind her
+    g.anchor.x += (home.x - g.anchor.x) * ease; g.anchor.y += (home.y - g.anchor.y) * ease;
+  }
+  const base = F.kind === "dragon" ? g.anchor : home;
   g.phase += dt * 9;
   if (g.cd > 0) g.cd -= dt;
   if (g.breath > 0) g.breath -= dt;
@@ -401,7 +408,7 @@ function updateFlyer(dt) {
       for (const e of state.enemies) if (dist(e, owner) <= F.engage && (!best || e.travelled > best.travelled)) best = e;
       if (best) {
         g.dir = best.x >= g.x ? 1 : -1;
-        state.shots.push({ x: g.x + g.dir * 8, y: g.y, z: 0, total: dist(g, best), target: best, tx: best.x, ty: best.y, dmg: F.damage, def: BOLT, trail: [], hero: owner, fireball: { splash: F.splash, burnTime: F.burnTime, burnDps: F.burnDps } });
+        state.shots.push({ x: g.x + g.dir * 14, y: g.y, z: 0, total: dist(g, best), target: best, tx: best.x, ty: best.y, dmg: F.damage, def: BOLT, trail: [], hero: owner, fireball: { splash: F.splash, burnTime: F.burnTime, burnDps: F.burnDps } });
         g.cd = 1 / F.rate; g.breath = 0.3;
         sfx("magic", 0.1);
       }
@@ -435,7 +442,7 @@ function updateFlyer(dt) {
     g.angle += dt * (F.kind === "dragon" ? 1.2 : F.kind === "loong" ? 1.0 : 1.6);
     goal = F.kind === "loong"
       ? { x: home.x + Math.sin(g.angle) * 44, y: home.y - 40 + Math.sin(g.angle * 2) * 12 }
-      : { x: home.x + Math.cos(g.angle) * 26, y: home.y - hover + Math.sin(g.angle) * 8 };
+      : { x: base.x + Math.cos(g.angle) * 26, y: base.y - hover + Math.sin(g.angle) * 8 };
   }
   const d = dist(g, goal);
   if (d > 0.5) {
@@ -445,5 +452,11 @@ function updateFlyer(dt) {
     g.y += ((goal.y - g.y) / d) * step;
     g.y = Math.max(16, g.y);                                 // soaring high, but never off the top of the map
     if (Math.abs(dx) > 1 && !g.breath) g.dir = Math.sign(dx);
+  }
+  // The dragon looks the way Ember is heading while she walks, and settles to face her way once she stops
+  // It only turns round a moment after she does, as if it noticed late
+  if (F.kind === "dragon" && !g.breath && owner.hp > 0) {
+    if (owner.dir !== g.dir) { g.turnWait = (g.turnWait || 0) + dt; if (g.turnWait > 0.35) { g.dir = owner.dir; g.turnWait = 0; } }
+    else g.turnWait = 0;
   }
 }

@@ -569,23 +569,24 @@ function drawBird(g) {
 
 // Cinder: a chubby red baby dragon with stubby wings, a cream belly and little horns
 function drawDragon(g) {
+  const OUT = "rgba(127,0,0,0.22)", HORN_OUT = "rgba(188,170,164,0.3)";           // subtle outlines
   const flap = Math.sin(g.phase * 0.9) * 0.9, T = state.time;
   ctx.save();
   ctx.translate(g.x, g.y);
-  ctx.scale(g.dir, 1);
+  ctx.scale(g.dir * 1.6, 1.6);                                                    // a bigger dragon, same design
   for (const side of [-1, 1]) {                                                 // bat-like wings
     const tipY = -6 - flap * 8;
-    poly(ctx, [[-1, -3], [side * 5, -7 - flap * 3], [side * 13, tipY], [side * 12, tipY + 5], [side * 7, 0], [0, 1]], "#c62828", "#7f0000", 0.8);
-    line(ctx, -1, -3, side * 13, tipY, "#7f0000", 1); line(ctx, -1, -3, side * 12, tipY + 5, "#7f0000", 0.8);
+    poly(ctx, [[-1, -3], [side * 5, -7 - flap * 3], [side * 13, tipY], [side * 12, tipY + 5], [side * 7, 0], [0, 1]], "#c62828", OUT, 0.8);
+    line(ctx, -1, -3, side * 13, tipY, OUT, 1); line(ctx, -1, -3, side * 12, tipY + 5, OUT, 0.8);
   }
   line(ctx, -6, 2, -14 + Math.sin(T * 4) * 1.5, 6, "#d32f2f", 3);               // tail
   poly(ctx, [[-14 + Math.sin(T * 4) * 1.5, 4], [-18 + Math.sin(T * 4) * 1.5, 6], [-14 + Math.sin(T * 4) * 1.5, 8]], "#ff8a65");   // tail fin
-  ellipse(ctx, 0, 1, 7, 5, "#e53935", "#7f0000", 0.8);                          // round body
+  ellipse(ctx, 0, 1, 7, 5, "#e53935", OUT, 0.8);                          // round body
   ellipse(ctx, 1, 2.5, 4, 3, "#ffe0b2");                                        // cream belly
   for (const lx of [-3, 3]) line(ctx, lx, 5, lx, 8, "#c62828", 2.2);            // stubby legs
-  circle(ctx, 7, -3, 5, "#e53935", "#7f0000", 0.8);                             // head
+  circle(ctx, 7, -3, 5, "#e53935", OUT, 0.8);                             // head
   ellipse(ctx, 11, -1.5, 3.5, 2.5, "#ef5350");                                  // snout
-  for (const hx of [5, 8]) poly(ctx, [[hx - 1, -7], [hx, -10.5], [hx + 1, -7]], "#ffe0b2", "#bcaaa4", 0.5);   // horns
+  for (const hx of [5, 8]) poly(ctx, [[hx - 1, -7], [hx, -10.5], [hx + 1, -7]], "#ffe0b2", HORN_OUT, 0.5);   // horns
   circle(ctx, 8, -4, 1.4, "#fff"); circle(ctx, 8.4, -4, 0.8, "#212121");         // big eye
   circle(ctx, 13.5, -2, 0.6, "#4a0000"); circle(ctx, 13, -0.6, 0.6, "#4a0000");   // nostrils
   if (g.breath > 0) {                                                           // a puff of flame from the mouth
