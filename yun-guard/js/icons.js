@@ -1,7 +1,7 @@
 // A small set of clean line icons (inline SVG, stroke follows the text colour). Used instead of emoji
 // in the HUD, hero cards and build menus so everything looks consistent on every device.
 const P = {
-  coins:     '<circle cx="9" cy="9" r="6"/><path d="M14.5 5.5A6 6 0 1 1 7.5 16.5"/><path d="M7 9h4M9 7v4"/>',
+  coins:     '<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="5.2"/><path d="M12 9.6v4.8M10.6 9.6h2.8M10.6 14.4h2.8"/>',
   heart:     '<path d="M12 20s-7-4.4-9-9a5 5 0 0 1 9-3 5 5 0 0 1 9 3c-2 4.6-9 9-9 9z"/>',
   volume:    '<path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16 9a4 4 0 0 1 0 6"/><path d="M18.5 6.5a8 8 0 0 1 0 11"/>',
   volumeOff: '<path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M17 9l4 6M21 9l-4 6"/>',
@@ -20,6 +20,9 @@ const P = {
   zap:       '<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',
   chevrons:  '<path d="M6 6l6 6-6 6"/><path d="M13 6l6 6-6 6"/>',
   chevronLeft: '<path d="M15 5l-7 7 7 7"/>',
+  trash:     '<path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/>',
+  brush:     '<path d="M14 3h6v6l-7 7-6-6z" fill="none"/><path d="M20 9l-7 7"/><path d="M9.5 12.5a3.5 3.5 0 0 0-5 3c0 2.2-1 3.8-2.5 5 2.4.3 4.8-.2 6.4-1.8a3.5 3.5 0 0 0 3.1-5.2"/><path d="M14 3l6 6"/>',
+  eraser:    '<path d="M7 20h13"/><path d="M4.5 15.5l9-9a2 2 0 0 1 2.8 0l3.2 3.2a2 2 0 0 1 0 2.8l-7 7H8.5l-4-4z"/><path d="M9.5 10.5l6 6"/>',
   chevronRight: '<path d="M9 5l7 7-7 7"/>',
   skull:     '<path d="M12 3a8 8 0 0 0-8 8c0 3 2 5 4 6v3h8v-3c2-1 4-3 4-6a8 8 0 0 0-8-8z"/><circle cx="9" cy="11" r="1.3"/><circle cx="15" cy="11" r="1.3"/><path d="M10 20v-2M14 20v-2"/>',
   tornado:   '<path d="M3 5h18M5 9h14M7 13h10M9 17h6M11 21h2"/>',

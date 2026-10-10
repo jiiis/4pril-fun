@@ -1,11 +1,11 @@
 import { canvas } from "./render/gfx.js";
 import { state } from "./state.js";
-import { W, H, SPOT_RADIUS, TOWERS } from "./config.js";
+import { W, H, SPOT_RADIUS, TOWERS, HERO_KINDS } from "./config.js";
 import { dist } from "./util.js";
 import { map, generateMap } from "./map.js";
 import { update } from "./update.js";
 import { draw, SPOT_SQUASH, depthScale, invalidateBackground } from "./render/draw.js";
-import { initUi, openMenu, closeMenu, resetUiForLevel } from "./ui.js";
+import { initUi, openMenu, closeMenu, resetUiForLevel, centerOn } from "./ui.js";
 import { startWave, spawnEnemy } from "./waves.js";
 import { createTower, setRally, archerHeight, mageHeight, teslaHeight, visLevel } from "./towers.js";
 import { initCritters } from "./critters.js";
@@ -52,6 +52,7 @@ function startLevel({ level: L, seed, hero }) {
   if (hero === "pick" || !hero) {                                     // the legend screen again (no entrance animation this time)
     heroPick.classList.add("again");
     heroPick.style.display = "flex";
+    showLegendBadge(null);
     document.getElementById("next").disabled = true; document.getElementById("pause").disabled = true;
     showInUrl(null);
   } else if (hero === "none") { startSolo(); showInUrl("none"); }
@@ -72,8 +73,29 @@ initWeather();
 // Pick a hero before the round starts (or pass ?hero=april / ?hero=avril in the URL)
 const heroPick = document.getElementById("heroPick");
 const preset = new URLSearchParams(location.search).get("hero");
+const LEGEND_ICON = { april: "sword", avril: "bow", adrien: "shieldCheck", ember: "flame", willow: "leaf", meilin: "snowflake" };
+const LEGEND_TINT = { april: "#7986cb", avril: "#f06292", adrien: "#ffd54f", ember: "#ff7043", willow: "#8bc34a", meilin: "#80deea" };
+const legendBadge = document.getElementById("legendBadge");
+function showLegendBadge(kind) {
+  if (!kind || !LEGEND_ICON[kind]) { legendBadge.classList.remove("on"); return; }
+  legendBadge.innerHTML = icon(LEGEND_ICON[kind]); legendBadge.style.setProperty("--tint", LEGEND_TINT[kind]);
+  legendBadge.title = `Find ${HERO_KINDS[kind].name} (click to centre on her and select her)`;
+  legendBadge.classList.add("on");
+}
+// Clicking the badge finds the legend: the view centres on her and she is selected, ready for an order
+legendBadge.addEventListener("click", () => {
+  const h = state.hero;
+  if (!h || heroPick.style.display !== "none") return;
+  const at = h.hp > 0 ? h : h.spawn;
+  centerOn(at.x, at.y);
+  if (h.hp > 0 && !h.selected) selectHero(h);
+  closeMenu();
+  canvas.style.cursor = selectedHero() ? "crosshair" : "default";
+  sfx("select");
+});
 function chooseHero(kind) {
   initHero(kind);
+  showLegendBadge(kind);
   heroPick.style.display = "none";
   document.getElementById("next").disabled = false;   // hero chosen: the wave and pause buttons come alive
   document.getElementById("pause").disabled = false;
@@ -82,6 +104,7 @@ function chooseHero(kind) {
 // Or go it alone: towers only, no legend on the field
 function startSolo() {
   state.heroes = []; state.hero = null; state.dog = null; state.eagle = null;
+  showLegendBadge(null);
   heroPick.style.display = "none";
   document.getElementById("next").disabled = false;
   document.getElementById("pause").disabled = false;
@@ -91,9 +114,11 @@ document.getElementById("noLegend").addEventListener("click", startSolo);
 // Reset: wipe the saved level and carried gold and start from level 1 (two taps, so a slip doesn't do it)
 const resetBtn = document.getElementById("resetProgress");
 let resetArmed = null;
+const resetLbl = resetBtn.querySelector(".lbl");
+const disarmReset = () => { clearTimeout(resetArmed); resetArmed = null; resetBtn.classList.remove("armed"); resetLbl.textContent = "Reset progress"; };
 resetBtn.addEventListener("click", () => {
-  if (!resetArmed) { resetArmed = setTimeout(() => { resetArmed = null; resetBtn.textContent = "Reset progress"; }, 3000); resetBtn.textContent = "Tap again to reset everything"; return; }
-  clearTimeout(resetArmed); resetArmed = null; resetBtn.textContent = "Reset progress";
+  if (!resetArmed) { resetArmed = setTimeout(disarmReset, 3500); resetBtn.classList.add("armed"); resetLbl.textContent = "Tap again to erase progress"; return; }
+  disarmReset();
   clearProgress();
   startLevel({ level: 1, hero: "pick" });
 });

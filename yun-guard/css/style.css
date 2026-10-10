@@ -59,6 +59,7 @@ body { position: fixed; inset: 0; }   /* pinned to the viewport so iOS can't scr
 .stat .icon .ico { display: block; width: 1.15em; height: 1.15em; vertical-align: 0; }
 .stat b, .stat .dim { display: inline-block; line-height: 1; }
 .stat.gold .icon { color: var(--accent); }
+.stat.level, .stat.level .icon { color: var(--accent); }   /* the level in gold, like the picker on the home page */
 .stat.lives .icon { color: #ef5350; }
 .stat.wave .icon { color: #e0e0e0; }
 .stat.seed { font-size: 13px; font-weight: 600; }
@@ -198,7 +199,7 @@ canvas { display: block; }
   overflow: auto;
   justify-content: safe center;                                 /* centred when it fits, scrollable from the top when it doesn't */
 }
-#heroPick .eyebrow { margin: 0 0 8px; font-size: 12px; letter-spacing: 6px; text-transform: uppercase; color: var(--accent); opacity: 0.9; }
+#heroPick .eyebrow { margin: 0 0 18px; font-size: 14px; letter-spacing: 7px; text-transform: uppercase; color: var(--accent); opacity: 0.9; }
 #heroPick h1 { font-family: Cinzel, Outfit, "Avenir Next", Georgia, serif; font-size: 44px; margin: 0 0 40px; letter-spacing: 2px; font-weight: 500; background: linear-gradient(180deg, #ffffff, #c9ccd6); -webkit-background-clip: text; background-clip: text; color: transparent; }
 #heroPick .cards { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; max-width: 100%; }
 #heroPick .card {
@@ -326,12 +327,18 @@ canvas { display: block; }
   #heroPick .ghost { margin-top: 12px; padding: 7px 14px; font-size: 12px; }
 }
 @media (max-width: 600px) {                                   /* phones held upright: two columns, no descriptions, clear of the HUD */
-  #heroPick { padding-top: 64px; padding-bottom: 90px; }
+  #heroPick { padding-top: 112px; padding-bottom: 104px; }   /* clear of the HUD stats and the rotate hint above, the buttons below */
   #heroPick .eyebrow { display: none; }
-  #heroPick h1 { font-size: 28px; margin-bottom: 16px; }
-  #heroPick .cards { gap: 12px; }
-  #heroPick .card { width: 150px; padding: 14px 12px 12px; }
+  #heroPick h1 { font-size: 23px; margin-bottom: 12px; letter-spacing: 1px; }
+  #heroPick .cards { gap: 9px; }
+  #heroPick .card { width: 142px; padding: 11px 10px 10px; gap: 5px; }
+  #heroPick .card .portrait { width: 46px; height: 46px; }
+  #heroPick .card .portrait .ico { width: 24px; height: 24px; }
+  #heroPick .card strong { font-size: 14px; margin-top: 2px; }
+  #heroPick .card em { font-size: 9.5px; letter-spacing: 1.5px; padding: 2px 8px; }
   #heroPick .card small { display: none; }
+  #heroPick .levelPick { margin-bottom: 10px; }
+  #heroPick .ghost { margin-top: 12px; }
 }
 @media (max-width: 600px) { .hud-logo .brand { display: none; } }   /* no room for the wordmark beside the buttons */
 #rotate {                                                      /* portrait phones: a soft nudge at the top */
@@ -349,14 +356,14 @@ canvas { display: block; }
   .hud-logo .brand { font-size: 16px; padding-bottom: 5px; }
 }
 #menu .tile.armed { background: rgba(255, 255, 255, 0.14); border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }   /* phones: tapped once, tap again to build */
-#heroPick .levelPick { display: flex; align-items: center; gap: 10px; margin: 0 0 14px; animation: cardIn 0.5s ease both; }
+#heroPick .levelPick { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 10px; margin: 0 0 14px; animation: cardIn 0.5s ease both; }
 #heroPick .levelPick label { display: inline-flex; align-items: center; gap: 8px; font-family: Outfit, "Avenir Next", sans-serif; font-weight: 700; font-size: 18px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
 #heroPick .levelPick input { width: 64px; padding: 6px 8px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.18); background: rgba(255, 255, 255, 0.08); color: var(--accent); font: 800 22px/1 Outfit, "Avenir Next", sans-serif; text-align: center; -moz-appearance: textfield; }
 #heroPick .levelPick input::-webkit-outer-spin-button, #heroPick .levelPick input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-#heroPick .levelPick button { width: 36px; height: 36px; border-radius: 50%; padding: 0; display: inline-flex; align-items: center; justify-content: center; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.18); color: var(--text); }
-#heroPick .levelPick button:hover { background: rgba(255, 255, 255, 0.16); filter: none; }
-#heroPick .levelPick button:disabled { opacity: 0.3; background: rgba(255, 255, 255, 0.05); }
-@media (max-height: 540px) { #heroPick .levelPick { margin-bottom: 8px; } #heroPick .levelPick label { font-size: 14px; } #heroPick .levelPick input { font-size: 18px; width: 54px; padding: 4px 6px; } #heroPick .levelPick button { width: 30px; height: 30px; font-size: 18px; } }
+#heroPick .levelPick #lvPrev, #heroPick .levelPick #lvNext { width: 36px; height: 36px; border-radius: 50%; padding: 0; display: inline-flex; align-items: center; justify-content: center; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.18); color: var(--text); }
+#heroPick .levelPick #lvPrev:hover, #heroPick .levelPick #lvNext:hover { background: rgba(255, 255, 255, 0.16); filter: none; }
+#heroPick .levelPick #lvPrev:disabled, #heroPick .levelPick #lvNext:disabled { opacity: 0.3; background: rgba(255, 255, 255, 0.05); }
+@media (max-height: 540px) { #heroPick .levelPick { margin-bottom: 8px; } #heroPick .levelPick label { font-size: 14px; } #heroPick .levelPick input { font-size: 18px; width: 54px; padding: 4px 6px; } #heroPick .levelPick #lvPrev, #heroPick .levelPick #lvNext { width: 30px; height: 30px; } }
 @media (min-width: 1700px) {                                    /* very wide screens: roomier cards */
   #heroPick .card { width: 240px; padding: 34px 20px 26px; }
   #heroPick .card .portrait { width: 96px; height: 96px; }
@@ -365,7 +372,7 @@ canvas { display: block; }
   #heroPick .card small { font-size: 14px; }
   #heroPick h1 { font-size: 56px; }
 }
-#heroPick .levelPick button .ico { width: 18px; height: 18px; }
+#heroPick .levelPick #lvPrev .ico, #heroPick .levelPick #lvNext .ico { width: 18px; height: 18px; }
 .stat.seed { text-decoration: none; cursor: pointer; }
 .stat.seed:hover .dim { color: var(--text); }
 /* ---------- Restart prompt: the same full-screen, focused look as the pause screen ---------- */
@@ -388,8 +395,25 @@ canvas { display: block; }
 @media (max-height: 540px) { #confirm { gap: 22px; } #confirm .choice .big { width: 76px; height: 76px; } #confirm .choice .big .ico { width: 38px; height: 38px; } #confirm .actions { gap: 36px; } }
 #confirm .choice:focus, #confirm .choice:focus-visible { outline: none; box-shadow: none; }
 #heroPick.again .card, #heroPick.again .ghost, #heroPick.again .levelPick { animation: none; }   /* shown again mid-session: no entrance replay */
-#heroPick .reset { margin-top: 18px; background: none; border: 0; padding: 6px 10px; color: rgba(255, 255, 255, 0.38); font-size: 12px; font-weight: 600; letter-spacing: 0.4px; text-transform: none; box-shadow: none; }
-#heroPick .reset:hover { color: #ef9a9a; filter: none; transform: none; text-decoration: underline; }
-@media (max-height: 540px) { #heroPick .reset { margin-top: 8px; font-size: 11px; } }
+#heroPick .reset {                                            /* a quiet pill beside the level picker; turns red once armed */
+  margin: 0 0 0 14px; height: 36px; padding: 0 15px; font-size: 13.5px; animation: none; white-space: nowrap;   /* same height as the arrow buttons */
+  color: rgba(255, 255, 255, 0.45); border-color: rgba(255, 255, 255, 0.12);
+  transition: color 0.15s, border-color 0.15s, background 0.15s, transform 0.12s, box-shadow 0.15s;
+}
+#heroPick .reset .ico { width: 20px; height: 20px; }
+#heroPick .reset:hover { color: #ef9a9a; border-color: rgba(239, 154, 154, 0.55); background: rgba(239, 83, 80, 0.1); transform: translateY(-2px); box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35); }
+#heroPick .reset:active { transform: translateY(0) scale(0.97); transition-duration: 0.05s; }
+#heroPick .reset.armed { color: #fff; border-color: #ef5350; background: rgba(239, 83, 80, 0.85); box-shadow: 0 6px 18px rgba(239, 83, 80, 0.35); animation: resetPulse 0.9s ease-in-out infinite; }
+@keyframes resetPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.04); } }
+@media (max-height: 540px) { #heroPick .reset { height: 30px; padding: 0 11px; font-size: 12px; } }
+@media (max-width: 600px) { #heroPick .reset { margin: 4px 0 0; flex-basis: 100%; justify-content: center; max-width: 220px; } }   /* phones upright: on its own line, still centred */
 #menu .pill[data-action="rally"] { flex: 0 0 auto; padding: 7px 12px; }
 #menu .pill[data-action="rally"] .ico { width: 24px; height: 24px; display: block; }
+/* The chosen legend, shown beside the controls while a level is on: her icon in her colour, as on the home page */
+#legendBadge { --tint: var(--accent); width: 46px; height: 46px; border-radius: 50%; display: none; align-items: center; justify-content: center;
+  color: var(--tint); background: color-mix(in srgb, var(--tint) 18%, rgba(22, 25, 33, 0.7)); border: 1.5px solid color-mix(in srgb, var(--tint) 55%, transparent);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--tint) 30%, transparent), 0 6px 16px rgba(0, 0, 0, 0.4); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+#legendBadge.on { display: inline-flex; cursor: pointer; transition: background 0.15s; }
+#legendBadge.on:hover { background: color-mix(in srgb, var(--tint) 32%, rgba(22, 25, 33, 0.7)); }
+#legendBadge.on:active { transform: translateY(1px); }
+#legendBadge .ico { width: 24px; height: 24px; display: block; }

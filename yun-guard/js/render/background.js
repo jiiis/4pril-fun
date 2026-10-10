@@ -384,7 +384,7 @@ const DRAW_DECO = {
         const lean = (r() - 0.5) * 3 * s, lDrop = r() * 2.5 * s, rDrop = r() * 2.5 * s, lw = w * (0.85 + r() * 0.3), rw = w * (0.85 + r() * 0.3);
         poly(c, [[x - lw, ty + lDrop], [x - lw * 0.55, ty - 4 * s - r() * 2 * s], [x + lean, ty - 13 * s], [x + rw * 0.55, ty - 4 * s - r() * 2 * s], [x + rw, ty + rDrop]], g1, "rgba(13,61,18,0.45)", 0.7);
         poly(c, [[x - lw, ty + lDrop], [x + lean, ty - 13 * s], [x - lw * 0.2, ty]], "rgba(255,255,255,0.1)");
-        if (r() < 0.35) line(c, x + (r() < 0.5 ? -1 : 1) * lw * 0.9, ty - 1 * s, x + (r() < 0.5 ? -1 : 1) * (lw + 3 * s), ty + 1 * s, "#0d3d12", 1.2);   // a stray branch
+        if (r() < 0.35) line(c, x + (r() < 0.5 ? -1 : 1) * lw * 0.9, ty - 1 * s, x + (r() < 0.5 ? -1 : 1) * (lw + 3 * s), ty + 1 * s, "rgba(13,61,18,0.45)", 1.2);   // a stray branch, as soft as the outline
       }
       if (r() < 0.3) for (let i = 0; i < 3; i++) circle(c, x + (r() - 0.5) * 10 * s, y - 12 * s - r() * 14 * s, 1.1 * s, "#8d6e63");   // cones
     } else if (v === 3) {                                                    // cherry: dark trunk, a cloud of blossom in its own shade of pink

@@ -37,6 +37,7 @@
       </div>
       <div class="hud-logo"><img src="yun-guard/icon-192.png" alt="Yun Guard" /><span class="brand">4pril<em>.fun</em></span></div>
       <div class="hud-right">
+        <span id="legendBadge" title="Find your legend"></span>
         <button id="mute" class="round" title="Sound on/off (M)" data-icon="volume"></button>
         <button id="restart-level" class="round" title="New map, same level (R)" data-icon="restart"></button>
         <button id="fullscreen" class="round" title="Full screen (F)" data-icon="expand"></button>
@@ -72,6 +73,7 @@
         <button id="lvPrev" title="Previous level" data-icon="chevronLeft"></button>
         <label>Level <input id="lvInput" type="number" min="1" max="100" value="1" /></label>
         <button id="lvNext" title="Next level" data-icon="chevronRight"></button>
+        <button id="resetProgress" class="ghost reset" title="Forget the saved level and carried gold, and start from level 1"><span data-icon="eraser"></span><span class="lbl">Reset progress</span></button>
       </div>
       <h1>Choose your legend</h1>
       <div class="cards">
@@ -119,7 +121,6 @@
         </button>
       </div>
       <button id="noLegend" class="ghost"><span data-icon="shieldOff"></span>Go without a legend <kbd>W</kbd></button>
-      <button id="resetProgress" class="reset" title="Forget the saved level and carried gold, and start from level 1">Reset progress</button>
     </div>
 
   <script type="module" src="yun-guard/js/main.js"></script>
