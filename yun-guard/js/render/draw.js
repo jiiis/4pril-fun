@@ -89,7 +89,7 @@ function drawRallyFlag(p, moving) {
 // scenery until the mouse is over it. Once a tower stands there, the pad is gone.
 export const SPOT_SQUASH = 0.62;   // how much the build pads are foreshortened (1 = seen straight from above)
 // A light sense of depth: things lower on the map (nearer the viewer) are drawn a little larger
-export const depthScale = (y) => 0.9 + 0.2 * Math.min(1, Math.max(0, y / H));
+export const depthScale = (y) => 0.82 + 0.36 * Math.min(1, Math.max(0, y / H));
 function drawSpot(s, i, occupied, hovered) {
   if (occupied) return;
   const { x, y } = s, R = SPOT_RADIUS;
