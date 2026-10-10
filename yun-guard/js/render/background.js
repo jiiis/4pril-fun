@@ -24,12 +24,17 @@ export function buildBackground() {
     const hx = rand() * W, hy = Y0 + rand() * HH, rx = 70 + rand() * 110, ry = rx * (0.45 + rand() * 0.2);
     ellipse(c, hx + rx * 0.12, hy + ry * 0.35, rx * 1.02, ry * 0.9, "rgba(20,60,15,0.11)");          // shadow at the foot of the hill
     const hg = c.createRadialGradient(hx - rx * 0.35, hy - ry * 0.45, 4, hx, hy, rx);
-    hg.addColorStop(0, "rgba(170,225,110,0.55)");
-    hg.addColorStop(0.6, "rgba(120,185,70,0.25)");
-    hg.addColorStop(1, "rgba(60,110,35,0.35)");
+    hg.addColorStop(0, "rgba(175,230,110,0.7)");
+    hg.addColorStop(0.6, "rgba(120,185,70,0.3)");
+    hg.addColorStop(1, "rgba(45,95,30,0.5)");
     ellipse(c, hx, hy, rx, ry, hg);
+    c.save(); c.beginPath(); c.ellipse(hx, hy, rx, ry, 0, 0, Math.PI * 2); c.clip();                  // a darker shaded flank down the far side
+    ellipse(c, hx + rx * 0.3, hy + ry * 0.45, rx * 0.95, ry * 0.75, "rgba(30,70,20,0.16)");
+    c.restore();
     ellipse(c, hx - rx * 0.1, hy - ry * 0.15, rx * 0.7, ry * 0.55, "rgba(255,255,170,0.08)");       // sun on the crest
   }
+  // Ledges and outcrops: the land steps up and down here and there
+  for (const t of map.terrain) t.type === "ledge" ? drawLedge(c, t) : drawOutcrop(c, t);
   // Sunlit patches
   for (let i = 0; i < 60; i++) {
     ellipse(c, rand() * W, Y0 + rand() * HH, 40 + rand() * 80, 20 + rand() * 40, rand() < 0.35 ? `rgba(225,175,80,${0.05 + rand() * 0.07})` : `rgba(255,255,160,${0.04 + rand() * 0.06})`);   // sun, and patches of straw-dry grass
@@ -190,6 +195,39 @@ function blob(c, pts, fill) {                                           // close
     c.quadraticCurveTo(a[0], a[1], mx, my);
   }
   c.closePath(); c.fill();
+}
+// A grassy ledge: the ground steps down along a bowed line. Lit grass on the upper lip, a short
+// face of bare earth with a few stones, and a shadow on the lower ground.
+function drawLedge(c, t) {
+  const r = rng(t.seed), hw = t.w / 2, drop = 9 + r() * 6, n = 12;
+  const edge = [];
+  for (let i = 0; i <= n; i++) { const u = i / n - 0.5; edge.push([t.x + u * t.w, t.y + t.bow * u * u * t.w * 0.8 - Math.abs(u) * 2 + (r() - 0.5) * 2]); }
+  const path = (pts, dy = 0) => { c.beginPath(); pts.forEach(([x, y], i) => (i ? c.lineTo(x, y + dy) : c.moveTo(x, y + dy))); };
+  // soft shadow on the ground below
+  c.globalAlpha = 0.22; path(edge, drop); for (let i = n; i >= 0; i--) c.lineTo(edge[i][0], edge[i][1] + drop + 10); c.closePath(); c.fillStyle = "#1e3a14"; c.fill(); c.globalAlpha = 1;
+  // the earth face
+  path(edge); for (let i = n; i >= 0; i--) c.lineTo(edge[i][0], edge[i][1] + drop * (0.6 + 0.4 * Math.sin((i / n) * Math.PI))); c.closePath();
+  const g = c.createLinearGradient(0, t.y, 0, t.y + drop); g.addColorStop(0, "#8a6a45"); g.addColorStop(1, "#5c4630");
+  c.fillStyle = g; c.fill();
+  for (let i = 1; i < n; i += 2) line(c, edge[i][0], edge[i][1] + 2, edge[i][0] + (r() - 0.5) * 2, edge[i][1] + drop * 0.6, "rgba(40,28,15,0.35)", 1);   // streaks
+  for (let i = 0; i < 4; i++) { const k = Math.floor(r() * n); circle(c, edge[k][0] + (r() - 0.5) * 6, edge[k][1] + 2 + r() * (drop - 3), 1 + r() * 1.3, "#9e9e9e"); }   // stones in the face
+  // the lit upper lip, grass hanging over
+  path(edge); c.strokeStyle = "rgba(190,235,120,0.7)"; c.lineWidth = 2.2; c.lineCap = "round"; c.stroke();
+  for (let i = 0; i <= n; i += 2) for (let k = -1; k <= 1; k++) line(c, edge[i][0] + k * 2, edge[i][1], edge[i][0] + k * 2.5, edge[i][1] + 3 + r() * 2, "#4f8a2c", 1);
+}
+// A rocky outcrop breaking through the turf: a few grey facets with a lit top and grass tufts at its foot
+function drawOutcrop(c, t) {
+  const r = rng(t.seed), hw = t.w / 2;
+  ellipse(c, t.x + 3, t.y + hw * 0.35, hw * 1.1, hw * 0.35, "rgba(20,50,15,0.2)");
+  const greys = [["#8d8d8d", "#5f5f5f", "#b0b0b0"], ["#9e9789", "#6b655a", "#c4bcae"], ["#7d8a92", "#4f5a61", "#a6b3bb"]][Math.floor(r() * 3)];
+  const n = 6 + Math.floor(r() * 3), pts = [];
+  for (let i = 0; i < n; i++) { const a = (i / n) * Math.PI * 2, rad = hw * (0.7 + r() * 0.3); pts.push([t.x + Math.cos(a) * rad, t.y + Math.sin(a) * rad * 0.5]); }
+  poly(c, pts, greys[0], greys[1], 0.8);
+  for (let i = 0; i < 3; i++) { const k = Math.floor(r() * n); poly(c, [[t.x, t.y - hw * 0.25], pts[k], pts[(k + 1) % n]], i % 2 ? greys[2] : greys[1]); }   // facets
+  poly(c, pts.slice(0, Math.ceil(n / 2)).map(([px, py]) => [t.x + (px - t.x) * 0.5, t.y - hw * 0.28 + (py - t.y) * 0.4]), greys[2]);                    // lit top
+  for (let i = 0; i < 3; i++) line(c, t.x + (r() - 0.5) * hw, t.y + (r() - 0.3) * hw * 0.3, t.x + (r() - 0.5) * hw, t.y + (r() + 0.2) * hw * 0.3, "rgba(0,0,0,0.25)", 0.8);   // cracks
+  for (let i = 0; i < 5; i++) { const a = r() * Math.PI, gx = t.x + Math.cos(a) * hw * 1.05, gy = t.y + Math.sin(a) * hw * 0.5; for (let k = -1; k <= 1; k++) line(c, gx, gy, gx + k * 2, gy - 4 - r() * 3, "#4f8a2c", 1.2); }   // tufts
+  if (r() < 0.6) { circle(c, t.x + (r() - 0.5) * hw, t.y + r() * hw * 0.2, 2.5, "#5b8f33"); circle(c, t.x + (r() - 0.5) * hw, t.y, 1.6, "#6ea83f"); }   // moss
 }
 function drawPond(c, p) {
   const rand = rng(p.seed);
@@ -421,6 +459,16 @@ const DRAW_DECO = {
       c.save(); c.translate(lx, ly); c.rotate(r() * Math.PI);
       ellipse(c, 0, 0, 1.9 * s, 1.1 * s, pal[Math.floor(r() * pal.length)]);
       c.restore();
+    }
+  },
+  pebbles(c, x, y, s, v, r) {                                                // a few small stones lying together
+    const greys = [["#8d8d8d", "#b0b0b0"], ["#9e9789", "#c4bcae"], ["#7d8a92", "#a6b3bb"]][v];
+    const n = 2 + Math.floor(r() * 3);
+    for (let i = 0; i < n; i++) {
+      const px = x + (i - (n - 1) / 2) * 6 * s + (r() - 0.5) * 4, py = y + (r() - 0.5) * 4, pr = (1.6 + r() * 1.6) * s;
+      ellipse(c, px, py + 1, pr * 1.1, pr * 0.5, "rgba(20,50,15,0.25)");
+      ellipse(c, px, py, pr, pr * 0.7, greys[0], "rgba(60,60,60,0.5)", 0.6);
+      ellipse(c, px - pr * 0.25, py - pr * 0.25, pr * 0.45, pr * 0.3, greys[1]);
     }
   },
   rock(c, x, y, s, v, r) {

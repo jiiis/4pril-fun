@@ -13,6 +13,7 @@ export const map = {
   ponds: [],       // small still pools on the grass: { x, y, rx, ry, wobble[] }
   bridges: [],     // where the road crosses a river: { x, y, angle, span }
   deco: [],        // trees, rocks, bushes, flowers
+  terrain: [],     // ledges and rocky outcrops that give the land some relief
   critters: [],    // animal home spots
   entry: null,     // where the signpost goes
   castle: null,    // the main road's castle (castles[0])
@@ -126,6 +127,7 @@ export function generateMap(seed) {
   makeRivers(rand);
   makePonds(rand);
   map.spots = pickSpots(allCells, rand);
+  makeTerrain(rand);
   map.deco = scatterDeco(rand);
   map.critters = placeCritters(rand);
   return map;
@@ -536,6 +538,20 @@ function clear(p, { road = 50, spots = 48, castle = 85, entry = 50, deco = 0, cr
     && map.critters.every((c) => dist(c, p) > critters);
 }
 
+// Relief: a few grassy ledges (a step in the ground with a small earth face) and rocky outcrops,
+// all on open ground so nothing stands on a road, in the water or on a build pad
+function makeTerrain(rand) {
+  map.terrain = [];
+  const want = 6 + Math.floor(rand() * 5);
+  for (let i = 0; i < 400 && map.terrain.length < want; i++) {
+    const p = { x: 40 + rand() * (W - 80), y: 40 + rand() * (H - 80) };
+    const outcrop = rand() < 0.35, w = outcrop ? 26 + rand() * 24 : 70 + rand() * 110;
+    if (!clear(p, { road: w * 0.5 + 34, spots: 50, castle: 120, entry: 90, river: w * 0.5 + 10 })) continue;
+    if (map.terrain.some((t) => dist(t, p) < (t.w + w) * 0.6)) continue;
+    map.terrain.push({ type: outcrop ? "outcrop" : "ledge", x: p.x, y: p.y, w, bow: (rand() - 0.5) * 0.6, seed: Math.floor(rand() * 1e6) });
+  }
+}
+
 function scatterDeco(rand) {
   const out = [];
   map.deco = out;
@@ -553,9 +569,9 @@ function scatterDeco(rand) {
     if (!clear(p, { deco: 40 })) continue;
     placed++;
     const roll = rand();
-    const type = roll < 0.32 ? "tree" : roll < 0.5 ? "bush" : roll < 0.63 ? "rock" : roll < 0.85 ? "flower" : roll < 0.93 ? "mushroom" : "stump";
+    const type = roll < 0.3 ? "tree" : roll < 0.46 ? "bush" : roll < 0.56 ? "rock" : roll < 0.66 ? "pebbles" : roll < 0.85 ? "flower" : roll < 0.93 ? "mushroom" : "stump";
     // Every piece of scenery gets its own look: a variant, a size and a seed for its small random details
-    const size = type === "flower" ? 0.5 + rand() * 0.25 : type === "mushroom" ? 0.42 + rand() * 0.2 : type === "stump" ? 0.6 + rand() * 0.2 : type === "tree" ? 1.0 + rand() * 0.4 : 0.8 + rand() * 0.5;   // small things stay small, trees stand tall
+    const size = type === "flower" ? 0.5 + rand() * 0.25 : type === "pebbles" ? 0.7 + rand() * 0.5 : type === "mushroom" ? 0.42 + rand() * 0.2 : type === "stump" ? 0.6 + rand() * 0.2 : type === "tree" ? 1.0 + rand() * 0.4 : 0.8 + rand() * 0.5;   // small things stay small, trees stand tall
     const item = { type, x: p.x, y: p.y, s: size, variant: type === "tree" ? treeVariant() : Math.floor(rand() * 3), seed: Math.floor(rand() * 1e6) };
     out.push(item);
     if (type === "tree" && (item.variant === 4 || item.variant === 5) && rand() < 0.7) {           // a drift of fallen leaves beside a turned or bare tree
