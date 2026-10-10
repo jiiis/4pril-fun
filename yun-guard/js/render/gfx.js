@@ -3,7 +3,10 @@
 // offscreen background canvas too.
 
 export const canvas = document.getElementById("c");
-export const ctx = canvas.getContext("2d");
+export let ctx = canvas.getContext("2d");
+// Temporarily point every drawing helper at another context (used to draw a creature into a small
+// scratch canvas so it can be tinted cheaply). Importers see the change because module bindings are live.
+export function withCtx(c, fn) { const prev = ctx; ctx = c; try { fn(); } finally { ctx = prev; } }
 
 export function rect(c, x, y, w, h, fill, stroke, lw = 2) {
   c.fillStyle = fill;

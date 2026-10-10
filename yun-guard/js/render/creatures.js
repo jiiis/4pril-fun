@@ -1,4 +1,24 @@
-import { ctx, rect as rect0, circle as circle0, ellipse as ellipse0, poly as poly0, line, shadow } from "./gfx.js";
+import { ctx, withCtx, rect as rect0, circle as circle0, ellipse as ellipse0, poly as poly0, line, shadow } from "./gfx.js";
+
+// Tinting (hit flash, frost, fresh corpses) used ctx.filter, which drops the whole canvas onto a slow software
+// path and made the game stutter every time an arrow landed. Instead the creature is drawn into a small scratch
+// canvas, tinted there with source-atop, and copied back: a few cheap GPU operations.
+const scratch = document.createElement("canvas"), sctx = scratch.getContext("2d");
+function drawTinted(size, tint, drawFn) {
+  const m = ctx.getTransform(), scale = Math.hypot(m.a, m.b);
+  const half = Math.ceil(size * 2.2 * scale), full = half * 2;
+  if (scratch.width !== full || scratch.height !== full) { scratch.width = full; scratch.height = full; }
+  else { sctx.setTransform(1, 0, 0, 1, 0, 0); sctx.clearRect(0, 0, full, full); }
+  sctx.setTransform(m.a, m.b, m.c, m.d, half, half);
+  withCtx(sctx, drawFn);
+  sctx.setTransform(1, 0, 0, 1, 0, 0);
+  sctx.globalCompositeOperation = "source-atop";
+  sctx.fillStyle = tint; sctx.fillRect(0, 0, full, full);
+  sctx.globalCompositeOperation = "source-over";
+  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.drawImage(scratch, Math.round(m.e) - half, Math.round(m.f) - half);
+  ctx.restore();
+}
 
 // Monster outlines stay subtle: every shape helper used here softens its outline colour to ~45% and thins it,
 // so the drawings below can keep naming plain colours.
@@ -24,9 +44,10 @@ export function drawEnemy(e) {
   ctx.scale(e.dir, 1);
   if (!e.wasBlocked && !flying) dust(e.phase, e.def.size);   // little puffs of dust behind the feet while walking
   ctx.translate(0, bob);
-  if (e.hitFlash > 0) ctx.filter = "brightness(1.35) saturate(0.6)";
-  else if (e.frost) ctx.filter = "saturate(0.45) brightness(1.15) hue-rotate(160deg)";   // chilled: a pale, bluish tint
-  CREATURES[e.type](e.phase, e.wasBlocked);
+  const body = () => CREATURES[e.type](e.phase, e.wasBlocked);
+  if (e.hitFlash > 0) drawTinted(e.def.size, "rgba(255,255,255,0.5)", body);
+  else if (e.frost) drawTinted(e.def.size, "rgba(150,210,240,0.5)", body);   // chilled: a pale, bluish tint
+  else body();
   ctx.restore();
 
   if (e.frost) drawIce(e);
@@ -52,14 +73,13 @@ export function drawCorpse(c) {
   if (age < 2) {
     // The body lies where it fell, turned a random way and in one of three poses
     ctx.globalAlpha = 0.9;
-    ctx.filter = "grayscale(0.7) brightness(0.8)";
     ctx.rotate(c.angle);
     if (c.pose === 1) ctx.scale(1, -1);                        // face down
     if (c.pose === 2) { ctx.rotate(0.5); ctx.scale(1, 0.75); } // curled on its side
     ctx.scale(c.dir, 1);
     ctx.rotate(-Math.PI / 2);
     ctx.translate(-c.def.size * 0.2, 0);
-    CREATURES[c.type](c.phase, true);
+    drawTinted(c.def.size, "rgba(70,60,60,0.55)", () => CREATURES[c.type](c.phase, true));   // drained and greyed
   } else {
     // Skeleton: a crooked spine, a random number of ribs, the skull to one side, loose bones scattered about
     ctx.globalAlpha = Math.min(1, c.life / 1.5) * 0.95;
