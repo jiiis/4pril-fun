@@ -45,13 +45,13 @@ export function levelConfig(L) {
   L = clampLevel(L);
   return {
     level: L,
-    waves: Math.min(30, 8 + Math.floor((L - 1) / 4)),      // 8 waves at level 1, 30 from level 89
-    hp: 0.85 + (L - 1) * 0.045,                              // monsters' base toughness, on top of the per-wave growth
-    speed: 1 + Math.min(0.3, (L - 1) * 0.003),               // a little quicker, up to 30% faster
-    count: Math.min(2, 0.7 + (L - 1) * 0.013),               // crowd size, from thin to double
+    waves: Math.min(28, 9 + Math.floor((L - 1) / 4)),      // 9 waves at level 1, 28 from level 77
+    hp: 0.95 + (L - 1) * 0.036,                              // monsters' base toughness (0.95 → 4.5), on top of the per-wave growth
+    speed: 1 + Math.min(0.25, (L - 1) * 0.0025),             // a little quicker, up to 25% faster
+    count: Math.min(1.8, 0.8 + (L - 1) * 0.011),             // crowd size, from a little thin to nearly double
     shift: Math.floor((L - 1) / 6),                          // the tougher kinds arrive this many waves earlier
-    gold: 350 + L * 6,                                       // a bigger purse to meet a bigger threat
-    goldMul: 1 + (L - 1) * 0.01,                             // rewards keep up a little
+    gold: 360 + L * 7,                                       // a bigger purse to meet a bigger threat (367 → 1060)
+    goldMul: 1 + (L - 1) * 0.012,                            // rewards keep up a little better
     lives: 20,
   };
 }
