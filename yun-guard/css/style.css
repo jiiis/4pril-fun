@@ -343,7 +343,7 @@ canvas { display: block; }
 }
 #rotate .ico { width: 16px; height: 16px; }
 @media (max-width: 1040px), (max-height: 540px) {               /* phones: a smaller logo in the corner */
-  .hud-logo { bottom: 10px; left: 10px; gap: 8px; }
+  .hud-logo { bottom: 25px; left: 12px; gap: 8px; }                /* 40px logo centred on the button row (62px tall, 14px up) */
   .hud-logo img { width: 40px; height: 40px; border-radius: 10px; }
   .hud-logo .brand { font-size: 16px; padding-bottom: 5px; }
 }
@@ -386,3 +386,4 @@ canvas { display: block; }
 #confirm .choice small { color: var(--text); }
 @media (max-height: 540px) { #confirm { gap: 22px; } #confirm .choice .big { width: 76px; height: 76px; } #confirm .choice .big .ico { width: 38px; height: 38px; } #confirm .actions { gap: 36px; } }
 #confirm .choice:focus, #confirm .choice:focus-visible { outline: none; box-shadow: none; }
+#heroPick.again .card, #heroPick.again .ghost, #heroPick.again .levelPick { animation: none; }   /* shown again mid-session: no entrance replay */

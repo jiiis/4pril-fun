@@ -121,7 +121,7 @@ export function placeMenu() {
   if (state.selected === null || menu.style.display === "none") return;
   const s = map.spots[state.selected], r = $("c").getBoundingClientRect(), k = r.width / W;
   const sx = r.left + s.x * k, sy = r.top + s.y * k, mw = menu.offsetWidth, mh = menu.offsetHeight;
-  const vw = window.innerWidth, vh = window.innerHeight;
+  const vw = pageW(), vh = pageH();
   // Prefer below the spot; flip above if that runs off the screen; always stay on screen
   let top = sy + 30 * k;
   if (top + mh > vh - 6) top = sy - mh - 34 * k;
@@ -187,27 +187,31 @@ function handleMenuClick(ev) {
 export const view = { k: 1, fit: 1, panX: 0, panY: 0, mobile: false };
 const MAX_ZOOM = 2, MIN_ZOOM = 0.6;                              // small screens may shrink the board to see more of it; pads stay tappable
 const hudH = () => 0;                                           // the HUD floats over the board, so the whole window is for the map
+// The page (html/body) is sized to the dynamic viewport; measure it rather than window.innerHeight, which
+// phones report late and inconsistently while their toolbars slide
+export const pageW = () => document.body.clientWidth || window.innerWidth;
+export const pageH = () => document.body.clientHeight || window.innerHeight;
 export function fitToWindow() {
   view.mobile = window.matchMedia("(pointer: coarse)").matches || navigator.maxTouchPoints > 1;
   document.documentElement.style.setProperty("--hud", `${hudH()}px`);
   // The board is scaled to the window's height (never below natural size, never more than 2×); the width
   // follows proportionally, so a wide screen gets quiet borders at the sides and a narrow one pans sideways.
-  view.k = view.fit = clamp((window.innerHeight - hudH()) / H, MIN_ZOOM, MAX_ZOOM);
+  view.k = view.fit = clamp((pageH() - hudH()) / H, MIN_ZOOM, MAX_ZOOM);
   applyView();
 }
 // Zoom so the board point under the screen position (sx, sy) stays put: pinch on a phone, ctrl+wheel on a trackpad
 export function zoomTo(k, sx, sy) {
   if (document.fullscreenElement) return;                        // full screen is the fixed, fitted view: no zooming
   k = clamp(k, Math.max(MIN_ZOOM, view.fit * 0.8), Math.min(MAX_ZOOM, view.fit * 1.8));   // only a little out, a fair bit in, from the natural fit
-  const cx = window.innerWidth / 2, cy = (window.innerHeight - hudH()) / 2;
+  const cx = pageW() / 2, cy = (pageH() - hudH()) / 2;
   const ux = (sx - cx - view.panX) / view.k, uy = (sy - cy - view.panY) / view.k;   // board offset (from its centre) under the finger
   view.panX = sx - cx - ux * k; view.panY = sy - cy - uy * k; view.k = k;
   applyView();
 }
-export const canPan = () => W * view.k > window.innerWidth + 1 || H * view.k > window.innerHeight - hudH() + 1;
+export const canPan = () => W * view.k > pageW() + 1 || H * view.k > pageH() - hudH() + 1;
 export function panBy(dx, dy) { view.panX += dx; view.panY += dy; applyView(); }
 function applyView() {
-  const maxX = Math.max(0, (W * view.k - window.innerWidth) / 2), maxY = Math.max(0, (H * view.k - (window.innerHeight - hudH())) / 2);   // never pan past the board's edge
+  const maxX = Math.max(0, (W * view.k - pageW()) / 2), maxY = Math.max(0, (H * view.k - (pageH() - hudH())) / 2);   // never pan past the board's edge
   view.panX = clamp(view.panX, -maxX, maxX); view.panY = clamp(view.panY, -maxY, maxY);
   $("wrap").style.transform = `translate(calc(-50% + ${view.panX}px), calc(-50% + ${view.panY}px)) scale(${view.k})`;
   placeMenu();                                                  // the open menu follows its spot as the view moves
@@ -251,8 +255,9 @@ export function initUi() {
   window.addEventListener("resize", fitToWindow);
   // Phones report their final viewport late and sometimes without a resize event (iOS toolbars settling after load,
   // rotation, returning from the background): re-fit on every signal we can get, and once more shortly after load
-  let lastW = window.innerWidth, lastH = window.innerHeight;
-  const refit = () => { if (window.innerWidth !== lastW || window.innerHeight !== lastH) { lastW = window.innerWidth; lastH = window.innerHeight; fitToWindow(); } };   // only when the size really changed, so a player's zoom isn't reset for nothing
+  let lastW = pageW(), lastH = pageH();
+  const refit = () => { if (pageW() !== lastW || pageH() !== lastH) { lastW = pageW(); lastH = pageH(); fitToWindow(); } };   // only when the size really changed, so a player's zoom isn't reset for nothing
+  if (window.ResizeObserver) new ResizeObserver(refit).observe(document.body);   // the body follows the dynamic viewport; the board follows the body
   window.visualViewport?.addEventListener("resize", refit);
   window.addEventListener("orientationchange", () => { refit(); setTimeout(refit, 300); });
   window.addEventListener("pageshow", refit);

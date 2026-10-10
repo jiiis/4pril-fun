@@ -8,7 +8,9 @@ const touchMid = (ev) => ({ x: (ev.touches[0].clientX + ev.touches[1].clientX) /
 const DRAG = 8;   // pixels of movement before a press counts as a drag
 
 export function initTouch() {
+  const interactive = (ev) => ev.target.closest && ev.target.closest("input, button, a, select, textarea, #menu, #heroPick, #overlay, #confirm, #rotate");
   window.addEventListener("touchstart", (ev) => {
+    if (interactive(ev)) { start = null; pinch = null; return; }     // real controls get real taps (and the keyboard for inputs)
     ev.preventDefault();
     if (ev.touches.length === 2) { pinch = { d: touchDist(ev), k: view.k, mid: touchMid(ev) }; start = null; return; }   // two fingers: pinch to zoom
     pinch = null;
@@ -17,6 +19,7 @@ export function initTouch() {
     start = { x: t.clientX, y: t.clientY, time: performance.now() }; last = { x: t.clientX, y: t.clientY }; dragged = false;
   }, { passive: false });
   window.addEventListener("touchmove", (ev) => {
+    if (interactive(ev)) return;
     ev.preventDefault();
     if (pinch && ev.touches.length === 2) {
       const mid = touchMid(ev);
@@ -31,6 +34,7 @@ export function initTouch() {
     last = { x: t.clientX, y: t.clientY };
   }, { passive: false });
   window.addEventListener("touchend", (ev) => {
+    if (interactive(ev)) return;
     ev.preventDefault();
     if (ev.touches.length < 2) pinch = null;
     if (!start) return;

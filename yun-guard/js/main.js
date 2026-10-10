@@ -49,7 +49,8 @@ function startLevel({ level: L, seed, hero }) {
   resetUiForLevel();
   pauseBtn.innerHTML = icon("pause"); pauseBtn.title = "Pause (P)";
   lvInput.value = level; document.getElementById("lvPrev").disabled = level <= 1; document.getElementById("lvNext").disabled = level >= MAX_LEVEL;
-  if (hero === "pick" || !hero) {                                     // the legend screen again
+  if (hero === "pick" || !hero) {                                     // the legend screen again (no entrance animation this time)
+    heroPick.classList.add("again");
     heroPick.style.display = "flex";
     document.getElementById("next").disabled = true; document.getElementById("pause").disabled = true;
     showInUrl(null);
