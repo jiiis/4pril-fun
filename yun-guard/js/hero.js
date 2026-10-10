@@ -250,7 +250,7 @@ function updateCharge(h, dt) {
   if (c.left <= 0) { h.charge = null; h.vx = h.vy = 0; h.speedNow = 0; h.cd = 0.3; }
 }
 
-// ---------- Ranged attacks: Avril's frost arrows, Ember's fireballs ----------
+// ---------- Ranged attacks: Avril's frost arrows, Candice's fireballs ----------
 const ARROW = { type: "physical" }, BOLT = { type: "magic" };
 function rangedAttack(h) {
   const r = h.def.ranged;
@@ -453,7 +453,7 @@ function updateFlyer(dt) {
     g.y = Math.max(16, g.y);                                 // soaring high, but never off the top of the map
     if (Math.abs(dx) > 1 && !g.breath) g.dir = Math.sign(dx);
   }
-  // The dragon looks the way Ember is heading while she walks, and settles to face her way once she stops
+  // The dragon looks the way Candice is heading while she walks, and settles to face her way once she stops
   // It only turns round a moment after she does, as if it noticed late
   if (F.kind === "dragon" && !g.breath && owner.hp > 0) {
     if (owner.dir !== g.dir) { g.turnWait = (g.turnWait || 0) + dt; if (g.turnWait > 0.35) { g.dir = owner.dir; g.turnWait = 0; } }

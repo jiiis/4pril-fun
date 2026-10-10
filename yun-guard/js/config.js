@@ -96,9 +96,9 @@ export const EAGLE = {
   kind: "eagle",
 };
 
-// Ember: a young fire mage. Fragile, but her fireballs splash and set monsters ablaze. Her baby dragon breathes fire from above.
+// Candice: a young fire mage. Fragile, but her fireballs splash and set monsters ablaze. Her baby dragon breathes fire from above.
 export const EMBER = {
-  name: "Ember",
+  name: "Candice",
   hp: 170, damage: 7, rate: 1.0,
   speed: 100, armor: 0.05,
   engage: 36,
@@ -169,7 +169,7 @@ export const LOONG = {
   kind: "loong",
 };
 
-// Cinder, Ember's baby dragon. Circles above her and spits little fireballs at monsters near her (flying ones too).
+// Cinder, Candice's baby dragon. Circles above her and spits little fireballs at monsters near her (flying ones too).
 export const DRAGON = {
   name: "Cinder",
   damage: 6, rate: 0.7, splash: 22, burnTime: 1.5, burnDps: 5,

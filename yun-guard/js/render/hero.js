@@ -224,7 +224,7 @@ function drawAvril(h, a) {
   }
 }
 
-// ---------- Ember: young fire mage in a crimson robe with a flame-tipped staff ----------
+// ---------- Candice: young fire mage in a crimson robe with a flame-tipped staff ----------
 function drawEmber(h, a) {
   const { run, sw, breathe } = a;
   const T = state.time, hem = Math.sin(h.phase) * 2 * run;
