@@ -1,13 +1,13 @@
 import { canvas } from "./render/gfx.js";
 import { state } from "./state.js";
-import { W, H, SPOT_RADIUS } from "./config.js";
+import { W, H, SPOT_RADIUS, TOWERS } from "./config.js";
 import { dist } from "./util.js";
 import { map, generateMap } from "./map.js";
 import { update } from "./update.js";
 import { draw, SPOT_SQUASH, depthScale } from "./render/draw.js";
 import { initUi, openMenu, closeMenu } from "./ui.js";
 import { startWave, spawnEnemy } from "./waves.js";
-import { createTower, setRally } from "./towers.js";
+import { createTower, setRally, archerHeight, mageHeight, teslaHeight, visLevel } from "./towers.js";
 import { initCritters } from "./critters.js";
 import { initHero, sendHero, selectedHero, selectHero, deselectHeroes, heroAt } from "./hero.js";
 import { initTouch } from "./touch.js";
@@ -54,6 +54,24 @@ document.getElementById("pause").disabled = true;
 for (const card of heroPick.querySelectorAll(".card")) card.addEventListener("click", () => chooseHero(card.dataset.hero));
 if (["april", "avril", "ember", "willow", "meilin"].includes(preset)) chooseHero(preset);
 
+// Which build spot is under the point? An empty pad is its foreshortened disc; a tower counts over its
+// whole body, from the pad up to the roof. Where towers overlap, the one in front (lower on screen) wins.
+function spotAt(p) {
+  let best = -1, bestY = -Infinity;
+  map.spots.forEach((s, i) => {
+    const ds = depthScale(s.y), t = state.towers.find((t) => t.spot === i);
+    let hit;
+    if (!t) hit = Math.hypot(p.x - s.x, (p.y - s.y) / SPOT_SQUASH) <= SPOT_RADIUS * ds + 5;
+    else {
+      const lv = visLevel(t);
+      const h = t.def === TOWERS.archer ? archerHeight(lv) + 30 : t.def === TOWERS.mage ? mageHeight(lv) + 44 : t.def === TOWERS.tesla ? teslaHeight(lv) + 26 : 42;
+      hit = Math.abs(p.x - s.x) <= 24 * ds && p.y <= s.y + 14 * ds && p.y >= s.y - h * ds;
+    }
+    if (hit && s.y > bestY) { best = i; bestY = s.y; }
+  });
+  return best;
+}
+
 // Click the hero to select her, then click anywhere to send her there.
 // Click a build spot to open its menu; click empty ground to close it.
 canvas.addEventListener("click", (ev) => {
@@ -73,7 +91,7 @@ canvas.addEventListener("click", (ev) => {
     deselectHeroes();
     sfx("order");
   } else {
-    const i = map.spots.findIndex((s) => Math.hypot(p.x - s.x, (p.y - s.y) / SPOT_SQUASH) <= SPOT_RADIUS * depthScale(s.y) + 5);
+    const i = spotAt(p);
     if (i >= 0) { openMenu(i); sfx("click"); } else closeMenu();
   }
   canvas.style.cursor = selectedHero() || state.rallyFor ? "crosshair" : state.hover !== null ? "pointer" : "default";
@@ -83,7 +101,7 @@ canvas.addEventListener("click", (ev) => {
 canvas.addEventListener("mousemove", (ev) => {
   const r = canvas.getBoundingClientRect();
   const p = { x: (ev.clientX - r.left) * (W / r.width), y: (ev.clientY - r.top) * (H / r.height) };
-  const i = map.spots.findIndex((s) => Math.hypot(p.x - s.x, (p.y - s.y) / SPOT_SQUASH) <= SPOT_RADIUS * depthScale(s.y) + 5);
+  const i = spotAt(p);
   state.hover = i >= 0 ? i : null;
   // With a hero selected, an animal under the mouse is marked as the would-be target
   state.hoverCritter = selectedHero() ? state.critters.find((c) => dist(c, { x: p.x, y: p.y + 6 }) <= 16) || null : null;
