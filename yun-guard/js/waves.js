@@ -6,7 +6,7 @@ import { setWaveButton, endGame } from "./ui.js";
 import { sfx } from "./audio.js";
 
 export function startWave() {
-  if (state.wave >= state.totalWaves || state.over || state.spawnQueue.length) return;
+  if (state.wave >= state.totalWaves || state.over) return;
 
   // Bonus gold for calling the wave early (like Kingdom Rush).
   if (state.countdown !== null && state.countdown > 0) {
@@ -17,8 +17,10 @@ export function startWave() {
 
   state.wave++;
   state.countdown = null;
-  state.spawnQueue = [];
-  let t = 0;
+  // Called while the last wave is still appearing? The new one lines up behind it instead of replacing it
+  const queued = state.spawnQueue.length;
+  let t = queued ? state.spawnQueue[state.spawnQueue.length - 1].at + 1.5 : 0;
+  if (!queued) { state.spawnQueue = []; state.spawnTimer = 0; }
   for (const g of makeWave(state.wave, state.diff)) {
     for (let i = 0; i < g.count; i++) {
       state.spawnQueue.push({ type: g.type, at: t });
@@ -26,8 +28,7 @@ export function startWave() {
     }
     t += 1.5;                                             // short pause between groups
   }
-  state.spawnTimer = 0;
-  setWaveButton("busy");
+  setWaveButton(state.wave >= state.totalWaves ? "busy" : "ready");   // the button stays live (no countdown badge) so the next wave can be called early too
   sfx("wave");
 }
 

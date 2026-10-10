@@ -1,4 +1,12 @@
-import { ctx, rect, circle, ellipse, poly, line, shadow } from "./gfx.js";
+import { ctx, rect as rect0, circle as circle0, ellipse as ellipse0, poly as poly0, line, shadow } from "./gfx.js";
+
+// Monster outlines stay subtle: every shape helper used here softens its outline colour to ~45% and thins it,
+// so the drawings below can keep naming plain colours.
+const soft = (c) => (typeof c === "string" && /^#[0-9a-f]{6}$/i.test(c) ? `rgba(${parseInt(c.slice(1, 3), 16)},${parseInt(c.slice(3, 5), 16)},${parseInt(c.slice(5, 7), 16)},0.45)` : c);
+const rect = (c, x, y, w, h, fill, stroke, lw = 2) => rect0(c, x, y, w, h, fill, soft(stroke), lw * 0.7);
+const circle = (c, x, y, r, fill, stroke, lw = 1.5) => circle0(c, x, y, r, fill, soft(stroke), lw * 0.7);
+const ellipse = (c, x, y, rx, ry, fill, stroke, lw = 1.5) => ellipse0(c, x, y, rx, ry, fill, soft(stroke), lw * 0.7);
+const poly = (c, pts, fill, stroke, lw = 2) => poly0(c, pts, fill, soft(stroke), lw * 0.7);
 import { state } from "../state.js";
 
 // Monsters are drawn with shapes and animated by their walking "phase".
