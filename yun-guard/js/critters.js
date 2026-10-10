@@ -71,7 +71,7 @@ export function updateCritters(dt) {
     }
     if (c.target) {
       const d = dist(c, c.target);
-      const step = Math.min(b.speed * (c.fleeing ? 1.4 : 1) * dt, d);
+      const step = Math.min(b.speed * (c.fleeing ? 1.2 : 1) * dt, d);   // a fright makes them quicker, but a legend still catches up
       c.x += ((c.target.x - c.x) / d) * step;
       c.y += ((c.target.y - c.y) / d) * step;
       c.phase += dt * (b.hops ? 9 : 8);

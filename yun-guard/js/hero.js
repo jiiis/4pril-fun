@@ -112,6 +112,7 @@ function updateOne(h, dt) {
   if (h.bowCd > 0) h.bowCd -= dt;
   if (h.cast > 0) h.cast -= dt;
   if (h.chargeCd > 0) h.chargeCd -= dt;
+  if (h.cd > 0) h.cd -= dt;                                 // the swing cooldown always runs down, so she strikes the moment she arrives
   h.face += (h.dir - h.face) * Math.min(1, dt * TURN);
 
   // Fallen: wait, then return at the castle
@@ -141,9 +142,8 @@ function updateOne(h, dt) {
       }
     } else {                                                 // melee heroes run it down
       goal = prey; stopAt = 14;
-      if (dist(h, prey) <= stopAt + 4) {
+      if (dist(h, prey) <= stopAt + 8) {
         h.dir = prey.x >= h.x ? 1 : -1;
-        h.cd -= dt;
         if (h.cd <= 0) {
           h.cd = 1 / def.rate; h.swing = 0.25; sfx("clash", 0.12);
           prey.hp -= heroDamage(h);
@@ -192,7 +192,6 @@ function updateOne(h, dt) {
   if (!h.moveTo && h.target && dist(h, h.target) <= stopAt + 2) {
     h.target.blocked = true;
     h.dir = h.target.x >= h.x ? 1 : -1;
-    h.cd -= dt;
     if (h.cd <= 0) {
       hurt(h.target, heroDamage(h), "physical", true, h);
       if (def.cleave) {                                      // Mei Lin's spear sweeps through the monsters beside her target
