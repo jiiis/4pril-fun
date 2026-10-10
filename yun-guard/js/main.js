@@ -165,6 +165,7 @@ window.game = { state, map, update, draw, spawnEnemy, startWave, createTower, se
 // Phones held upright: a gentle nudge to turn sideways, where the map fits far better
 const rotateHint = document.getElementById("rotate");
 function checkOrientation() {
+  if (!rotateHint) return;
   const coarse = window.matchMedia("(pointer: coarse)").matches || navigator.maxTouchPoints > 1;
   rotateHint.style.display = coarse && window.innerHeight > window.innerWidth ? "flex" : "none";
 }

@@ -335,7 +335,7 @@ export function draw() {
   map.castles.forEach((k, i) => {
     if (k.style === 2) {                                                    // the temple flies no flag: lanterns sway gently by the doors
       // The gold finial catches the sun: a soft glow and a four-point glint that pulses
-      const fx = k.x, fy = k.y - 103 * k.scale, tw = 0.5 + 0.5 * Math.sin(state.time * 2.2 + i);
+      const fx = k.x, fy = k.y - 112 * k.scale, tw = 0.5 + 0.5 * Math.sin(state.time * 2.2 + i);
       ctx.globalAlpha = 0.12 + tw * 0.18; circle(ctx, fx, fy, (5 + tw * 3) * k.scale, "rgba(255,225,130,0.7)"); ctx.globalAlpha = 1;
       const r = (2 + tw * 3.5) * k.scale;
       ctx.strokeStyle = `rgba(255,250,220,${0.25 + tw * 0.45})`; ctx.lineWidth = 1; ctx.beginPath();

@@ -749,11 +749,12 @@ function drawPagoda(c, x, y) {
   cone(y - 62, 40, y - 75, 21);
   // Upper drum and the top cone
   rect(c, x - 18, y - 83, 36, 8, red, redDark, 1.2); line(c, x - 18, y - 80, x + 18, y - 80, goldDark, 1);
-  cone(y - 85, 28, y - 100, 4);
-  const fg = c.createRadialGradient(x - 1, y - 104, 0.5, x, y - 103, 4);
+  cone(y - 85, 28, y - 106, 3.5);
+  line(c, x, y - 106, x, y - 111, goldDark, 2);                                                           // a short gold spire
+  const fg = c.createRadialGradient(x - 1, y - 113, 0.5, x, y - 112, 4);
   fg.addColorStop(0, "#fff8dc"); fg.addColorStop(0.5, "#ffd54f"); fg.addColorStop(1, "#c9a227");
-  circle(c, x, y - 103, 3.6, fg, "#b8902a", 0.8);                                                        // bright gold finial (it glints live in draw.js)
-  circle(c, x - 1.2, y - 104.2, 1, "rgba(255,255,255,0.9)");                                                         // gold finial (the banner pole stands on it)
+  circle(c, x, y - 112, 3.6, fg, "#b8902a", 0.8);                                                        // bright gold finial (it glints live in draw.js)
+  circle(c, x - 1.2, y - 113.2, 1, "rgba(255,255,255,0.9)");                                                         // gold finial (the banner pole stands on it)
 }
 
 export function drawSign(c, x, y, face = { dc: 1, dr: 0 }) {

@@ -340,3 +340,8 @@ canvas { display: block; }
   z-index: 5; pointer-events: none; white-space: nowrap;
 }
 #rotate .ico { width: 16px; height: 16px; }
+@media (max-width: 1040px), (max-height: 540px) {               /* phones: a smaller logo in the corner */
+  .hud-logo { bottom: 10px; left: 10px; gap: 8px; }
+  .hud-logo img { width: 40px; height: 40px; border-radius: 10px; }
+  .hud-logo .brand { font-size: 16px; padding-bottom: 5px; }
+}
