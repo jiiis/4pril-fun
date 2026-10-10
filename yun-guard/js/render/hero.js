@@ -2,9 +2,9 @@ import { ctx, rect, circle, ellipse, poly, line, shadow } from "./gfx.js";
 import { state } from "../state.js";
 import { xpToNext } from "../hero.js";
 
-const ACCENT = { april: "#90caf9", avril: "#f48fb1", ember: "#ffab91", willow: "#aed581", meilin: "#b2ebf2", adrien: "#ffe082" };
-const RING = { april: "rgba(144,202,249,0.25)", avril: "rgba(244,143,177,0.25)", ember: "rgba(255,171,145,0.25)", willow: "rgba(174,213,129,0.25)", meilin: "rgba(178,235,242,0.28)", adrien: "rgba(255,224,130,0.28)" };
-const BAR = { april: "#42a5f5", avril: "#f06292", ember: "#ff7043", willow: "#8bc34a", meilin: "#4dd0e1", adrien: "#ffca28" };
+const ACCENT = { april: "#9fa8da", avril: "#f48fb1", ember: "#ffab91", willow: "#aed581", meilin: "#b2ebf2", adrien: "#ffe082" };
+const RING = { april: "rgba(159,168,218,0.28)", avril: "rgba(244,143,177,0.25)", ember: "rgba(255,171,145,0.25)", willow: "rgba(174,213,129,0.25)", meilin: "rgba(178,235,242,0.28)", adrien: "rgba(255,224,130,0.28)" };
+const BAR = { april: "#5c6bc0", avril: "#f06292", ember: "#ff7043", willow: "#8bc34a", meilin: "#4dd0e1", adrien: "#ffca28" };
 
 // Draws whichever hero is in play. Shared: selection ring, movement animation, bars and badges.
 export function drawHero(h) {

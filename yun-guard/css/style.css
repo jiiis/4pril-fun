@@ -260,6 +260,7 @@ canvas { display: block; }
 #heroPick .ghost .ico { width: 18px; height: 18px; vertical-align: 0; }
 #heroPick .ghost kbd { margin-left: 8px; padding: 1px 6px; border-radius: 5px; font: 600 11px/1.4 ui-monospace, Menlo, monospace; color: rgba(255, 255, 255, 0.7); background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); }
 #heroPick .ghost:hover { color: var(--text); border-color: rgba(255, 255, 255, 0.4); background: rgba(255, 255, 255, 0.06); transform: translateY(-2px); filter: none; }
+#heroPick .card[data-hero="april"] { --tint: #7986cb; }   /* sapphire, like her cape */
 #heroPick .card[data-hero="avril"] { --tint: #f06292; }
 #heroPick .card[data-hero="ember"] { --tint: #ff7043; }
 #heroPick .card[data-hero="willow"] { --tint: #8bc34a; }
