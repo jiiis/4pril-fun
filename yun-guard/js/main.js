@@ -115,7 +115,7 @@ document.getElementById("next").addEventListener("click", startWave);
 
 // Restart: play this same map again from the start, with the same legend (R)
 // Start over: a freshly generated map and the legend choice again
-function restartLevel() { location.href = location.pathname; }
+function restartLevel() { if (location.search) location.href = location.pathname; else location.reload(); }   // same URL: some phones ignore a plain href assignment
 document.getElementById("restart-level").addEventListener("click", restartLevel);
 window.addEventListener("keydown", (ev) => { if (ev.code === "KeyR" && !ev.metaKey && !ev.ctrlKey && heroPick.style.display === "none") restartLevel(); });
 
@@ -128,6 +128,14 @@ async function toggleFullscreen() {
   try { if (fsOn()) await document.exitFullscreen(); else await document.documentElement.requestFullscreen(); lockLandscape(); } catch (e) { /* not allowed here */ }
 }
 if (!document.documentElement.requestFullscreen) fsBtn.style.display = "none";
+// Touch devices that support it (iPad, Android) go full screen on the first tap, so no button is needed.
+// Browsers only allow this from a real user gesture, which is why it can't happen on load.
+const touchDevice = window.matchMedia("(pointer: coarse)").matches || navigator.maxTouchPoints > 1;
+if (touchDevice && document.documentElement.requestFullscreen) {
+  fsBtn.style.display = "none";
+  const enter = () => { if (!fsOn()) toggleFullscreen(); window.removeEventListener("touchend", enter); window.removeEventListener("pointerup", enter); };
+  window.addEventListener("touchend", enter); window.addEventListener("pointerup", enter);
+}
 fsBtn.addEventListener("click", toggleFullscreen);
 document.addEventListener("fullscreenchange", () => { fsBtn.innerHTML = icon(fsOn() ? "shrink" : "expand"); fsBtn.title = fsOn() ? "Exit full screen (F)" : "Full screen (F)"; });
 window.addEventListener("keydown", (ev) => { if (ev.code === "KeyF" && !ev.metaKey && !ev.ctrlKey) toggleFullscreen(); });

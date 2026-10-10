@@ -55,6 +55,12 @@ export function initTouch() {
     panBy(-ev.deltaX * k, -ev.deltaY * k);
   }, { passive: false });
 
+  // Safari on a Mac reports trackpad pinches as gesture events rather than ctrl+wheel
+  let gestureK = 1;
+  window.addEventListener("gesturestart", (ev) => { ev.preventDefault(); gestureK = view.k; });
+  window.addEventListener("gesturechange", (ev) => { ev.preventDefault(); zoomTo(gestureK * ev.scale, ev.clientX, ev.clientY); });
+  window.addEventListener("gestureend", (ev) => ev.preventDefault());
+
   // Mouse dragging on the board (buttons and menus are left alone)
   let mouse = null, mouseDragged = false;
   window.addEventListener("mousedown", (ev) => {
