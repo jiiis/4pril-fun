@@ -603,18 +603,18 @@ function drawPaifang(c, g) {
   };
   for (const p of [a, b]) {
     castShadow(c, p.x, p.y + 4, 8, 28);
-    rect(c, p.x - 7, p.y - 2, 14, 7, "#8d8d8d", "#4e4e4e", 1);           // stone base
+    rect(c, p.x - 7, p.y - 2, 14, 7, "#8d8d8d", "rgba(78,78,78,0.5)", 0.7);   // stone base
     const grad = c.createLinearGradient(p.x - 5, 0, p.x + 5, 0);
     grad.addColorStop(0, "#c4544a"); grad.addColorStop(0.5, "#a8382f"); grad.addColorStop(1, "#7a2420");
-    rect(c, p.x - 5, p.y - 40, 10, 38, grad, "#5a1a16", 1);              // red lacquered post
-    rect(c, p.x - 6, p.y - 44, 12, 5, "#c9a227", "#8a6a00", 0.8);          // gold cap
+    rect(c, p.x - 5, p.y - 40, 10, 38, grad, "rgba(90,26,22,0.55)", 0.7);   // red lacquered post
+    rect(c, p.x - 6, p.y - 44, 12, 5, "#c9a227", "rgba(138,106,0,0.5)", 0.6);   // gold cap
     if (!across) roof(p.x, p.y - 48, 9);                                  // a little roof on each post
   }
   if (across) {
     const lx = Math.min(a.x, b.x), rx = Math.max(a.x, b.x), cy = a.y;
-    rect(c, lx - 4, cy - 50, rx - lx + 8, 7, "#a8382f", "#5a1a16", 1);     // crossbeam
+    rect(c, lx - 4, cy - 50, rx - lx + 8, 7, "#a8382f", "rgba(90,26,22,0.55)", 0.7);   // crossbeam
     for (let x = lx + 2; x < rx - 2; x += 8) rect(c, x, cy - 49, 3, 5, "#ffd54f");   // gold studs
-    rect(c, (lx + rx) / 2 - 13, cy - 52, 26, 10, "#1a237e", "#0d1545", 1);   // name board
+    rect(c, (lx + rx) / 2 - 13, cy - 52, 26, 10, "#1a237e", "rgba(13,21,69,0.6)", 0.7);   // name board
     line(c, (lx + rx) / 2 - 9, cy - 47, (lx + rx) / 2 + 9, cy - 47, "#ffd54f", 1.4);
     roof((lx + rx) / 2, cy - 56, (rx - lx) / 2 + 6);
   }
@@ -736,7 +736,7 @@ function drawPagoda(c, x, y) {
     for (let i = -hw + 4; i <= hw - 4; i += 6) rect(c, x + i - 0.8, ty - 12, 1.6, 6, "#d9d4ca");         // balustrade posts
     line(c, x - hw + 3, ty - 12, x + hw - 3, ty - 12, "#c9c3b6", 1.4);                                  // rail
   }
-  rect(c, x - 6, y - 2, 12, 12, "#d9d4ca", "#b8b2a6", 0.8); for (let s = 0; s < 4; s++) line(c, x - 6, y + s * 3, x + 6, y + s * 3, "#b8b2a6", 0.8);
+  rect(c, x - 6, y - 2, 12, 12, "#d9d4ca", "rgba(184,178,166,0.6)", 0.6); for (let s = 0; s < 4; s++) line(c, x - 6, y + s * 3, x + 6, y + s * 3, "rgba(184,178,166,0.7)", 0.7);
   // A conical roof: flaring eaves at the base, straight-ish sides rising to a ring at the top
   const cone = (base, hw, top, topHw) => {
     const g = c.createLinearGradient(x - hw, 0, x + hw, 0);
@@ -747,7 +747,7 @@ function drawPagoda(c, x, y) {
     c.quadraticCurveTo(x + hw * 0.55, base - (base - top) * 0.55, x + topHw, top);
     c.lineTo(x - topHw, top);
     c.quadraticCurveTo(x - hw * 0.55, base - (base - top) * 0.55, x - hw - 5, base - 2);
-    c.closePath(); c.fill(); c.strokeStyle = blueDark; c.lineWidth = 1; c.stroke();
+    c.closePath(); c.fill(); c.strokeStyle = "rgba(28,52,112,0.55)"; c.lineWidth = 0.7; c.stroke();
     for (let k = -3; k <= 3; k++) { const t = k / 3.6; line(c, x + t * topHw, top + 1, x + t * hw * 0.92, base + 1, "rgba(28,52,112,0.45)", 1); }   // tile seams fanning down
     line(c, x - hw - 3, base + 1, x + hw + 3, base + 1, goldDark, 1.2);                                  // gold eave
     ellipse(c, x, top, topHw, 1.6, goldDark);                                                             // gold ring at the top
@@ -756,7 +756,7 @@ function drawPagoda(c, x, y) {
   rect(c, x - 38, y - 34, 76, 20, red, redEdge, 0.8);
   ellipse(c, x, y - 14, 38, 5, redDeep, redEdge, 0.8);
   line(c, x - 38, y - 31, x + 38, y - 31, goldDark, 1.4);
-  for (const dx of [-27, -9, 9, 27]) { rect(c, x + dx - 4, y - 29, 8, 13, "#5a1a16", gold, 0.9); line(c, x + dx, y - 29, x + dx, y - 16, gold, 0.7); line(c, x + dx - 4, y - 23, x + dx + 4, y - 23, gold, 0.7); }
+  for (const dx of [-27, -9, 9, 27]) { rect(c, x + dx - 4, y - 29, 8, 13, "#5a1a16", "rgba(233,197,90,0.7)", 0.7); line(c, x + dx, y - 29, x + dx, y - 16, gold, 0.7); line(c, x + dx - 4, y - 23, x + dx + 4, y - 23, gold, 0.7); }
   cone(y - 36, 50, y - 50, 32);
   // Middle drum and roof
   rect(c, x - 28, y - 60, 56, 10, red, redEdge, 0.8); line(c, x - 28, y - 57, x + 28, y - 57, goldDark, 1.2);
