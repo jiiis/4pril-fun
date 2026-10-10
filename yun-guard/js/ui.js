@@ -212,8 +212,6 @@ export function zoomTo(k, sx, sy) {
 }
 export const canPan = () => W * view.k > pageW() + 1 || H * view.k > pageH() - hudH() + 1;
 export function panBy(dx, dy) { view.panX += dx; view.panY += dy; applyView(); }
-// Bring a board point to the middle of the screen (as far as the board's edges allow)
-export function centerOn(x, y) { view.panX = -(x - W / 2) * view.k; view.panY = -(y - H / 2) * view.k; applyView(); }
 function applyView() {
   const maxX = Math.max(0, (W * view.k - pageW()) / 2), maxY = Math.max(0, (H * view.k - (pageH() - hudH())) / 2);   // never pan past the board's edge
   view.panX = clamp(view.panX, -maxX, maxX); view.panY = clamp(view.panY, -maxY, maxY);
