@@ -94,12 +94,20 @@ export function openMenu(spotIndex) {
   const menu = $("menu");
   menu.innerHTML = html;
   menu.style.display = "block";
-  const mw = menu.offsetWidth, mh = menu.offsetHeight;
-  // Prefer below the spot; flip above if that runs off the board; always stay inside it
-  let top = s.y + 30;
-  if (top + mh > H - 4) top = s.y - mh - 34;
-  menu.style.left = `${clamp(s.x - mw / 2, 4, W - mw - 4)}px`;
-  menu.style.top = `${clamp(top, 4, H - mh - 4)}px`;
+  placeMenu();
+}
+// The menu floats over the page in screen pixels (so it never scales with the board), next to its spot
+export function placeMenu() {
+  const menu = $("menu");
+  if (state.selected === null || menu.style.display === "none") return;
+  const s = map.spots[state.selected], r = $("c").getBoundingClientRect(), k = r.width / W;
+  const sx = r.left + s.x * k, sy = r.top + s.y * k, mw = menu.offsetWidth, mh = menu.offsetHeight;
+  const vw = window.innerWidth, vh = window.innerHeight;
+  // Prefer below the spot; flip above if that runs off the screen; always stay on screen
+  let top = sy + 30 * k;
+  if (top + mh > vh - 6) top = sy - mh - 34 * k;
+  menu.style.left = `${clamp(sx - mw / 2, 6, vw - mw - 6)}px`;
+  menu.style.top = `${clamp(top, 6, vh - mh - 6)}px`;
 }
 
 export function closeMenu() {
@@ -175,6 +183,7 @@ function applyView() {
   const maxX = Math.max(0, (W * view.k - window.innerWidth) / 2), maxY = Math.max(0, (H * view.k - (window.innerHeight - hudH())) / 2);   // never pan past the board's edge
   view.panX = clamp(view.panX, -maxX, maxX); view.panY = clamp(view.panY, -maxY, maxY);
   $("wrap").style.transform = `translate(calc(-50% + ${view.panX}px), calc(-50% + ${view.panY}px)) scale(${view.k})`;
+  placeMenu();                                                  // the open menu follows its spot as the view moves
 }
 
 export function initUi() {
