@@ -13,13 +13,15 @@
 html, body {
   margin: 0;
   height: 100%;
+  height: 100dvh;                /* phones: fill the dynamic viewport, even as the browser's bars slide in and out */
   overflow: hidden;
   touch-action: none;            /* phones: no pinch zoom or scroll; the game pans itself (see touch.js) */
   overscroll-behavior: none;
-  background: radial-gradient(circle at 50% 30%, #1d2230, var(--bg) 70%);
+  background: radial-gradient(circle at 50% 30%, #1d2230, var(--bg) 70%) var(--bg);   /* with a solid fallback colour: anything the browser leaves uncovered (iOS toolbars, safe areas) stays dark */
   font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   color: var(--text);
 }
+body { position: fixed; inset: 0; }   /* pinned to the viewport so iOS can't scroll a blank strip into view */
 
 /* The board is 1440×840 and always shown at its natural size; it is centred below the HUD and
    panned around by dragging (see ui.js and touch.js). */

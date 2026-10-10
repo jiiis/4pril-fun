@@ -349,17 +349,21 @@ export function draw() {
   for (const h of state.heroes) actors.push({ y: h.hp > 0 ? h.y : h.spawn.y, draw: scaled(h.hp > 0 ? h.x : h.spawn.x, h.hp > 0 ? h.y : h.spawn.y, () => drawHero(h)) });
   if (state.dog && state.dog.hp > 0) actors.push({ y: state.dog.y, draw: scaled(state.dog.x, state.dog.y, drawDog) });
   actors.sort((a, b) => a.y - b.y).forEach((a) => a.draw());
-  // Cherry blossom: petals loosen from every cherry tree, flutter down and settle on the grass
+  // Falling blossom and leaves: cherry trees shed petals, autumn trees shed leaves. Both loosen from the
+  // canopy, flutter down on the breeze with a tumbling spin and fade as they reach the grass.
+  const AUTUMN = ["#e65100", "#f9a825", "#bf360c", "#ffb300", "#d84315"];
   for (const d of map.deco) {
-    if (d.type !== "tree" || d.variant !== 3) continue;
-    const s = d.s, topY = d.y - 22 * s, h0 = (d.seed % 1000) / 1000, tone = cherryToneOf(d.seed);
-    for (let i = 0; i < 5; i++) {
-      const p = ((state.time * 0.22 + i * 0.2 + h0) % 1);                   // 0 at the canopy, 1 on the ground
+    if (d.type !== "tree" || (d.variant !== 3 && d.variant !== 4)) continue;
+    const autumn = d.variant === 4, s = d.s, topY = d.y - 22 * s, h0 = (d.seed % 1000) / 1000, tone = autumn ? null : cherryToneOf(d.seed);
+    const n = autumn ? 4 : 5, speed = autumn ? 0.16 : 0.22;                   // leaves are heavier and fewer
+    for (let i = 0; i < n; i++) {
+      const p = ((state.time * speed + i * 0.23 + h0) % 1);                   // 0 at the canopy, 1 on the ground
       const px = d.x + Math.sin(h0 * 6.3 + i * 2.1) * 12 * s + Math.sin(state.time * 1.6 + i) * 4 + p * 14;   // drifting on the breeze
-      const py = topY + p * (d.y + 2 - topY), rot = state.time * 3 + i;
+      const py = topY + p * (d.y + 2 - topY), rot = state.time * (autumn ? 2.2 : 3) + i;
       ctx.save(); ctx.globalAlpha = Math.min(1, Math.sin(Math.min(1, p / 0.9) * Math.PI) * 1.4) * 0.9;
       ctx.translate(px, py); ctx.rotate(rot); ctx.scale(1, 0.55 + 0.45 * Math.abs(Math.cos(rot * 0.7)));
-      ellipse(ctx, 0, 0, 1.9, 1.2, `hsl(${tone.hue},${tone.sat}%,${Math.min(97, tone.lit + (i % 2 ? 6 : -4))}%)`);
+      if (autumn) ellipse(ctx, 0, 0, 2.3, 1.3, AUTUMN[(d.seed + i) % AUTUMN.length]);
+      else ellipse(ctx, 0, 0, 1.9, 1.2, `hsl(${tone.hue},${tone.sat}%,${Math.min(97, tone.lit + (i % 2 ? 6 : -4))}%)`);
       ctx.restore();
     }
   }
