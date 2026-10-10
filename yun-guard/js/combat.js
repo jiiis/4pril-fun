@@ -73,7 +73,7 @@ export function addBlood(x, y, size) {
     const a = Math.random() * Math.PI * 2, d = size * 0.15 + Math.random() * size * 0.5;
     drops.push({ x: Math.cos(a) * d, y: Math.sin(a) * d * 0.6, r: 1.5 + Math.random() * (1.5 + size * 0.06) });
   }
-  state.blood.push({ x, y, drops, life: 10, maxLife: 10 });
+  state.blood.push({ x, y, drops, life: 5, maxLife: 5 });   // gone before the bones are (CORPSE_TIME)
 }
 
 export function addScorch(x, y, r) {
