@@ -171,7 +171,7 @@ export function update(dt) {
     if (e.def.raise) {                                       // necromancers raise skeletons from fallen monsters nearby
       e.raiseCd = (e.raiseCd ?? e.def.raise.every) - dt;
       if (e.raiseCd <= 0) {
-        const c = state.corpses.find((c) => dist(c, e) <= e.def.raise.range);
+        const c = state.corpses.find((c) => !c.critter && dist(c, e) <= e.def.raise.range);   // only monsters rise again
         if (c) {
           state.corpses.splice(state.corpses.indexOf(c), 1);
           spawnEnemyAt("skeleton", e, 0.7, c);

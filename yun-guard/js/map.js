@@ -273,7 +273,7 @@ const inPond = (p, pond, extra) => Math.hypot((p.x - pond.x), (p.y - pond.y) * (
 const nearWater = (p, extra) => nearRiver(p, extra) || map.ponds.some((q) => inPond(p, q, extra));
 
 // ---------- Ponds ----------
-// Up to three small ponds on open grass, well away from roads, rivers, castles and signposts.
+// Up to four small ponds on open grass, well away from roads, rivers, castles and signposts.
 function makePonds(rand) {
   map.ponds = [];
   const want = rand() < 0.15 ? 0 : 1 + Math.floor(rand() * 4);

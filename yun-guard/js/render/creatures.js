@@ -70,7 +70,7 @@ export function drawCorpse(c) {
   const s = c.def.size / 26;
   ctx.save();
   ctx.translate(c.x, c.y);
-  if (age < 2) {
+  if (age < 2 && !c.critter) {                                   // animals go straight to bones
     // The body lies where it fell, turned a random way and in one of three poses
     ctx.globalAlpha = 0.9;
     ctx.rotate(c.angle);

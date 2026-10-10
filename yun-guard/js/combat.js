@@ -20,15 +20,7 @@ export function hurt(e, dmg, type, flash = true, source = null) {
     addBurst(e.x, e.y, e.def.size * 0.7, "rgba(255,255,255,0.7)");
     // Every corpse falls differently: random direction, pose, and a unique scatter of bones
     const r = Math.random;
-    if (!e.def.noCorpse) state.corpses.push({
-      x: e.x, y: e.y, type: e.type, def: e.def, dir: e.dir, phase: e.phase, life: CORPSE_TIME, maxLife: CORPSE_TIME,
-      angle: r() * Math.PI * 2,                    // which way the body is turned
-      pose: Math.floor(r() * 3),                   // 0 on its back, 1 face down, 2 curled on its side
-      bend: (r() - 0.5) * 0.9,                     // how crooked the spine is
-      ribs: 3 + Math.floor(r() * 3),
-      skullSide: r() < 0.5 ? -1 : 1,
-      bones: Array.from({ length: 1 + Math.floor(r() * 3) }, () => ({ x: (r() - 0.5) * 36, y: (r() - 0.5) * 26, a: r() * Math.PI, len: 6 + r() * 6 })),
-    });
+    if (!e.def.noCorpse) state.corpses.push(makeCorpse(e.x, e.y, e.type, e.def, e.dir, e.phase));
     // A few drops of blood on the ground, and sometimes a death cry (trolls always roar)
     addBlood(e.x, e.y, e.def.size);
     const cry = { goblin: "dieGoblin", wolf: "dieWolf", orc: "dieOrc", troll: "dieTroll", bat: "dieBat", skeleton: "dieSkeleton", shaman: "dieShaman", golem: "dieGolem",
@@ -36,6 +28,21 @@ export function hurt(e, dmg, type, flash = true, source = null) {
     if (e.type === "troll" || e.type === "golem" || e.type === "wyvern" || Math.random() < 0.5) sfx(cry, 0.15);
     sfx("coin", 0.12);
   }
+}
+
+// A fallen body: it lies where it fell for a while, then only the bones remain, then they fade
+export function makeCorpse(x, y, type, def, dir, phase, extra = {}) {
+  const r = Math.random;
+  return {
+    x, y, type, def, dir, phase, life: CORPSE_TIME, maxLife: CORPSE_TIME,
+    angle: r() * Math.PI * 2,                    // which way the body is turned
+    pose: Math.floor(r() * 3),                   // 0 on its back, 1 face down, 2 curled on its side
+    bend: (r() - 0.5) * 0.9,                     // how crooked the spine is
+    ribs: 3 + Math.floor(r() * 3),
+    skullSide: r() < 0.5 ? -1 : 1,
+    bones: Array.from({ length: 1 + Math.floor(r() * 3) }, () => ({ x: (r() - 0.5) * 36, y: (r() - 0.5) * 26, a: r() * Math.PI, len: 6 + r() * 6 })),
+    ...extra,
+  };
 }
 
 export function addFloater(x, y, text, color, size = 16) {

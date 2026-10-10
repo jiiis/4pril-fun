@@ -71,7 +71,7 @@ export function drawHero(h) {
     circle(ctx, h.x, h.y - 5, 22 + (1.2 - h.levelFlash) * 20, null, "#80deea", 3);
     ctx.globalAlpha = 1;
   }
-  const w = 30, x = h.x - w / 2, y = h.y - 30;
+  const w = 30, x = h.x - w / 2, y = h.y - 42;                                  // well above the head, clear of the face
   rect(ctx, x, y, w, 4, "#222");
   rect(ctx, x, y, w * (h.hp / h.maxHp), 4, BAR[h.kind] || "#42a5f5");
   rect(ctx, x, y + 5, w, 2, "#222");
@@ -579,8 +579,17 @@ function drawDragon(g) {
     poly(ctx, [[-1, -3], [side * 5, -7 - flap * 3], [side * 13, tipY], [side * 12, tipY + 5], [side * 7, 0], [0, 1]], "#c62828", OUT, 0.8);
     line(ctx, -1, -3, side * 13, tipY, OUT, 1); line(ctx, -1, -3, side * 12, tipY + 5, OUT, 0.8);
   }
-  line(ctx, -6, 2, -14 + Math.sin(T * 4) * 1.5, 6, "#d32f2f", 3);               // tail
-  poly(ctx, [[-14 + Math.sin(T * 4) * 1.5, 4], [-18 + Math.sin(T * 4) * 1.5, 6], [-14 + Math.sin(T * 4) * 1.5, 8]], "#ff8a65");   // tail fin
+  {                                                                             // tail: thick at the root, tapering to the tip
+    const w = Math.sin(T * 4) * 1.5, tipX = -14.5 + w, midX = -10.5 + w * 0.5;
+    poly(ctx, [[-5.5, -0.2], [midX, 2.6], [tipX, 5.6], [tipX, 6.4], [midX, 5.2], [-5.5, 3.8]], "#d32f2f");
+  }
+  {                                                                             // the tip of the tail burns like a candle
+    const tx = -16.1 + Math.sin(T * 4) * 1.5, ty = 5.4, fl = 1 + Math.sin(T * 13) * 0.18, lean = Math.sin(T * 7) * 0.8;
+    ctx.globalAlpha = 0.9;
+    poly(ctx, [[tx - 2.6, ty + 1], [tx - 3.2 + lean, ty - 3 * fl], [tx - 1.5 + lean * 1.6, ty - 7 * fl], [tx + 0.4 + lean, ty - 3 * fl], [tx + 1.4, ty + 1]], "#ff7043");
+    poly(ctx, [[tx - 1.4, ty + 0.5], [tx - 1.6 + lean, ty - 2 * fl], [tx - 0.9 + lean * 1.2, ty - 4.2 * fl], [tx + 0.2 + lean, ty - 2 * fl], [tx + 0.6, ty + 0.5]], "#ffeb3b");
+    ctx.globalAlpha = 1;
+  }
   ellipse(ctx, 0, 1, 7, 5, "#e53935", OUT, 0.8);                          // round body
   ellipse(ctx, 1, 2.5, 4, 3, "#ffe0b2");                                        // cream belly
   for (const lx of [-3, 3]) line(ctx, lx, 5, lx, 8, "#c62828", 2.2);            // stubby legs

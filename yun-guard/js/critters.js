@@ -1,7 +1,7 @@
 import { state } from "./state.js";
 import { map } from "./map.js";
 import { dist } from "./util.js";
-import { addFloater, addBurst, addBlood } from "./combat.js";
+import { addFloater, addBurst, addBlood, makeCorpse } from "./combat.js";
 import { sfx } from "./audio.js";
 
 // How each animal behaves: how fast it moves, how far it wanders from home,
@@ -35,7 +35,9 @@ export function slayCritter(c) {
   state.gold += 2;
   addFloater(c.x, c.y - 16, "+2", "#ffd54f");
   addBurst(c.x, c.y, 12, "rgba(255,255,255,0.8)");
-  addBlood(c.x, c.y, c.type === "deer" || c.type === "cow" ? 22 : c.type === "chicken" || c.type === "duck" ? 10 : 16);
+  const size = c.type === "deer" || c.type === "cow" ? 22 : c.type === "chicken" || c.type === "duck" ? 10 : 16;
+  addBlood(c.x, c.y, size);
+  state.corpses.push(makeCorpse(c.x, c.y, c.type, { size }, c.dir, c.phase, { critter: true }));   // its little skeleton stays a while
   sfx("die", 0.08); sfx("coin", 0.12);
 }
 
