@@ -5,7 +5,7 @@ import { dist } from "./util.js";
 import { map, generateMap } from "./map.js";
 import { update } from "./update.js";
 import { draw, SPOT_SQUASH, depthScale, invalidateBackground } from "./render/draw.js";
-import { initUi, openMenu, closeMenu, resetUiForLevel, centerOn } from "./ui.js";
+import { initUi, openMenu, closeMenu, resetUiForLevel } from "./ui.js";
 import { startWave, spawnEnemy } from "./waves.js";
 import { createTower, setRally, archerHeight, mageHeight, teslaHeight, visLevel } from "./towers.js";
 import { initCritters } from "./critters.js";
@@ -79,15 +79,13 @@ const legendBadge = document.getElementById("legendBadge");
 function showLegendBadge(kind) {
   if (!kind || !LEGEND_ICON[kind]) { legendBadge.classList.remove("on"); return; }
   legendBadge.innerHTML = icon(LEGEND_ICON[kind]); legendBadge.style.setProperty("--tint", LEGEND_TINT[kind]);
-  legendBadge.title = `Find ${HERO_KINDS[kind].name} (click to centre on her and select her)`;
+  legendBadge.title = `Find ${HERO_KINDS[kind].name} (click to select her)`;
   legendBadge.classList.add("on");
 }
-// Clicking the badge finds the legend: the view centres on her and she is selected, ready for an order
+// Clicking the badge selects the legend, ready for an order (the view stays put)
 legendBadge.addEventListener("click", () => {
   const h = state.hero;
   if (!h || heroPick.style.display !== "none") return;
-  const at = h.hp > 0 ? h : h.spawn;
-  centerOn(at.x, at.y);
   if (h.hp > 0 && !h.selected) selectHero(h);
   closeMenu();
   canvas.style.cursor = selectedHero() ? "crosshair" : "default";
