@@ -23,7 +23,7 @@ const RECOIL_TIME = 0.2;
 // where the monster is now, so the shot lands on a moving target.
 function predictPosition(e, T) {
   if (e.wasBlocked) return { x: e.x, y: e.y };
-  let remaining = e.def.speed * T, x = e.x, y = e.y, next = e.next;
+  let remaining = e.def.speed * (e.speedMul || 1) * T, x = e.x, y = e.y, next = e.next;
   while (remaining > 0 && next < e.path.length) {
     const p = e.path[next];
     const d = Math.hypot(p.x - x, p.y - y);
@@ -194,7 +194,7 @@ export function update(dt) {
     const target = e.path[e.next];
     const d = dist(e, target);
     const slowMul = (e.frost ? 1 - e.frost.slow : 1) * (e.poison ? 1 - e.poison.slow : 1) * (e.staticSlow > 0 ? 0.75 : 1);
-    const step = e.def.speed * slowMul * dt;
+    const step = e.def.speed * (e.speedMul || 1) * slowMul * dt;
     if (d <= step) {
       e.x = target.x; e.y = target.y; e.next++;
       if (e.next >= e.path.length) e.reached = true;
@@ -205,7 +205,7 @@ export function update(dt) {
       if (Math.abs(dx) > 0.5) e.dir = Math.sign(dx);
     }
     e.travelled += step;
-    e.phase += dt * e.def.speed * slowMul / 8;
+    e.phase += dt * e.def.speed * (e.speedMul || 1) * slowMul / 8;
   }
   for (const e of state.enemies) {
     if (e.reached) {

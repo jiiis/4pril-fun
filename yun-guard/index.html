@@ -6,7 +6,7 @@
   <title>4pril.fun</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800&family=Sora:wght@700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icon-180.png" />
@@ -32,12 +32,13 @@
         <div class="stat wave"><span class="icon" data-icon="swords"></span><b id="wave">0</b><span class="dim">/<span id="totalWaves">0</span></span></div>
       </div>
       <div class="hud-topright">
+        <div class="stat"><span class="icon" data-icon="flag"></span>Lv <span id="lvl">1</span></div>
         <div class="stat seed"><span class="icon" data-icon="map"></span><span class="dim">#<span id="seed">0</span></span></div>
       </div>
       <div class="hud-logo"><img src="icon-192.png" alt="Yun Guard" /><span class="brand">4pril<em>.fun</em></span></div>
       <div class="hud-right">
         <button id="mute" class="round" title="Sound on/off" data-icon="volume"></button>
-        <button id="restart-level" class="round" title="Restart this map (R)" data-icon="restart"></button>
+        <button id="restart-level" class="round" title="Restart this level (R)" data-icon="restart"></button>
         <button id="fullscreen" class="round" title="Full screen (F)" data-icon="expand"></button>
         <button id="pause" class="round" title="Pause (P)" data-icon="pause"></button>
         <button id="next" class="round big" title="Next wave"><span class="face" data-icon="play"></span><span class="badge" id="nextBadge"></span></button>
@@ -49,13 +50,21 @@
     <div id="overlay">
       <h1 id="overlayTitle"></h1>
       <p id="overlayText"></p>
-      <button id="restart">Play again</button>
+      <div class="actions">
+        <button id="restart">Play again</button>
+        <button id="changeLegend" class="ghost" style="display:none">Change legend</button>
+      </div>
     </div>
 
     <div id="rotate"><span data-icon="restart"></span>Turn your phone sideways for the best view</div>
 
     <div id="heroPick">
       <p class="eyebrow">Yun Guard</p>
+      <div class="levelPick">
+        <button id="lvPrev" title="Previous level" data-icon="chevronLeft"></button>
+        <label>Level <input id="lvInput" type="number" min="1" max="100" value="1" /></label>
+        <button id="lvNext" title="Next level" data-icon="chevronRight"></button>
+      </div>
       <h1>Choose your legend</h1>
       <div class="cards">
         <button class="card" data-hero="april">

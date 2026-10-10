@@ -4,6 +4,9 @@ import { START_GOLD, START_LIVES } from "./config.js";
 export const state = {
   gold: START_GOLD,
   lives: START_LIVES,
+  level: 1,
+  totalWaves: 15,
+  diff: { hp: 1, speed: 1, count: 1, shift: 0, goldMul: 1 },   // the level's difficulty (see levels.js)
   wave: 0,
   time: 0,
   enemies: [],

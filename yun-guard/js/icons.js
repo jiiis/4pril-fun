@@ -19,6 +19,8 @@ const P = {
   shieldCheck:'<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/>',
   zap:       '<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',
   chevrons:  '<path d="M6 6l6 6-6 6"/><path d="M13 6l6 6-6 6"/>',
+  chevronLeft: '<path d="M15 5l-7 7 7 7"/>',
+  chevronRight: '<path d="M9 5l7 7-7 7"/>',
   skull:     '<path d="M12 3a8 8 0 0 0-8 8c0 3 2 5 4 6v3h8v-3c2-1 4-3 4-6a8 8 0 0 0-8-8z"/><circle cx="9" cy="11" r="1.3"/><circle cx="15" cy="11" r="1.3"/><path d="M10 20v-2M14 20v-2"/>',
   tornado:   '<path d="M3 5h18M5 9h14M7 13h10M9 17h6M11 21h2"/>',
   burst:     '<path d="M12 4v4M12 16v4M4 12h4M16 12h4M6.3 6.3l2.9 2.9M14.8 14.8l2.9 2.9M6.3 17.7l2.9-2.9M14.8 9.2l2.9-2.9"/>',

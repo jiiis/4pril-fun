@@ -13,9 +13,10 @@ export function hurt(e, dmg, type, flash = true, source = null) {
   if (flash) e.hitFlash = 0.12;
   if (e.hp <= 0) {
     e.dead = true;
-    state.gold += e.def.gold;
+    const reward = Math.round(e.def.gold * state.diff.goldMul);
+    state.gold += reward;
     if (source && source.xpPending !== undefined) source.xpPending += Math.round(e.def.gold * 2.5);
-    addFloater(e.x, e.y - e.def.size, `+${e.def.gold}`, "#ffd54f");
+    addFloater(e.x, e.y - e.def.size, `+${reward}`, "#ffd54f");
     addBurst(e.x, e.y, e.def.size * 0.7, "rgba(255,255,255,0.7)");
     // Every corpse falls differently: random direction, pose, and a unique scatter of bones
     const r = Math.random;

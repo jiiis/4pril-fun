@@ -1,0 +1,29 @@
+// Levels 1 to 100. Each level has its own fixed map and a difficulty that climbs steadily:
+// more waves, tougher and faster monsters, bigger crowds, and the nastier kinds showing up sooner.
+// The last level played is remembered on this device.
+export const MAX_LEVEL = 100;
+const KEY = "yunguard.level";
+
+export function savedLevel() {
+  try { const n = Math.floor(Number(localStorage.getItem(KEY))); return n >= 1 && n <= MAX_LEVEL ? n : 1; } catch (e) { return 1; }
+}
+export function saveLevel(n) { try { localStorage.setItem(KEY, String(n)); } catch (e) { /* private mode: fine */ } }
+export const clampLevel = (n) => Math.max(1, Math.min(MAX_LEVEL, Math.floor(Number(n) || 1)));
+
+// A level always plays on the same map
+export const levelSeed = (L) => ((L * 2654435761 + 97) % 999983) + 1;
+
+export function levelConfig(L) {
+  L = clampLevel(L);
+  return {
+    level: L,
+    waves: Math.min(30, 8 + Math.floor((L - 1) / 4)),      // 8 waves at level 1, 30 from level 89
+    hp: 0.85 + (L - 1) * 0.045,                              // monsters' base toughness, on top of the per-wave growth
+    speed: 1 + Math.min(0.3, (L - 1) * 0.003),               // a little quicker, up to 30% faster
+    count: Math.min(2, 0.7 + (L - 1) * 0.013),               // crowd size, from thin to double
+    shift: Math.floor((L - 1) / 6),                          // the tougher kinds arrive this many waves earlier
+    gold: 350 + L * 6,                                       // a bigger purse to meet a bigger threat
+    goldMul: 1 + (L - 1) * 0.01,                             // rewards keep up a little
+    lives: 20,
+  };
+}

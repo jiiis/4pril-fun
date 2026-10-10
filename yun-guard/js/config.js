@@ -202,19 +202,23 @@ export const ENEMIES = {
 };
 
 // What appears in each wave. n = wave number (1, 2, 3 ...).
-export function makeWave(n) {
-  const groups = [{ type: "goblin", count: 5 + Math.round(n * 2.5), gap: 0.8 }];
-  if (n >= 2) groups.push({ type: "wolf", count: n + 1, gap: 0.45 });
-  if (n >= 3) groups.push({ type: "bat", count: Math.floor(n / 2) + 2, gap: 0.55 });
-  if (n >= 4) groups.push({ type: "thief", count: Math.ceil(n / 4), gap: 0.9 });
-  if (n >= 4) groups.push({ type: "orc", count: Math.ceil(n * 0.7), gap: 1.3 });
-  if (n >= 5) groups.push({ type: "slime", count: Math.ceil(n / 2) + 1, gap: 1 });
-  if (n >= 6) groups.push({ type: "skeleton", count: Math.ceil(n * 0.6), gap: 1.1 });
-  if (n >= 6) groups.push({ type: "shaman", count: Math.ceil((n - 4) / 2), gap: 2 });
-  if (n >= 8 && n % 2 === 0) groups.push({ type: "golem", count: Math.ceil(n / 6), gap: 4 });
-  if (n >= 9 && n % 2 === 1) groups.push({ type: "necromancer", count: Math.ceil((n - 8) / 3), gap: 3 });
-  if (n >= 10 && n % 2 === 0) groups.push({ type: "wyvern", count: Math.ceil((n - 8) / 2), gap: 2.5 });
-  if (n % 5 === 0) groups.push({ type: "troll", count: Math.ceil(n / 4), gap: 3 });
+export function makeWave(n, d = { count: 1, shift: 0 }) {
+  // n is the wave number; on higher levels the nastier kinds are judged as if the wave were later (shift),
+  // and every group is scaled by the level's crowd size.
+  const m = n + d.shift, groups = [];
+  const add = (type, count, gap) => groups.push({ type, count: Math.max(1, Math.round(count * d.count)), gap });
+  add("goblin", 5 + n * 2.5, 0.8);
+  if (m >= 2) add("wolf", m + 1, 0.45);
+  if (m >= 3) add("bat", Math.floor(m / 2) + 2, 0.55);
+  if (m >= 4) add("thief", Math.ceil(m / 4), 0.9);
+  if (m >= 4) add("orc", Math.ceil(m * 0.7), 1.3);
+  if (m >= 5) add("slime", Math.ceil(m / 2) + 1, 1);
+  if (m >= 6) add("skeleton", Math.ceil(m * 0.6), 1.1);
+  if (m >= 6) add("shaman", Math.ceil((m - 4) / 2), 2);
+  if (m >= 8 && m % 2 === 0) add("golem", Math.ceil(m / 6), 4);
+  if (m >= 9 && m % 2 === 1) add("necromancer", Math.ceil((m - 8) / 3), 3);
+  if (m >= 10 && m % 2 === 0) add("wyvern", Math.ceil((m - 8) / 2), 2.5);
+  if (n % 5 === 0) add("troll", Math.ceil(m / 4), 3);
   return groups;
 }
 

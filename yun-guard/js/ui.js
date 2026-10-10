@@ -1,5 +1,6 @@
 import { state } from "./state.js";
-import { TOWERS, TOTAL_WAVES, W, H } from "./config.js";
+import { TOWERS, W, H } from "./config.js";
+import { MAX_LEVEL, saveLevel } from "./levels.js";
 import { map } from "./map.js";
 import { towerRange, towerDamage, upgradeCost, sellValue, canUpgrade, canSpecialise, abilityCost, abilityDef, soldierCount, soldierHp, soldierDamage, createTower } from "./towers.js";
 import { ABILITIES } from "./config.js";
@@ -40,14 +41,32 @@ export function endGame(won) {
   $("paused").style.display = "none";
   $("pause").disabled = true;
   setWaveButton("over");
-  $("overlayTitle").textContent = won ? "Victory!" : "Game Over";
-  $("overlayText").textContent = (won
-    ? `You defended the kingdom through all ${TOTAL_WAVES} waves!`
-    : `The monsters broke through on wave ${state.wave}. Try a different tower mix!`)
-    + ` (Map #${map.seed})`;
+  const L = state.level, last = L >= MAX_LEVEL;
+  $("overlayTitle").textContent = won ? (last ? "Kingdom saved!" : `Level ${L} complete!`) : "Game Over";
+  $("overlayText").textContent = won
+    ? (last ? `You held every one of the ${MAX_LEVEL} levels. Legendary!` : `All ${state.totalWaves} waves beaten. Level ${L + 1} awaits.`)
+    : `The monsters broke through on wave ${state.wave} of level ${L}. Try a different tower mix!`;
   $("overlay").style.display = "flex";
   sfx(won ? "victory" : "gameOver");
+  // Won: the next level is unlocked and starts by itself in a few seconds (or at a click). Lost: try this level again.
+  const btn = $("restart"), alt = $("changeLegend");
+  if (won && !last) {
+    saveLevel(L + 1);
+    const hero = state.hero ? state.hero.kind : "none";
+    let left = 8;
+    const go = () => { location.href = `${location.pathname}?level=${L + 1}&hero=${hero}`; };      // straight in, same legend
+    const tick = () => { btn.textContent = `Next level  ·  ${left}s`; if (left-- <= 0) go(); else endTimer = setTimeout(tick, 1000); };
+    tick();
+    btn.onclick = go;
+    alt.style.display = "";
+    alt.onclick = () => { clearTimeout(endTimer); location.href = `${location.pathname}?level=${L + 1}`; };   // pick a legend first
+  } else {
+    alt.style.display = "none";
+    btn.textContent = won ? "Play again from level 1" : "Try again";
+    btn.onclick = () => { location.href = won ? `${location.pathname}?level=1` : location.pathname; };
+  }
 }
+let endTimer = null;
 
 // ---------- Build / upgrade menu ----------
 export function openMenu(spotIndex) {
@@ -196,7 +215,8 @@ function applyView() {
 }
 
 export function initUi() {
-  $("totalWaves").textContent = TOTAL_WAVES;
+  $("totalWaves").textContent = state.totalWaves;
+  $("lvl").textContent = state.level;
   applyIcons();
   setWaveButton("start");
   $("menu").addEventListener("click", handleMenuClick);
@@ -207,7 +227,6 @@ export function initUi() {
     const tile = ev.target.closest(".tile"), hint = $("menu").querySelector(".hint");
     if (tile && hint) hint.textContent = tile.dataset.desc;
   });
-  $("restart").addEventListener("click", () => { location.href = location.pathname; });   // fresh random map
   $("seed").textContent = map.seed;
   window.addEventListener("resize", fitToWindow);
   fitToWindow();

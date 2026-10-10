@@ -14,10 +14,17 @@ import { initTouch } from "./touch.js";
 import { icon } from "./icons.js";
 import { unlockAudio, toggleMute, isMuted, sfx } from "./audio.js";
 import { initWeather } from "./weather.js";
+import { MAX_LEVEL, clampLevel, savedLevel, saveLevel, levelConfig, levelSeed } from "./levels.js";
 
-// A new random world every time. Add ?seed=1234 to the URL to replay a map you liked.
-const seedParam = Number(new URLSearchParams(location.search).get("seed"));
-generateMap(seedParam > 0 ? seedParam : Math.floor(Math.random() * 1e6));
+// Which level? ?level=N in the URL, else the last one played on this device. Each level has its own map
+// (add ?seed=1234 to force a particular map instead).
+const params = new URLSearchParams(location.search);
+const level = clampLevel(params.get("level") || savedLevel());
+saveLevel(level);
+const diff = levelConfig(level);
+state.level = level; state.diff = diff; state.totalWaves = diff.waves; state.gold = diff.gold; state.lives = diff.lives;
+const seedParam = Number(params.get("seed"));
+generateMap(seedParam > 0 ? seedParam : levelSeed(level));
 
 initUi();
 initTouch();
@@ -43,6 +50,15 @@ function startSolo() {
   sfx("select");
 }
 document.getElementById("noLegend").addEventListener("click", startSolo);
+// Level picker on the legend screen: arrows or type a number, and the chosen level loads
+const lvInput = document.getElementById("lvInput");
+lvInput.value = level; lvInput.max = MAX_LEVEL;
+const goLevel = (n) => { n = clampLevel(n); if (n !== level) location.href = `${location.pathname}?level=${n}`; else lvInput.value = n; };
+document.getElementById("lvPrev").addEventListener("click", () => goLevel(level - 1));
+document.getElementById("lvNext").addEventListener("click", () => goLevel(level + 1));
+lvInput.addEventListener("change", () => goLevel(lvInput.value));
+lvInput.addEventListener("keydown", (ev) => { ev.stopPropagation(); if (ev.key === "Enter") goLevel(lvInput.value); });
+document.getElementById("lvPrev").disabled = level <= 1; document.getElementById("lvNext").disabled = level >= MAX_LEVEL;
 window.addEventListener("keydown", (ev) => {
   const n = ["Digit1", "Digit2", "Digit3", "Digit4", "Digit5"].indexOf(ev.code);
   if (n >= 0 && !ev.metaKey && !ev.ctrlKey && heroPick.style.display !== "none") chooseHero(["april", "avril", "ember", "willow", "meilin"][n]);
