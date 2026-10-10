@@ -331,3 +331,12 @@ canvas { display: block; }
   #heroPick .card small { display: none; }
 }
 @media (max-width: 600px) { .hud-logo .brand { display: none; } }   /* no room for the wordmark beside the buttons */
+#rotate {                                                      /* portrait phones: a soft nudge at the top */
+  position: fixed; top: 60px; left: 50%; transform: translateX(-50%);
+  display: none; align-items: center; gap: 8px;
+  padding: 8px 14px; border-radius: 999px;
+  background: rgba(22, 25, 33, 0.75); color: var(--text); font-size: 13px; font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.15); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  z-index: 5; pointer-events: none; white-space: nowrap;
+}
+#rotate .ico { width: 16px; height: 16px; }

@@ -114,12 +114,8 @@ window.addEventListener("keydown", (ev) => {
 document.getElementById("next").addEventListener("click", startWave);
 
 // Restart: play this same map again from the start, with the same legend (R)
-function restartLevel() {
-  const q = new URLSearchParams();
-  q.set("seed", map.seed);
-  q.set("hero", state.hero ? state.hero.kind : "none");
-  location.href = `${location.pathname}?${q}`;
-}
+// Start over: a freshly generated map and the legend choice again
+function restartLevel() { location.href = location.pathname; }
 document.getElementById("restart-level").addEventListener("click", restartLevel);
 window.addEventListener("keydown", (ev) => { if (ev.code === "KeyR" && !ev.metaKey && !ev.ctrlKey && heroPick.style.display === "none") restartLevel(); });
 
@@ -127,7 +123,9 @@ window.addEventListener("keydown", (ev) => { if (ev.code === "KeyR" && !ev.metaK
 const fsBtn = document.getElementById("fullscreen");
 const fsOn = () => !!document.fullscreenElement;
 async function toggleFullscreen() {
-  try { if (fsOn()) await document.exitFullscreen(); else await document.documentElement.requestFullscreen(); } catch (e) { /* not allowed here */ }
+  // On phones that allow it (Android), full screen also locks the view sideways
+  const lockLandscape = () => screen.orientation?.lock?.("landscape").catch(() => {});
+  try { if (fsOn()) await document.exitFullscreen(); else await document.documentElement.requestFullscreen(); lockLandscape(); } catch (e) { /* not allowed here */ }
 }
 if (!document.documentElement.requestFullscreen) fsBtn.style.display = "none";
 fsBtn.addEventListener("click", toggleFullscreen);
@@ -163,3 +161,12 @@ requestAnimationFrame(frame);
 
 // Handy for poking at the game from the browser console.
 window.game = { state, map, update, draw, spawnEnemy, startWave, createTower, sendHero };
+
+// Phones held upright: a gentle nudge to turn sideways, where the map fits far better
+const rotateHint = document.getElementById("rotate");
+function checkOrientation() {
+  const coarse = window.matchMedia("(pointer: coarse)").matches || navigator.maxTouchPoints > 1;
+  rotateHint.style.display = coarse && window.innerHeight > window.innerWidth ? "flex" : "none";
+}
+window.addEventListener("resize", checkOrientation);
+checkOrientation();
