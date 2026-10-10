@@ -201,7 +201,7 @@ canvas { display: block; }
   justify-content: safe center;                                 /* centred when it fits, scrollable from the top when it doesn't */
 }
 #heroPick .eyebrow { margin: 0 0 8px; font-size: 12px; letter-spacing: 6px; text-transform: uppercase; color: var(--accent); opacity: 0.9; }
-#heroPick h1 { font-family: Sora, Outfit, "Avenir Next", "Segoe UI Variable", "Helvetica Neue", sans-serif; font-size: 48px; margin: 0 0 40px; letter-spacing: -1px; font-weight: 800; background: linear-gradient(180deg, #ffffff, #c9ccd6); -webkit-background-clip: text; background-clip: text; color: transparent; }
+#heroPick h1 { font-family: Cinzel, Outfit, "Avenir Next", Georgia, serif; font-size: 44px; margin: 0 0 40px; letter-spacing: 2px; font-weight: 500; background: linear-gradient(180deg, #ffffff, #c9ccd6); -webkit-background-clip: text; background-clip: text; color: transparent; }
 #heroPick .cards { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; max-width: 100%; }
 #heroPick .card {
   --tint: var(--accent);
