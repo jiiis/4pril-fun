@@ -518,8 +518,13 @@ function lairTreePos(e) {
   const side = (e.x - e.rx) * px + (e.y - e.ry) * py > 0 ? -1 : 1;
   return { x: e.rx + px * side * (GATE_SPAN + 16) + ax * 6, y: e.ry + py * side * (GATE_SPAN + 16) + ay * 6 };
 }
-export function drawLairStructure(c, e) {
-  for (const s of lairStakes(e)) {                                              // skull stakes
+export function lairParts(e) {                                                  // each piece sorts by its own feet
+  const [a, b] = lairStakes(e), t = lairTreePos(e);
+  return [{ y: a.y + 2, draw: (c) => drawLairStake(c, a) }, { y: b.y + 2, draw: (c) => drawLairStake(c, b) }, { y: t.y + 2, draw: (c) => drawLairTree(c, t) }];
+}
+export function drawLairStructure(c, e) { for (const p of lairParts(e)) p.draw(c); }
+function drawLairStake(c, s) {
+  {                                                                             // skull stake
     castShadow(c, s.x, s.y + 2, 5, 22);
     line(c, s.x, s.y + 4, s.x, s.y - 30, "#4e342e", 4); line(c, s.x - 1, s.y + 4, s.x - 1, s.y - 30, "#6d4c41", 1.5);
     for (let k = 0; k < 3; k++) line(c, s.x - 5, s.y - 8 - k * 7, s.x + 5, s.y - 10 - k * 7, "#8d6e63", 1.2);   // rope wraps
@@ -527,8 +532,9 @@ export function drawLairStructure(c, e) {
     circle(c, s.x - 2.2, s.y - 36, 1.6, "#1b1b1b"); circle(c, s.x + 2.2, s.y - 36, 1.6, "#1b1b1b");
     line(c, s.x - 2.5, s.y - 31, s.x + 2.5, s.y - 31, "#9e9e9e", 1); for (let k = -1; k <= 1; k++) line(c, s.x + k * 1.6, s.y - 32, s.x + k * 1.6, s.y - 30, "#9e9e9e", 1);
   }
-  // A dead tree leaning over the road, on the signpost's far side
-  const { x: tx, y: ty } = lairTreePos(e);
+}
+// A dead tree leaning over the road, on the signpost's far side
+function drawLairTree(c, { x: tx, y: ty }) {
   castShadow(c, tx, ty, 8, 26);
   line(c, tx, ty, tx + 3, ty - 34, "#3e2723", 6);
   line(c, tx + 1, ty - 18, tx - 14, ty - 32, "#3e2723", 3.5); line(c, tx + 2, ty - 26, tx + 16, ty - 40, "#3e2723", 3);

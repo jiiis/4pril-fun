@@ -137,7 +137,7 @@ function makeRivers(rand) {
   map.rivers = [];
   map.bridges = [];
   const roll = rand();
-  const count = roll < 0.1 ? 0 : roll < 0.45 ? 1 : roll < 0.8 ? 2 : 3;      // a big world usually has a river or two
+  const count = roll < 0.1 ? 0 : roll < 0.5 ? 1 : 2;                         // a big world usually has a river or two, never more
   for (let n = 0; n < count; n++) {
     let river = null;
     for (let attempt = 0; attempt < 240 && !river; attempt++) {

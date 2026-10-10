@@ -3,7 +3,7 @@ import { state } from "../state.js";
 import { map } from "../map.js";
 import { SPOT_RADIUS, H } from "../config.js";
 import { towerRange, abilityDef } from "../towers.js";
-import { buildBackground, drawSign, CASTLE_STYLES, gatePillars, lairStakes, drawDecoItem, drawCastleAt, drawGateStructure, gateAnchorY, drawLairStructure, lairAnchorY } from "./background.js";
+import { buildBackground, drawSign, CASTLE_STYLES, gatePillars, lairStakes, drawDecoItem, drawCastleAt, drawGateStructure, gateAnchorY, drawLairStructure, lairAnchorY, lairParts } from "./background.js";
 import { drawTower, flag } from "./towers.js";
 import { drawEnemy, drawCorpse } from "./creatures.js";
 import { drawSoldier } from "./soldiers.js";
@@ -267,7 +267,7 @@ export function draw() {
   for (const d of map.deco) actors.push({ y: d.y, draw: scaled(d.x, d.y, () => drawDecoItem(ctx, d)) });   // trees, bushes, rocks, flowers...
   for (const k of map.castles) actors.push({ y: k.y + 8 * k.scale, draw: () => drawCastleAt(ctx, k) });
   for (const g of map.exits) actors.push({ y: gateAnchorY(g), draw: () => drawGateStructure(ctx, g) });
-  for (const e of map.entries) actors.push({ y: lairAnchorY(e), draw: () => drawLairStructure(ctx, e) });
+  for (const e of map.entries) for (const p of lairParts(e)) actors.push({ y: p.y, draw: () => p.draw(ctx) });   // stakes and dead tree sort separately
   for (const e of map.entries) actors.push({ y: e.y + 12, draw: scaled(e.x, e.y, () => { drawSign(ctx, e.x, e.y, e.face); flag(e.x, e.y - 40, 20, "#c62828", 2 + e.y); }) });
   for (const t of state.towers) actors.push({ y: t.y + 12, draw: scaled(t.x, t.y, () => {
     drawTower(t);

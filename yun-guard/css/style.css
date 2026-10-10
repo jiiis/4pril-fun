@@ -195,10 +195,14 @@ canvas { display: block; }
   -webkit-backdrop-filter: blur(6px) saturate(1.1);
   text-align: center;
   z-index: 3;
+  padding: 20px 16px;
+  box-sizing: border-box;
+  overflow: auto;
+  justify-content: safe center;                                 /* centred when it fits, scrollable from the top when it doesn't */
 }
 #heroPick .eyebrow { margin: 0 0 8px; font-size: 12px; letter-spacing: 6px; text-transform: uppercase; color: var(--accent); opacity: 0.9; }
 #heroPick h1 { font-family: Outfit, "Avenir Next", "Segoe UI Variable", "Helvetica Neue", sans-serif; font-size: 46px; margin: 0 0 40px; letter-spacing: 0.5px; font-weight: 700; background: linear-gradient(180deg, #ffffff, #c9ccd6); -webkit-background-clip: text; background-clip: text; color: transparent; }
-#heroPick .cards { display: flex; gap: 16px; }
+#heroPick .cards { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; max-width: 100%; }
 #heroPick .card {
   --tint: var(--accent);
   position: relative;
@@ -293,3 +297,37 @@ canvas { display: block; }
 #overlay h1 { font-size: 56px; margin: 0 0 8px; letter-spacing: 2px; }
 #overlay p { color: var(--muted); margin: 0 0 22px; font-size: 18px; }
 #overlay button { font-size: 20px; padding: 12px 28px; }
+
+/* Phones: the legend picker shrinks to fit. Short screens (landscape) drop the descriptions and tighten everything. */
+@media (max-width: 1040px) {
+  #heroPick h1 { font-size: 32px; margin-bottom: 20px; }
+  #heroPick .card { width: 150px; padding: 18px 12px 14px; gap: 6px; }
+  #heroPick .card .portrait { width: 56px; height: 56px; }
+  #heroPick .card .portrait .ico { width: 28px; height: 28px; }
+  #heroPick .card strong { font-size: 15px; }
+  #heroPick .card small { font-size: 11px; }
+  #heroPick .ghost { margin-top: 18px; }
+}
+@media (max-height: 540px) {
+  #heroPick { justify-content: safe center; padding-top: 14px; }
+  #heroPick .eyebrow { display: none; }
+  #heroPick h1 { font-size: 24px; margin-bottom: 12px; }
+  #heroPick .cards { gap: 10px; }
+  #heroPick .card { width: 132px; padding: 12px 10px 10px; gap: 4px; }
+  #heroPick .card .portrait { width: 44px; height: 44px; }
+  #heroPick .card .portrait .ico { width: 22px; height: 22px; }
+  #heroPick .card strong { font-size: 13px; margin-top: 2px; }
+  #heroPick .card em { font-size: 9px; letter-spacing: 1.5px; padding: 2px 8px; }
+  #heroPick .card small { display: none; }
+  #heroPick .card kbd { top: 6px; right: 6px; }
+  #heroPick .ghost { margin-top: 12px; padding: 7px 14px; font-size: 12px; }
+}
+@media (max-width: 600px) {                                   /* phones held upright: two columns, no descriptions, clear of the HUD */
+  #heroPick { padding-top: 64px; padding-bottom: 90px; }
+  #heroPick .eyebrow { display: none; }
+  #heroPick h1 { font-size: 28px; margin-bottom: 16px; }
+  #heroPick .cards { gap: 12px; }
+  #heroPick .card { width: 150px; padding: 14px 12px 12px; }
+  #heroPick .card small { display: none; }
+}
+@media (max-width: 600px) { .hud-logo .brand { display: none; } }   /* no room for the wordmark beside the buttons */
