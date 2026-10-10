@@ -13,6 +13,13 @@ export const clampLevel = (n) => Math.max(1, Math.min(MAX_LEVEL, Math.floor(Numb
 // A level always plays on the same map
 export const levelSeed = (L) => ((L * 2654435761 + 97) % 999983) + 1;
 
+// Load the page with this query (e.g. "?level=8"), dropping any #seed. Same URL: reload (some phones ignore a plain assignment).
+export function navigate(query = "") {
+  const url = location.pathname + query;
+  if (!location.hash && url === location.pathname + location.search) location.reload();
+  else location.href = url;
+}
+
 export function levelConfig(L) {
   L = clampLevel(L);
   return {

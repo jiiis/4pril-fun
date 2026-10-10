@@ -14,7 +14,7 @@ import { initTouch } from "./touch.js";
 import { icon } from "./icons.js";
 import { unlockAudio, toggleMute, isMuted, sfx } from "./audio.js";
 import { initWeather } from "./weather.js";
-import { MAX_LEVEL, clampLevel, savedLevel, saveLevel, levelConfig, levelSeed } from "./levels.js";
+import { MAX_LEVEL, clampLevel, savedLevel, saveLevel, levelConfig, levelSeed, navigate } from "./levels.js";
 
 // Which level? ?level=N in the URL, else the last one played on this device. Each level has its own map
 // (add ?seed=1234 to force a particular map instead).
@@ -25,6 +25,17 @@ const diff = levelConfig(level);
 state.level = level; state.diff = diff; state.totalWaves = diff.waves; state.gold = diff.gold; state.lives = diff.lives;
 const seedParam = Number(params.get("seed")) || Number(location.hash.replace(/^#/, ""));   // ?seed=123456 or #123456
 generateMap(seedParam > 0 ? seedParam : levelSeed(level));
+// The address bar always shows the level and map being played, so a browser refresh or bookmark brings back exactly this game
+{
+  const q = new URLSearchParams({ level, seed: map.seed });
+  if (params.get("hero")) q.set("hero", params.get("hero"));
+  history.replaceState(null, "", `${location.pathname}?${q}`);
+}
+// Editing the #seed in the address bar doesn't reload the page by itself; do it when it means a different map
+window.addEventListener("hashchange", () => {
+  const want = Number(location.hash.replace(/^#/, "")) || levelSeed(level);
+  if (want !== map.seed) location.reload();
+});
 
 initUi();
 initTouch();
@@ -53,7 +64,7 @@ document.getElementById("noLegend").addEventListener("click", startSolo);
 // Level picker on the legend screen: arrows or type a number, and the chosen level loads
 const lvInput = document.getElementById("lvInput");
 lvInput.value = level; lvInput.max = MAX_LEVEL;
-const goLevel = (n) => { n = clampLevel(n); if (n !== level) location.href = `${location.pathname}?level=${n}`; else lvInput.value = n; };
+const goLevel = (n) => { n = clampLevel(n); if (n !== level) navigate(`?level=${n}`); else lvInput.value = n; };
 document.getElementById("lvPrev").addEventListener("click", () => goLevel(level - 1));
 document.getElementById("lvNext").addEventListener("click", () => goLevel(level + 1));
 lvInput.addEventListener("change", () => goLevel(lvInput.value));
@@ -129,7 +140,9 @@ canvas.addEventListener("mouseleave", () => { state.hover = null; state.hoverCri
 for (const evt of ["pointerdown", "keydown"]) window.addEventListener(evt, unlockAudio);
 const muteBtn = document.getElementById("mute");
 muteBtn.innerHTML = icon(isMuted() ? "volumeOff" : "volume");
-muteBtn.addEventListener("click", () => { muteBtn.innerHTML = icon(toggleMute() ? "volumeOff" : "volume"); });
+const flipMute = () => { muteBtn.innerHTML = icon(toggleMute() ? "volumeOff" : "volume"); };
+muteBtn.addEventListener("click", flipMute);
+window.addEventListener("keydown", (ev) => { if (ev.code === "KeyM" && !ev.metaKey && !ev.ctrlKey) flipMute(); });
 // Keyboard: 1 selects the hero (press again to deselect), Escape deselects everything
 window.addEventListener("keydown", (ev) => {
   const hero = state.heroes[0];
@@ -146,12 +159,24 @@ window.addEventListener("keydown", (ev) => {
 });
 
 document.getElementById("next").addEventListener("click", startWave);
+window.addEventListener("keydown", (ev) => { if (ev.code === "KeyN" && !ev.metaKey && !ev.ctrlKey && heroPick.style.display === "none" && !document.getElementById("next").disabled && !state.paused) startWave(); });   // N: next wave (on the legend screen N means no legend)
 
 // Restart: play this same map again from the start, with the same legend (R)
 // Start over: a freshly generated map and the legend choice again
-function restartLevel() { if (location.search) location.href = location.pathname; else location.reload(); }   // same URL: some phones ignore a plain href assignment
+// Restart: a small in-game dialog asks for the same map (default) or a freshly generated one
+const confirmBox = document.getElementById("confirm");
+function restartLevel() {
+  if (state.over) return;
+  document.getElementById("confirmLevel").textContent = level;
+  confirmBox.style.display = "flex";
+}
+const closeConfirm = () => { confirmBox.style.display = "none"; };
+document.getElementById("confirmSame").addEventListener("click", () => navigate(`?level=${level}&seed=${map.seed}`));
+document.getElementById("confirmNew").addEventListener("click", () => navigate(`?level=${level}&seed=${1 + Math.floor(Math.random() * 999999)}`));
+confirmBox.addEventListener("click", (ev) => { if (ev.target === confirmBox) closeConfirm(); });
+window.addEventListener("keydown", (ev) => { if (ev.key === "Escape" && confirmBox.style.display === "flex") closeConfirm(); });
 document.getElementById("restart-level").addEventListener("click", restartLevel);
-window.addEventListener("keydown", (ev) => { if (ev.code === "KeyR" && !ev.metaKey && !ev.ctrlKey && heroPick.style.display === "none") restartLevel(); });
+window.addEventListener("keydown", (ev) => { if (ev.code === "KeyR" && !ev.metaKey && !ev.ctrlKey) restartLevel(); });   // R: a fresh map, any time
 
 // Full screen: the round button, or F (hidden where the browser doesn't allow it, e.g. iPhone)
 const fsBtn = document.getElementById("fullscreen");

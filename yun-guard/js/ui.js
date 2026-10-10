@@ -1,6 +1,6 @@
 import { state } from "./state.js";
 import { TOWERS, W, H } from "./config.js";
-import { MAX_LEVEL, saveLevel } from "./levels.js";
+import { MAX_LEVEL, saveLevel, navigate } from "./levels.js";
 import { map } from "./map.js";
 import { towerRange, towerDamage, upgradeCost, sellValue, canUpgrade, canSpecialise, abilityCost, abilityDef, soldierCount, soldierHp, soldierDamage, createTower } from "./towers.js";
 import { ABILITIES } from "./config.js";
@@ -29,7 +29,7 @@ export function setWaveButton(mode, seconds) {
   const b = $("next"), face = b.querySelector(".face"), badge = $("nextBadge");
   b.classList.toggle("ready", mode === "ready" || mode === "start");
   b.disabled = mode === "busy" || mode === "over" || state.paused;
-  b.title = mode === "start" ? "Start the first wave" : mode === "ready" ? "Call the next wave now for bonus gold" : mode === "busy" ? "Wave in progress" : "Game over";
+  b.title = mode === "start" ? "Start the first wave (N)" : mode === "ready" ? "Call the next wave now for bonus gold (N)" : mode === "busy" ? "Wave in progress" : "Game over";
   face.innerHTML = icon(mode === "start" ? "swords" : mode === "ready" ? "forward" : mode === "busy" ? "hourglass" : "x");
   badge.classList.toggle("on", mode === "ready");
   if (mode === "ready") badge.textContent = Math.ceil(Math.max(seconds, 0));
@@ -54,16 +54,16 @@ export function endGame(won) {
     saveLevel(L + 1);
     const hero = state.hero ? state.hero.kind : "none";
     let left = 8;
-    const go = () => { location.href = `${location.pathname}?level=${L + 1}&hero=${hero}`; };      // straight in, same legend
+    const go = () => navigate(`?level=${L + 1}&hero=${hero}`);      // straight in, same legend
     const tick = () => { btn.textContent = `Next level  ·  ${left}s`; if (left-- <= 0) go(); else endTimer = setTimeout(tick, 1000); };
     tick();
     btn.onclick = go;
     alt.style.display = "";
-    alt.onclick = () => { clearTimeout(endTimer); location.href = `${location.pathname}?level=${L + 1}`; };   // pick a legend first
+    alt.onclick = () => { clearTimeout(endTimer); navigate(`?level=${L + 1}`); };   // pick a legend first
   } else {
     alt.style.display = "none";
     btn.textContent = won ? "Play again from level 1" : "Try again";
-    btn.onclick = () => { location.href = won ? `${location.pathname}?level=1` : location.pathname; };
+    btn.onclick = () => navigate(won ? "?level=1" : `?level=${L}`);
   }
 }
 let endTimer = null;
@@ -228,6 +228,12 @@ export function initUi() {
     if (tile && hint) hint.textContent = tile.dataset.desc;
   });
   $("seed").textContent = map.seed;
+  // Clicking the map number puts #seed in the address bar and copies the link, so the map can be shared
+  $("seedLink").href = `#${map.seed}`;
+  $("seedLink").addEventListener("click", () => {
+    const url = `${location.origin}${location.pathname}#${map.seed}`;
+    navigator.clipboard?.writeText(url).catch(() => {});
+  });
   window.addEventListener("resize", fitToWindow);
   fitToWindow();
   refreshHud();

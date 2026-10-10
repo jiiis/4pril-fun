@@ -33,19 +33,27 @@
         <div class="stat wave"><span class="icon" data-icon="swords"></span><b id="wave">0</b><span class="dim">/<span id="totalWaves">0</span></span></div>
       </div>
       <div class="hud-topright">
-        <div class="stat seed"><span class="icon" data-icon="map"></span><span class="dim">#<span id="seed">0</span></span></div>
+        <a class="stat seed" id="seedLink" href="#" title="Click to put this map in the address bar and copy the link"><span class="icon" data-icon="map"></span><span class="dim">#<span id="seed">0</span></span></a>
       </div>
       <div class="hud-logo"><img src="icon-192.png" alt="Yun Guard" /><span class="brand">4pril<em>.fun</em></span></div>
       <div class="hud-right">
-        <button id="mute" class="round" title="Sound on/off" data-icon="volume"></button>
-        <button id="restart-level" class="round" title="Restart this level (R)" data-icon="restart"></button>
+        <button id="mute" class="round" title="Sound on/off (M)" data-icon="volume"></button>
+        <button id="restart-level" class="round" title="New map, same level (R)" data-icon="restart"></button>
         <button id="fullscreen" class="round" title="Full screen (F)" data-icon="expand"></button>
         <button id="pause" class="round" title="Pause (P)" data-icon="pause"></button>
-        <button id="next" class="round big" title="Next wave"><span class="face" data-icon="play"></span><span class="badge" id="nextBadge"></span></button>
+        <button id="next" class="round big" title="Next wave (N)"><span class="face" data-icon="play"></span><span class="badge" id="nextBadge"></span></button>
       </div>
     </header>
 
     <div id="paused"><span data-icon="play" title="Resume"></span><small>paused · tap or press P to resume</small></div>
+
+    <div id="confirm">
+      <div class="actions">
+        <button id="confirmSame" class="choice"><span class="big" data-icon="restart"></span><small>same map</small></button>
+        <button id="confirmNew" class="choice alt"><span class="big" data-icon="map"></span><small>new map</small></button>
+      </div>
+      <small class="cap">restart level <span id="confirmLevel">1</span> · tap outside or press Esc to cancel</small>
+    </div>
 
     <div id="overlay">
       <h1 id="overlayTitle"></h1>
