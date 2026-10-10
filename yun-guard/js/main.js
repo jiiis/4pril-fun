@@ -180,7 +180,7 @@ canvas.addEventListener("click", (ev) => {
     sfx("order");
   } else {
     const i = spotAt(p);
-    if (i >= 0) { openMenu(i); sfx("click"); } else closeMenu();
+    if (i >= 0) { if (state.selected === i) closeMenu(); else { openMenu(i); sfx("click"); } } else closeMenu();   // clicking the open tower again closes its menu
   }
   canvas.style.cursor = selectedHero() || state.rallyFor ? "crosshair" : state.hover !== null ? "pointer" : "default";
 });
