@@ -350,15 +350,26 @@ export function drawCastleAt(c, k) {
   c.restore();
 }
 
+// A cherry tree's blossom colour, drawn from its random stream (the first draws, so it can be replayed
+// from the tree's seed for the falling petals). Most are pink; some are white or the palest blush.
+export function cherryTone(r) {
+  const hue = 330 + (r() - 0.5) * 30;
+  let sat = 55 + r() * 35, lit = 68 + r() * 12;
+  if (r() < 0.3) { sat = 20 + r() * 25; lit = 90 + r() * 6; }
+  return { hue, sat, lit };
+}
+export const cherryToneOf = (seed) => cherryTone(rng(seed || 1));
+
 const DRAW_DECO = {
   tree(c, x, y, s, v, r) {
     if (v === 1) s *= 1.35;                                                  // pines grow tall
     shadow(c, x, y + 4 * s, 14 * s, 5 * s);
     if (v === 0) {                                                           // broadleaf: a knobbly canopy of blobs
       const trunk = ["#6d4c41", "#5d4037", "#795548"][Math.floor(r() * 3)];
-      rect(c, x - 3 * s, y - 10 * s, 6 * s, 14 * s, trunk);
+      rect(c, x - 3 * s, y - 18 * s, 6 * s, 22 * s, trunk);                                             // runs up into the canopy
       line(c, x - 1 * s, y - 8 * s, x - 5 * s, y - 14 * s, trunk, 2.5 * s);
       const tint = Math.floor(r() * 3), dark = ["#2e7d32", "#33691e", "#1b5e20"][tint], light = ["#43a047", "#558b2f", "#2e7d32"][tint];
+      circle(c, x, y - 15 * s, 8 * s, dark);                                                             // the crown always sits on the trunk
       const blobs = 4 + Math.floor(r() * 3);
       for (let i = 0; i < blobs; i++) { const a = r() * Math.PI * 2, d = r() * 7 * s; circle(c, x + Math.cos(a) * d, y - 17 * s + Math.sin(a) * d * 0.7, (7 + r() * 5) * s, dark); }
       circle(c, x + (r() - 0.5) * 4 * s, y - 21 * s, (8 + r() * 3) * s, light);
@@ -377,10 +388,11 @@ const DRAW_DECO = {
       }
       if (r() < 0.3) for (let i = 0; i < 3; i++) circle(c, x + (r() - 0.5) * 10 * s, y - 12 * s - r() * 14 * s, 1.1 * s, "#8d6e63");   // cones
     } else if (v === 3) {                                                    // cherry: dark trunk, a cloud of blossom in its own shade of pink
-      rect(c, x - 2.5 * s, y - 10 * s, 5 * s, 14 * s, "#4e342e");
+      rect(c, x - 2.5 * s, y - 18 * s, 5 * s, 22 * s, "#4e342e");
       line(c, x - 1 * s, y - 9 * s, x - 6 * s, y - 15 * s, "#4e342e", 2 * s); line(c, x + 1 * s, y - 10 * s, x + 6 * s, y - 15 * s, "#4e342e", 2 * s);
-      const hue = 330 + (r() - 0.5) * 30, sat = 55 + r() * 35, lit = 68 + r() * 12;                       // from peach-pink to magenta, pale to vivid
-      const pink = (dl, ds = 0) => `hsl(${hue},${sat + ds}%,${lit + dl}%)`;
+      const { hue, sat, lit } = cherryTone(r);                                                             // its own shade: peach-pink to magenta, or nearly white
+      const pink = (dl, ds = 0) => `hsl(${hue},${sat + ds}%,${Math.min(97, lit + dl)}%)`;
+      circle(c, x, y - 16 * s, 7 * s, pink(-6));                                                         // the crown always sits on the trunk
       const blobs = 5 + Math.floor(r() * 3);
       for (let i = 0; i < blobs; i++) { const a = r() * Math.PI * 2, d = r() * 8 * s; circle(c, x + Math.cos(a) * d, y - 18 * s + Math.sin(a) * d * 0.7, (6 + r() * 4) * s, pink(r() < 0.5 ? -6 : 2)); }
       circle(c, x + (r() - 0.5) * 4 * s, y - 22 * s, (7 + r() * 3) * s, pink(12, -15));
@@ -388,10 +400,11 @@ const DRAW_DECO = {
       for (let i = 0; i < 3; i++) circle(c, x + (r() - 0.5) * 26 * s, y - 2 * s + r() * 3, 1 * s, pink(4));                        // fallen petals
     } else if (v === 4) {                                                    // autumn: a canopy turned gold, orange or red, leaves on the ground
       const trunk = ["#5d4037", "#4e342e", "#6d4c41"][Math.floor(r() * 3)];
-      rect(c, x - 3 * s, y - 10 * s, 6 * s, 14 * s, trunk);
+      rect(c, x - 3 * s, y - 18 * s, 6 * s, 22 * s, trunk);
       line(c, x + 1 * s, y - 8 * s, x + 5 * s, y - 14 * s, trunk, 2.5 * s);
       const pal = [["#e65100", "#ff8f00", "#ffb300"], ["#f9a825", "#fdd835", "#fff176"], ["#bf360c", "#d84315", "#ff7043"], ["#ef6c00", "#f9a825", "#c62828"]][Math.floor(r() * 4)];
       const blobs = 4 + Math.floor(r() * 3), thin = r() < 0.35;             // some have already dropped half their leaves
+      circle(c, x, y - 15 * s, (thin ? 5.5 : 8) * s, pal[0]);                                           // the crown always sits on the trunk
       for (let i = 0; i < blobs; i++) { const a = r() * Math.PI * 2, d = r() * 7 * s; circle(c, x + Math.cos(a) * d, y - 17 * s + Math.sin(a) * d * 0.7, (thin ? 5 : 7 + r() * 5) * s, pal[Math.floor(r() * 2)]); }
       circle(c, x + (r() - 0.5) * 4 * s, y - 21 * s, (thin ? 5 : 7 + r() * 3) * s, pal[1 + Math.floor(r() * 2)]);
       if (thin) for (let i = 0; i < 3; i++) line(c, x, y - 14 * s, x + (r() - 0.5) * 16 * s, y - 24 * s - r() * 4 * s, trunk, 1.2 * s);   // bare twigs poking through
@@ -407,8 +420,9 @@ const DRAW_DECO = {
       branch(x, y - 11 * s, -Math.PI / 2 - 0.5, 9 * s, 2.2 * s, 2); branch(x, y - 11 * s, -Math.PI / 2 + 0.45, 9 * s, 2.2 * s, 2); branch(x, y - 12 * s, -Math.PI / 2 + (r() - 0.5) * 0.3, 10 * s, 2 * s, 2);
       for (let i = 0; i < 4; i++) circle(c, x + (r() - 0.5) * 26 * s, y - 1 * s + r() * 4, 1 * s, r() < 0.5 ? "#bf360c" : "#f9a825");   // the last fallen leaves
     } else {                                                                 // birch: pale trunk with bands, airy light canopy
-      rect(c, x - 2.5 * s, y - 14 * s, 5 * s, 18 * s, "#eceff1", "#9e9e9e", 0.6);
+      rect(c, x - 2.5 * s, y - 24 * s, 5 * s, 28 * s, "#eceff1", "#9e9e9e", 0.6);
       for (let i = 0; i < 4; i++) line(c, x - 2.5 * s, y - 12 * s + i * 4 * s + r() * 2, x + 2.5 * s, y - 11 * s + i * 4 * s, "#424242", 1);
+      circle(c, x, y - 21 * s, 6.5 * s, "#9ccc65");                                                      // the crown always sits on the trunk
       const blobs = 5 + Math.floor(r() * 3);
       for (let i = 0; i < blobs; i++) { const a = r() * Math.PI * 2, d = r() * 8 * s; circle(c, x + Math.cos(a) * d, y - 22 * s + Math.sin(a) * d * 0.8, (5 + r() * 4) * s, r() < 0.5 ? "#9ccc65" : "#aed581"); }
       circle(c, x - 2 * s, y - 26 * s, 3.5 * s, "rgba(255,255,255,0.2)");
@@ -476,8 +490,8 @@ const DRAW_DECO = {
     for (let k = 0; k < n; k++) {
       const mx = x + (k ? (r() - 0.5) * 12 : 0), my = y + (k ? (r() - 0.5) * 4 : 0), ms = s * (0.6 + r() * 0.6);
       shadow(c, mx, my + 2, 4 * ms, 1.5 * ms);
-      rect(c, mx - 1.8 * ms, my - 6 * ms, 3.6 * ms, 7 * ms, "#f5f5dc", "#bcaaa4", 0.6);
-      ellipse(c, mx, my - 6 * ms, 5.5 * ms, 3.5 * ms, caps[0], "#4e342e", 0.7);
+      rect(c, mx - 1.8 * ms, my - 6 * ms, 3.6 * ms, 7 * ms, "#f5f5dc", "rgba(120,90,70,0.22)", 0.5);
+      ellipse(c, mx, my - 6 * ms, 5.5 * ms, 3.5 * ms, caps[0], "rgba(60,35,25,0.28)", 0.5);
       if (v !== 1) for (let i = 0; i < 3; i++) circle(c, mx + (r() - 0.5) * 7 * ms, my - 7 * ms + (r() - 0.5) * 2 * ms, 0.8 * ms, caps[1]);
     }
   },
@@ -614,7 +628,7 @@ function drawPaifang(c, g) {
 function drawMoorishGate(c, g) {
   const [a, b] = gatePillars(g);
   const across = Math.abs(a.y - b.y) < 1;
-  const wall = "#f1e6d0", wallDark = "#cdbb9a", edge = "#8d7a58", teal = "#2a9d8f", tealDark = "#1b6f66", tealLight = "#5fc4b6", gold = "#e9c55a", goldDark = "#b8902a";
+  const wall = "#f1e6d0", wallDark = "#cdbb9a", edge = "rgba(141,122,88,0.5)", teal = "#2a9d8f", tealDark = "#1b6f66", tealLight = "#5fc4b6", gold = "#e9c55a", goldDark = "#b8902a";
   const dome = (cx, cy, r) => {
     const gr = c.createLinearGradient(cx - r, 0, cx + r, 0); gr.addColorStop(0, tealLight); gr.addColorStop(0.55, teal); gr.addColorStop(1, tealDark);
     c.fillStyle = gr; c.beginPath();
@@ -649,7 +663,7 @@ function drawMoorishGate(c, g) {
 // A desert palace: cream walls with a scalloped parapet and horseshoe arches, two slender minaret towers with
 // little balconies, and turquoise onion domes tipped with gold. The big central dome carries the banner.
 function drawPalace(c, x, y) {
-  const wall = "#f1e6d0", wallDark = "#cdbb9a", edge = "#8d7a58", teal = "#2a9d8f", tealDark = "#1b6f66", tealLight = "#5fc4b6", gold = "#e9c55a", goldDark = "#b8902a";
+  const wall = "#f1e6d0", wallDark = "#cdbb9a", edge = "rgba(141,122,88,0.5)", teal = "#2a9d8f", tealDark = "#1b6f66", tealLight = "#5fc4b6", gold = "#e9c55a", goldDark = "#b8902a";
   const dome = (cx, cy, r) => {                                            // an onion dome
     const g = c.createLinearGradient(cx - r, 0, cx + r, 0);
     g.addColorStop(0, tealLight); g.addColorStop(0.55, teal); g.addColorStop(1, tealDark);
@@ -669,7 +683,7 @@ function drawPalace(c, x, y) {
   };
   shadow(c, x, y + 6, 58, 11);
   // Main block with a scalloped parapet
-  rect(c, x - 44, y - 36, 88, 40, wall, edge, 1.2);
+  rect(c, x - 44, y - 36, 88, 40, wall, edge, 0.8);
   const lg = c.createLinearGradient(x - 44, 0, x + 44, 0); lg.addColorStop(0, "rgba(255,255,255,0.25)"); lg.addColorStop(1, "rgba(80,60,30,0.2)");
   rect(c, x - 44, y - 36, 88, 40, lg);
   for (let sx = x - 42; sx <= x + 42; sx += 8) { c.fillStyle = wall; c.beginPath(); c.arc(sx, y - 36, 4, Math.PI, 0); c.fill(); c.strokeStyle = edge; c.lineWidth = 1; c.stroke(); }
@@ -679,7 +693,7 @@ function drawPalace(c, x, y) {
   for (const ax of [-28, 28]) { arch(x + ax, y - 8, 8, 16); }               // side arches
   rect(c, x - 10, y + 4, 20, 4, "#d9cbb0", edge, 0.8);                     // step
   // Central drum and great dome
-  rect(c, x - 18, y - 60, 36, 26, wall, edge, 1.2);
+  rect(c, x - 18, y - 60, 36, 26, wall, edge, 0.8);
   for (let sx = x - 15; sx <= x + 15; sx += 10) arch(x + sx - x, y - 42, 6, 12);
   line(c, x - 18, y - 54, x + 18, y - 54, teal, 1.6);
   dome(x, y - 60, 20);
@@ -698,7 +712,7 @@ function drawPalace(c, x, y) {
   // Minarets
   for (const tx of [x - 40, x + 40]) {
     const tg = c.createLinearGradient(tx - 7, 0, tx + 7, 0); tg.addColorStop(0, "#f6ecd8"); tg.addColorStop(1, wallDark);
-    rect(c, tx - 7, y - 78, 14, 82, tg, edge, 1.2);
+    rect(c, tx - 7, y - 78, 14, 82, tg, edge, 0.8);
     rect(c, tx - 9, y - 50, 18, 4, wall, edge, 1);                          // balcony
     for (let k = -1; k <= 1; k++) rect(c, tx + k * 5 - 0.8, y - 56, 1.6, 6, edge);
     rect(c, tx - 2, y - 70, 4, 7, "#3e2a1a");                              // window
@@ -711,14 +725,14 @@ function drawPalace(c, x, y) {
 // soft vermilion walls with gold-framed doors, and three conical roofs of deep-blue glazed tiles whose
 // eaves flare out at the bottom, crowned by a gold finial.
 function drawPagoda(c, x, y) {
-  const red = "#a8382f", redDark = "#7a2420", redDeep = "#8e2f29", gold = "#e9c55a", goldDark = "#b8902a";
+  const red = "#a8382f", redDark = "#7a2420", redEdge = "rgba(122,36,32,0.55)", redDeep = "#8e2f29", gold = "#e9c55a", goldDark = "#b8902a";
   const blue = "#2d4e9e", blueDark = "#1c3470", blueLight = "#4a6fc2";
   shadow(c, x, y + 6, 60, 11);
   // Marble terrace: three wide round tiers with balustrades, a stair up the middle
   for (const [hw, hh, ty] of [[56, 8, y + 3], [46, 7, y - 4], [36, 6, y - 10]]) {
-    ellipse(c, x, ty, hw, hh, "#e6e2da", "#b8b2a6", 1);
-    rect(c, x - hw, ty - 6, hw * 2, 6, "#efece5", "#b8b2a6", 0.8);
-    ellipse(c, x, ty - 6, hw, hh, "#f5f2ec", "#b8b2a6", 1);
+    ellipse(c, x, ty, hw, hh, "#e6e2da", "rgba(184,178,166,0.6)", 0.7);
+    rect(c, x - hw, ty - 6, hw * 2, 6, "#efece5", "rgba(184,178,166,0.6)", 0.6);
+    ellipse(c, x, ty - 6, hw, hh, "#f5f2ec", "rgba(184,178,166,0.6)", 0.7);
     for (let i = -hw + 4; i <= hw - 4; i += 6) rect(c, x + i - 0.8, ty - 12, 1.6, 6, "#d9d4ca");         // balustrade posts
     line(c, x - hw + 3, ty - 12, x + hw - 3, ty - 12, "#c9c3b6", 1.4);                                  // rail
   }
@@ -739,23 +753,32 @@ function drawPagoda(c, x, y) {
     ellipse(c, x, top, topHw, 1.6, goldDark);                                                             // gold ring at the top
   };
   // Lower hall: a wide red drum with doors
-  rect(c, x - 38, y - 34, 76, 20, red, redDark, 1.2);
-  ellipse(c, x, y - 14, 38, 5, redDeep, redDark, 1);
+  rect(c, x - 38, y - 34, 76, 20, red, redEdge, 0.8);
+  ellipse(c, x, y - 14, 38, 5, redDeep, redEdge, 0.8);
   line(c, x - 38, y - 31, x + 38, y - 31, goldDark, 1.4);
   for (const dx of [-27, -9, 9, 27]) { rect(c, x + dx - 4, y - 29, 8, 13, "#5a1a16", gold, 0.9); line(c, x + dx, y - 29, x + dx, y - 16, gold, 0.7); line(c, x + dx - 4, y - 23, x + dx + 4, y - 23, gold, 0.7); }
   cone(y - 36, 50, y - 50, 32);
   // Middle drum and roof
-  rect(c, x - 28, y - 60, 56, 10, red, redDark, 1.2); line(c, x - 28, y - 57, x + 28, y - 57, goldDark, 1.2);
+  rect(c, x - 28, y - 60, 56, 10, red, redEdge, 0.8); line(c, x - 28, y - 57, x + 28, y - 57, goldDark, 1.2);
   for (const dx of [-15, 0, 15]) rect(c, x + dx - 2.5, y - 56, 5, 6, "#5a1a16", gold, 0.6);
   cone(y - 62, 40, y - 75, 21);
   // Upper drum and the top cone
-  rect(c, x - 18, y - 83, 36, 8, red, redDark, 1.2); line(c, x - 18, y - 80, x + 18, y - 80, goldDark, 1);
+  rect(c, x - 18, y - 83, 36, 8, red, redEdge, 0.8); line(c, x - 18, y - 80, x + 18, y - 80, goldDark, 1);
   cone(y - 85, 28, y - 106, 3.5);
-  line(c, x, y - 106, x, y - 111, goldDark, 2);                                                           // a short gold spire
-  const fg = c.createRadialGradient(x - 1, y - 113, 0.5, x, y - 112, 4);
-  fg.addColorStop(0, "#fff8dc"); fg.addColorStop(0.5, "#ffd54f"); fg.addColorStop(1, "#c9a227");
-  circle(c, x, y - 112, 3.6, fg, "#b8902a", 0.8);                                                        // bright gold finial (it glints live in draw.js)
-  circle(c, x - 1.2, y - 113.2, 1, "rgba(255,255,255,0.9)");                                                         // gold finial (the banner pole stands on it)
+  // The gilded 宝顶 on the real Temple of Heaven is a gourd-like stack: a flared base, a squat bulb, a smaller
+  // bulb above it and a little pointed knob on top (it glints live in draw.js)
+  const fg = c.createLinearGradient(x - 4, 0, x + 4, 0);
+  fg.addColorStop(0, "#c9a227"); fg.addColorStop(0.45, "#fff3b0"); fg.addColorStop(1, "#b8902a");
+  ellipse(c, x, y - 106.5, 4.6, 1.5, fg, "#b8902a", 0.6);                                                 // flared base plate
+  c.fillStyle = fg; c.strokeStyle = "#b8902a"; c.lineWidth = 0.6; c.beginPath();                          // lower bulb: wide, slightly pear-shaped
+  c.moveTo(x - 3.6, y - 107); c.bezierCurveTo(x - 4.6, y - 110.5, x - 2.6, y - 112.5, x - 1.4, y - 113);
+  c.lineTo(x + 1.4, y - 113); c.bezierCurveTo(x + 2.6, y - 112.5, x + 4.6, y - 110.5, x + 3.6, y - 107); c.closePath(); c.fill(); c.stroke();
+  ellipse(c, x, y - 113.2, 1.9, 0.7, "#c9a227");                                                           // waist ring
+  c.beginPath();                                                                                            // upper bulb, smaller
+  c.moveTo(x - 1.8, y - 113.6); c.bezierCurveTo(x - 2.9, y - 116, x - 1.6, y - 117.6, x - 0.7, y - 118);
+  c.lineTo(x + 0.7, y - 118); c.bezierCurveTo(x + 1.6, y - 117.6, x + 2.9, y - 116, x + 1.8, y - 113.6); c.closePath(); c.fill(); c.stroke();
+  poly(c, [[x - 0.9, y - 118], [x + 0.9, y - 118], [x, y - 121]], "#ffe082", "#b8902a", 0.5);             // the pointed knob
+  circle(c, x - 1.3, y - 110.5, 0.9, "rgba(255,255,255,0.85)");                                            // highlight on the bulb                                                         // gold finial (the banner pole stands on it)
 }
 
 export function drawSign(c, x, y, face = { dc: 1, dr: 0 }) {
@@ -793,7 +816,7 @@ export function drawSign(c, x, y, face = { dc: 1, dr: 0 }) {
 // Style 1: a warm sandstone palace with square towers, terracotta tiled roofs and a green banner.
 // Both have a gatehouse, battlements, arrow slits and a portcullis. Lit from the left, shaded on the right.
 export const CASTLE_STYLES = [
-  { light: "#b0aca4", dark: "#6e6a63", keepLight: "#a8a49c", keepDark: "#66625b", gateLight: "#9e9a92", gateDark: "#605c56", towerLight: "#b8b4ac", towerMid: "#8f8b84", towerDark: "#5a5650", roof: "#3f4a56", roofEdge: "#1f262d", roofShine: "rgba(140,160,180,0.35)", mortar: "rgba(40,36,32,0.35)", outline: "rgba(40,38,35,0.65)", banner: "#1565c0", square: false },
+  { light: "#b0aca4", dark: "#6e6a63", keepLight: "#a8a49c", keepDark: "#66625b", gateLight: "#9e9a92", gateDark: "#605c56", towerLight: "#b8b4ac", towerMid: "#8f8b84", towerDark: "#5a5650", roof: "#3f4a56", roofEdge: "#1f262d", roofShine: "rgba(140,160,180,0.35)", mortar: "rgba(40,36,32,0.35)", outline: "rgba(40,38,35,0.4)", banner: "#1565c0", square: false },
   { banner: "#2e7d32", palace: true },                                  // white desert palace with turquoise domes: drawn by drawPalace
   { banner: "#e53935", pagoda: true },                                 // Chinese palace: drawn by drawPagoda
 ];
@@ -804,7 +827,7 @@ function drawCastle(c, x, y, styleIndex = 0) {
   const stone = (x0, y0, w, h, light = S.light, dark = S.dark) => {
     const g = c.createLinearGradient(x0, 0, x0 + w, 0);
     g.addColorStop(0, light); g.addColorStop(1, dark);
-    rect(c, x0, y0, w, h, g, S.outline, 0.8);
+    rect(c, x0, y0, w, h, g, S.outline, 0.6);
   };
   const courses = (x0, y0, w, h, step = 7) => {               // stone block courses
     c.strokeStyle = S.mortar; c.lineWidth = 1;
@@ -864,7 +887,7 @@ function drawCastle(c, x, y, styleIndex = 0) {
   for (const tx of [x - 40, x + 40]) {
     const g = c.createLinearGradient(tx - 12, 0, tx + 12, 0);
     g.addColorStop(0, S.towerLight); g.addColorStop(0.55, S.towerMid); g.addColorStop(1, S.towerDark);
-    rect(c, tx - 12, y - 64, 24, 68, g, S.outline, 0.8);
+    rect(c, tx - 12, y - 64, 24, 68, g, S.outline, 0.6);
     courses(tx - 12, y - 64, 24, 68);
     if (S.square) { rect(c, tx - 14, y - 66, 28, 4, S.towerLight, S.outline, 0.7); roof(tx, y - 66, 16, 20); }   // ledge and pyramid roof
     else { battlements(tx - 12, y - 64, 24, S.towerLight, S.towerDark); roof(tx, y - 70, 15, 26); }

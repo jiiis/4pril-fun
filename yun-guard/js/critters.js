@@ -17,6 +17,7 @@ const BEHAVIOUR = {
 };
 
 const POOPERS = { sheep: 1.2, cow: 2.2, deer: 1.3, bunny: 0.9 };   // who poops, and how big (ducks are too polite)
+const REAR = { sheep: 10, cow: 17, deer: 13, bunny: 7 };            // how far behind the animal's centre its rump is
 
 export function initCritters() {
   state.critters = map.critters.map((c) => ({
@@ -53,7 +54,7 @@ export function updateCritters(dt) {
     if (c.pooping) {
       c.pooping -= dt;
       if (c.poopDue !== null && (c.poopDue -= dt) <= 0) {
-        state.poops.push({ x: c.x - c.dir * 8, y: c.y + 3, size: POOPERS[c.type], n: 1 + Math.floor(Math.random() * 3), life: 45, age: 0, seed: Math.random() * 10 });
+        state.poops.push({ x: c.x - c.dir * REAR[c.type], y: c.y + 2, size: POOPERS[c.type], n: 1 + Math.floor(Math.random() * 3), life: 45, age: 0, seed: Math.random() * 10 });
         c.poopDue = null;
       }
       if (c.pooping <= 0) c.pooping = 0;

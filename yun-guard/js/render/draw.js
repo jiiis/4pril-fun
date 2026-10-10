@@ -4,7 +4,7 @@ import { view } from "../ui.js";
 import { map } from "../map.js";
 import { SPOT_RADIUS, W, H, TOWERS } from "../config.js";
 import { towerRange, abilityDef } from "../towers.js";
-import { buildBackground, drawSign, CASTLE_STYLES, gatePillars, lairStakes, drawDecoItem, drawCastleAt, drawGateStructure, gateAnchorY, drawLairStructure, lairAnchorY, lairParts } from "./background.js";
+import { buildBackground, drawSign, CASTLE_STYLES, gatePillars, lairStakes, drawDecoItem, drawCastleAt, drawGateStructure, gateAnchorY, drawLairStructure, lairAnchorY, lairParts, cherryToneOf } from "./background.js";
 import { drawTower, flag } from "./towers.js";
 import { drawEnemy, drawCorpse } from "./creatures.js";
 import { drawSoldier } from "./soldiers.js";
@@ -342,6 +342,21 @@ export function draw() {
   for (const h of state.heroes) actors.push({ y: h.hp > 0 ? h.y : h.spawn.y, draw: scaled(h.hp > 0 ? h.x : h.spawn.x, h.hp > 0 ? h.y : h.spawn.y, () => drawHero(h)) });
   if (state.dog && state.dog.hp > 0) actors.push({ y: state.dog.y, draw: scaled(state.dog.x, state.dog.y, drawDog) });
   actors.sort((a, b) => a.y - b.y).forEach((a) => a.draw());
+  // Cherry blossom: petals loosen from every cherry tree, flutter down and settle on the grass
+  for (const d of map.deco) {
+    if (d.type !== "tree" || d.variant !== 3) continue;
+    const s = d.s, topY = d.y - 22 * s, h0 = (d.seed % 1000) / 1000, tone = cherryToneOf(d.seed);
+    for (let i = 0; i < 5; i++) {
+      const p = ((state.time * 0.22 + i * 0.2 + h0) % 1);                   // 0 at the canopy, 1 on the ground
+      const px = d.x + Math.sin(h0 * 6.3 + i * 2.1) * 12 * s + Math.sin(state.time * 1.6 + i) * 4 + p * 14;   // drifting on the breeze
+      const py = topY + p * (d.y + 2 - topY), rot = state.time * 3 + i;
+      ctx.save(); ctx.globalAlpha = Math.min(1, Math.sin(Math.min(1, p / 0.9) * Math.PI) * 1.4) * 0.9;
+      ctx.translate(px, py); ctx.rotate(rot); ctx.scale(1, 0.55 + 0.45 * Math.abs(Math.cos(rot * 0.7)));
+      ellipse(ctx, 0, 0, 1.9, 1.2, `hsl(${tone.hue},${tone.sat}%,${Math.min(97, tone.lit + (i % 2 ? 6 : -4))}%)`);
+      ctx.restore();
+    }
+  }
+  ctx.globalAlpha = 1;
   // Living details on the structures, drawn over them: lantern glows, torches, banners, the temple's glint, the fountain
   // Lairs: the skulls' eyes glow and green mist seeps out of the entrance
   map.entries.forEach((e, i) => {
@@ -395,7 +410,7 @@ export function draw() {
   map.castles.forEach((k, i) => {
     if (k.style === 2) {                                                    // the temple flies no flag: lanterns sway gently by the doors
       // The gold finial catches the sun: a soft glow and a four-point glint that pulses
-      const fx = k.x, fy = k.y - 112 * k.scale, tw = 0.5 + 0.5 * Math.sin(state.time * 2.2 + i);
+      const fx = k.x, fy = k.y - 114 * k.scale, tw = 0.5 + 0.5 * Math.sin(state.time * 2.2 + i);
       ctx.globalAlpha = 0.12 + tw * 0.18; circle(ctx, fx, fy, (5 + tw * 3) * k.scale, "rgba(255,225,130,0.7)"); ctx.globalAlpha = 1;
       const r = (2 + tw * 3.5) * k.scale;
       ctx.strokeStyle = `rgba(255,250,220,${0.25 + tw * 0.45})`; ctx.lineWidth = 1; ctx.beginPath();

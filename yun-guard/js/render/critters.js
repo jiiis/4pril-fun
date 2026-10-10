@@ -69,9 +69,9 @@ const DRAW = {
     const nod = moving ? 0 : Math.sin(phase) * 2.5;                 // head bobs while grazing
     const edge = "#8a5a2a";                                          // a soft outline a shade darker than the coat
     for (const [lx, d] of [[-8, 1], [-4, -1], [6, 1], [10, -1]]) line(ctx, lx, -12, lx + sw * d, 0, "#9c6a35", 2.5);
+    line(ctx, -9, -16, -16, -13, "#b07a3b", 3);                     // tail, rooted inside the body
     ellipse(ctx, 0, -15, 12, 7, "#b07a3b");                        // body, no outline
     for (const [sx, sy] of [[-5, -16], [0, -19], [4, -14], [-1, -12]]) circle(ctx, sx, sy, 1.2, "#efdcc3");   // spots
-    line(ctx, -12, -17, -16, -13, "#b07a3b", 3);                    // tail
     line(ctx, 10, -19, 15, -27 + nod, "#b07a3b", 5);                // neck
     ellipse(ctx, 17, -29 + nod, 5.5, 4, "#b07a3b");                 // head, no outline
     ellipse(ctx, 21.5, -28 + nod, 2.5, 1.8, "#c9a06a");             // muzzle, a lighter shade of the coat
@@ -114,16 +114,16 @@ const DRAW = {
       line(ctx, lx, -8, lx + sw * d, 0, white, 2.2);
       ellipse(ctx, lx + sw * d, 0.3, 1.5, 0.9, black);
     }
-    ellipse(ctx, 0, -14, 14, 8, white, edge, 0.8);                                                         // body
+    line(ctx, -11, -18, -18, -10, white, 1.3); circle(ctx, -18.5, -9, 1.3, black);                           // tail with tuft, hanging from the top of the rump
+    ellipse(ctx, 0, -14, 14, 8, white, "rgba(0,0,0,0.12)", 0.6);                                           // body
     ellipse(ctx, -5, -15, 5, 4, black); ellipse(ctx, 5, -11, 4, 3, black); ellipse(ctx, 2, -19, 3, 2, black);   // patches
-    ellipse(ctx, -3.5, -7.5, 3.6, 2.2, "#f8bbd0", "#e59aa6", 0.8);                                          // udder, just ahead of the hind legs
-    line(ctx, -14, -16, -18, -9, white, 1.3); circle(ctx, -18.5, -8, 1.3, black);                            // tail with tuft
-    ellipse(ctx, 13, -16 + chew * 0.3, 6, 5, white, edge, 0.8);                                             // head
-    ellipse(ctx, 16.5, -13 + chew, 4, 3, "#f8bbd0", "#e59aa6", 0.8);                                        // muzzle
+    ellipse(ctx, -3.5, -7.5, 3.6, 2.2, "#f8bbd0");                                                           // udder, just ahead of the hind legs
+    ellipse(ctx, 13, -16 + chew * 0.3, 6, 5, white, "rgba(0,0,0,0.12)", 0.6);                               // head
+    ellipse(ctx, 16.5, -13 + chew, 4, 3, "#f8bbd0");                                                         // muzzle
     circle(ctx, 15.5, -13.5 + chew, 0.6, "#b5667a"); circle(ctx, 17.8, -13.5 + chew, 0.6, "#b5667a");
     ellipse(ctx, 11, -17, 2.5, 2, black);                                                                   // eye patch
     circle(ctx, 11.5, -17, 0.9, "#212121"); circle(ctx, 11.8, -17.3, 0.3, "#fff");                            // eye
-    poly(ctx, [[9, -20], [5.5, -21], [8, -18]], white, edge, 0.8); poly(ctx, [[16, -20], [19.5, -21], [17, -18]], white, edge, 0.8);   // ears
+    poly(ctx, [[9, -20], [5.5, -21], [8, -18]], white); poly(ctx, [[16, -20], [19.5, -21], [17, -18]], white);   // ears
     line(ctx, 10.5, -20.5, 9.5, -24, "#d7ccc8", 1.8); line(ctx, 15, -20.5, 16, -24, "#d7ccc8", 1.8);         // short horns
   },
 

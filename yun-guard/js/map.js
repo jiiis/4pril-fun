@@ -264,7 +264,7 @@ function nearestRoadPoint(p) {
 
 const nearRiver = (p, extra) => map.rivers.some((r) => closestPointOnPath(r.points, p).d < r.width / 2 + extra);
 // Inside (or within `extra` of) a pond: measured as a stretched distance from its centre
-const inPond = (p, pond, extra) => Math.hypot((p.x - pond.x), (p.y - pond.y) * (pond.rx / pond.ry)) < pond.rx + extra;
+const inPond = (p, pond, extra) => Math.hypot((p.x - pond.x), (p.y - pond.y) * (pond.rx / pond.ry)) < pond.rx * (pond.kmax || 1) + extra;
 const nearWater = (p, extra) => nearRiver(p, extra) || map.ponds.some((q) => inPond(p, q, extra));
 
 // ---------- Ponds ----------
@@ -276,12 +276,20 @@ function makePonds(rand) {
     const p = { x: 60 + rand() * (W - 120), y: 60 + rand() * (H - 120), seed: Math.floor(rand() * 1e6) };
     // The pond grows to fit the open ground around it: a small pool squeezed between roads, a lake in a wide meadow
     const riverRoom = map.rivers.length ? Math.min(...map.rivers.map((r) => closestPointOnPath(r.points, p).d - r.width / 2)) : Infinity;
-    const room = Math.min(roadDistance(p), riverRoom, ...map.castles.map((k) => dist(p, k) - 60 * k.scale), ...map.entries.map((e) => dist(p, e) - 40), ...map.ponds.map((q) => dist(p, q) - q.rx - 30));
+    const room = Math.min(roadDistance(p), riverRoom, ...map.castles.map((k) => dist(p, k) - 60 * k.scale), ...map.entries.map((e) => dist(p, e) - 40), ...map.ponds.map((q) => dist(p, q) - q.rx * (q.kmax || 1) - 30));
     const rx = Math.min(170, (room - 72) * 1.0);                            // keeps a clear bank of grass between the water and the road
     if (rx < 40) continue;                                                   // no puddles: too cramped here, try elsewhere
-    p.rx = rx * (0.85 + rand() * 0.15); p.ry = p.rx * (0.55 + rand() * 0.2);
-    // A gently irregular outline: a radius factor for each of 12 directions
-    p.wobble = Array.from({ length: 12 }, () => 0.82 + rand() * 0.36);
+    p.rx = rx * (0.85 + rand() * 0.15); p.ry = p.rx * (0.6 + rand() * 0.25);
+    // The outline is a smooth, low-frequency wobble around the ellipse: some ponds stretch long, some bend
+    // into a kidney, most are gently uneven. Radius factors for 24 directions, never below 0.72 so the
+    // ducks and fish near the middle always stay in the water.
+    const style = rand(), ph = [rand() * 6.3, rand() * 6.3, rand() * 6.3];
+    const A = style < 0.35 ? [0.04, 0.2 + rand() * 0.08, 0.03]                  // long: a strong two-lobe stretch
+      : style < 0.6 ? [0.12, 0.05, 0.1]                                          // kidney: one side bulges, a notch opposite
+      : [0.03, 0.06 + rand() * 0.06, 0.04 + rand() * 0.04];                      // gently uneven
+    if (style < 0.35) p.ry *= 0.8;                                                 // long ponds start from a slimmer ellipse too
+    p.wobble = Array.from({ length: 24 }, (_, i) => { const a = (i / 24) * Math.PI * 2; return Math.max(0.72, 1 + A[0] * Math.cos(a + ph[0]) + A[1] * Math.cos(2 * a + ph[1]) + A[2] * Math.cos(3 * a + ph[2])); });
+    p.kmax = Math.max(...p.wobble);
     // Big ponds attract ducks, drifting slowly around
     if (p.rx >= 70) {
       const n = 1 + Math.floor(rand() * 3);
