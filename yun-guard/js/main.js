@@ -23,7 +23,7 @@ const level = clampLevel(params.get("level") || savedLevel());
 saveLevel(level);
 const diff = levelConfig(level);
 state.level = level; state.diff = diff; state.totalWaves = diff.waves; state.gold = diff.gold; state.lives = diff.lives;
-const seedParam = Number(params.get("seed"));
+const seedParam = Number(params.get("seed")) || Number(location.hash.replace(/^#/, ""));   // ?seed=123456 or #123456
 generateMap(seedParam > 0 ? seedParam : levelSeed(level));
 
 initUi();
