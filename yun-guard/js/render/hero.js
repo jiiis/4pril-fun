@@ -94,39 +94,50 @@ function aimAngle(h) {
 // ---------- Lady April: knight in silver armour with sword and shield ----------
 function drawApril(h, a) {
   const { run, sw, breathe } = a;
-  const flow = 1 + run * 6 + Math.sin(h.phase * 0.5) * run * 1.5;
-  poly(ctx, [[-3, -14], [3, -14], [-2 - flow, 6 + run * 2], [-9 - flow, 4 + run * 3]], "#1e88e5", "#0d47a1", 1);
-  line(ctx, -3, 4, -3 + sw, 11, "#78909c", 3.5);
-  line(ctx, 3, 4, 3 - sw, 11, "#78909c", 3.5);
-  rect(ctx, -5 + sw, 10, 5, 3, "#37474f");
-  rect(ctx, 1 - sw, 10, 5, 3, "#37474f");
-  poly(ctx, [[-6, -12 - breathe], [6, -12 - breathe], [5, 5], [-5, 5]], "#cfd8dc", "#546e7a", 1);
-  rect(ctx, -3, -11 - breathe, 6, 15 + breathe, "#1e88e5");
-  circle(ctx, 0, -6, 1.8, "#ffd54f");
-  rect(ctx, -6, 1, 12, 2.5, "#4e342e");
-  circle(ctx, 0, 2.2, 1.2, "#ffd54f");
-  ellipse(ctx, -6, -11 - breathe, 4, 2.5, "#b0bec5", "#546e7a", 1);
-  ellipse(ctx, 6, -11 - breathe, 4, 2.5, "#b0bec5", "#546e7a", 1);
-  const braidSwing = Math.sin(h.phase - 0.8) * 2.5 * run;
-  ellipse(ctx, -6 - run * 2, -14 + braidSwing, 2.5, 6, "#f9a825");
-  circle(ctx, -7 - run * 3, -9 + braidSwing * 1.4, 1.6, "#f57f17");
-  circle(ctx, 0, -18 - breathe, 5, "#ffcc80");
-  ctx.fillStyle = "#f9a825"; ctx.beginPath(); ctx.arc(0, -18.5 - breathe, 5.2, Math.PI * 1.05, Math.PI * 1.95); ctx.fill();
-  line(ctx, -5, -19.5 - breathe, 5, -19.5 - breathe, "#eceff1", 1.5);
-  circle(ctx, 0, -20.5 - breathe, 1, "#42a5f5");
-  ctx.globalAlpha = 0.08; ellipse(ctx, 0, -15.5 - breathe, 4.2, 2.2, "#000"); ctx.globalAlpha = 1;   // soft shade under the chin
+  const T = state.time;
+  const navy = "#1a237e", sapphire = "#3949ab", silver = "#cfd8dc", silverDark = "#78909c", leather = "#4e342e", hair = "#6d2f1f", hairLight = "#9c4a2e", skin = "#ffe0b2";
+  // A short sapphire half-cape over the left shoulder, streaming out when she runs
+  const flow = 1 + run * 5 + Math.sin(h.phase * 0.5) * run * 1.5;
+  poly(ctx, [[-6, -13 - breathe], [-1, -13 - breathe], [-3 - flow, 2 + run * 2], [-11 - flow, -1 + run * 3]], sapphire, navy, 0.8);
+  line(ctx, -3 - flow, 2 + run * 2, -11 - flow, -1 + run * 3, silver, 1);                                  // silver hem
+  // Long legs in fitted dark breeches and tall riding boots
+  line(ctx, -3, 3, -3 + sw, 11, navy, 3.2); line(ctx, 3, 3, 3 - sw, 11, navy, 3.2);
+  rect(ctx, -5.5 + sw, 7, 5, 6, leather); rect(ctx, 0.5 - sw, 7, 5, 6, leather);
+  line(ctx, -5.5 + sw, 7, -0.5 + sw, 7, silverDark, 1); line(ctx, 0.5 - sw, 7, 5.5 - sw, 7, silverDark, 1);   // boot cuffs
+  // Fitted midnight coat with a high collar and silver frogging; a laced leather corset-belt at the waist
+  poly(ctx, [[-5.5, -12 - breathe], [5.5, -12 - breathe], [5, 4], [-5, 4]], navy, "#0d1545", 0.8);
+  for (const fy of [-9, -6, -3]) { line(ctx, -2.5, fy - breathe * 0.5, 2.5, fy - breathe * 0.5, silver, 0.9); circle(ctx, -2.8, fy - breathe * 0.5, 0.7, silver); circle(ctx, 2.8, fy - breathe * 0.5, 0.7, silver); }
+  poly(ctx, [[-3, -12 - breathe], [3, -12 - breathe], [1.5, -9 - breathe], [-1.5, -9 - breathe]], skin);  // the V of the open collar
+  poly(ctx, [[-5.5, -12.5 - breathe], [-2.5, -12.5 - breathe], [-1, -9.5 - breathe]], silver); poly(ctx, [[5.5, -12.5 - breathe], [2.5, -12.5 - breathe], [1, -9.5 - breathe]], silver);   // high collar, silver-lined
+  rect(ctx, -5.5, 0, 11, 4, leather); for (let i = -1; i <= 1; i++) line(ctx, i * 1.5 - 0.8, 0.5, i * 1.5 + 0.8, 3.5, silverDark, 0.6);   // corset lacing
+  // One silver pauldron on the sword arm; a slim steel vambrace on the other
+  ellipse(ctx, 6, -12 - breathe, 4, 2.6, silver, silverDark, 0.8);
+  // Hair: dark auburn, swept into a high ponytail tied with a sapphire ribbon, swinging as she moves
+  const swing = Math.sin(h.phase - 0.8) * 3 * run + Math.sin(T * 1.8) * 0.5;
+  poly(ctx, [[-2, -25 - breathe], [-7 - run * 2, -20 - breathe + swing], [-9 - run * 3, -11 + swing * 1.4], [-6 - run * 2, -8 + swing * 1.6], [-4, -14 - breathe]], hair, "#4a1f12", 0.6);
+  line(ctx, -4.5, -22 - breathe, -7.5 - run * 2.5, -12 + swing * 1.3, hairLight, 1);                     // a glossy strand
+  const fy = -18 - breathe;
+  ellipse(ctx, -1, fy - 0.2, 5.3, 6, hair);                                                                // the back of the head
+  circle(ctx, 0, fy, 5, skin);                                                                             // face
+  ctx.fillStyle = hair; ctx.beginPath(); ctx.arc(0, fy - 0.6, 5.3, Math.PI * 1.02, Math.PI * 1.98); ctx.fill();   // hairline
+  poly(ctx, [[-5.3, fy - 1.2], [-3, fy - 5.5], [0.5, fy - 3.5], [2, fy - 6], [5.3, fy - 1.2]], hair);       // side-parted fringe
+  ellipse(ctx, -1.5, fy - 6.2, 3, 2.2, hair);                                                              // the knot of the ponytail
+  poly(ctx, [[-2.8, fy - 6.5], [-0.5, fy - 7.8], [-1.6, fy - 5.6], [-3.8, fy - 4.6]], sapphire);          // ribbon bow
+  circle(ctx, 3.6, fy + 1.2, 0.6, silver);                                                                 // a small silver earring
+  ctx.globalAlpha = 0.08; ellipse(ctx, 0, fy + 2.6, 4.2, 2.2, "#000"); ctx.globalAlpha = 1;                // soft shade under the chin
+  // Off hand: gloved, held back for balance like a duellist, with a steel vambrace
   const armSwing = -sw * 0.8;
-  line(ctx, -5, -9, -9 + armSwing, -3, "#cfd8dc", 3);
-  poly(ctx, [[-13 + armSwing, -8], [-5 + armSwing, -8], [-5 + armSwing, -1], [-9 + armSwing, 3], [-13 + armSwing, -1]], "#1565c0", "#ffd54f", 1.5);
-  line(ctx, -9 + armSwing, -7, -9 + armSwing, 1, "#ffd54f", 1); line(ctx, -12 + armSwing, -4, -6 + armSwing, -4, "#ffd54f", 1);
+  line(ctx, -5, -9, -10 + armSwing, -4, navy, 2.6); line(ctx, -8 + armSwing, -6, -10 + armSwing, -4, silver, 2.2); circle(ctx, -10.5 + armSwing, -3.5, 1.4, leather);
+  // Sword arm and a slender silver blade with a swept guard; lunges forward on a strike, else held low and ready
   if (h.swing > 0) {
-    line(ctx, 5, -9, 11, -14, "#cfd8dc", 3);
-    line(ctx, 11, -14, 26, -24, "#eceff1", 2.8);
-    line(ctx, 9, -16, 13, -11, "#ffd54f", 2);
+    line(ctx, 5, -9, 11, -11, navy, 2.6); circle(ctx, 11.5, -11, 1.4, leather);
+    poly(ctx, [[9.5, -12.5], [13.5, -12.5], [13.5, -9.5], [9.5, -9.5]], silver, silverDark, 0.5);        // swept guard
+    line(ctx, 13, -11, 30, -17, "#eceff1", 2); line(ctx, 13, -11, 30, -17, "#fff", 0.6);                 // blade with a bright edge
   } else {
-    line(ctx, 5, -9, 9 - armSwing, -2, "#cfd8dc", 3);
-    line(ctx, 9 - armSwing, -2, 14 - armSwing, 13, "#eceff1", 2.8);
-    line(ctx, 6 - armSwing, -1, 12 - armSwing, -3, "#ffd54f", 2);
+    line(ctx, 5, -9, 9 - armSwing, -2, navy, 2.6); circle(ctx, 9.5 - armSwing, -1.5, 1.4, leather);
+    poly(ctx, [[7.5 - armSwing, -3], [11.5 - armSwing, -3], [11.5 - armSwing, 0], [7.5 - armSwing, 0]], silver, silverDark, 0.5);
+    line(ctx, 9.5 - armSwing, -1, 14.5 - armSwing, 14, "#eceff1", 2); line(ctx, 9.5 - armSwing, -1, 14.5 - armSwing, 14, "#fff", 0.6);
+    circle(ctx, 9.5 - armSwing, -4.5, 1, "#64b5f6");                                                      // sapphire pommel
   }
 }
 
@@ -175,14 +186,14 @@ function drawAvril(h, a) {
   line(ctx, -5.5, -18, -7.5 - run * 3, -6 + hairSwing, "#8d6e63", 1.2);
   for (const wy of [-4, 0]) circle(ctx, -7.5 - run * 3.5, wy + hairSwing, 1.6, "#4e342e");
   poly(ctx, [[-5, -9], [-7, -11], [-8.5, -8.5], [-6.5, -7]], "#80deea", "#00acc1", 0.6);
-  const fy = -18 - breathe;
-  circle(ctx, 0, fy, 5, "#ffe0b2");
-  ctx.fillStyle = "#4e342e"; ctx.beginPath(); ctx.arc(0, fy - 0.5, 5.2, Math.PI * 1.03, Math.PI * 1.97); ctx.fill();
-  line(ctx, -4.8, fy - 1.5, -1.5, fy - 4.2, "#6d4c41", 1);
-  poly(ctx, [[-4.5, fy - 3], [-2.5, fy - 6], [0, fy - 4.5], [2.5, fy - 7.5], [4.5, fy - 3]], "#ffd54f", "#f9a825", 0.8);
-  circle(ctx, 2.5, fy - 6.5, 1.2, "#f06292", "#ad1457", 0.4);
-  circle(ctx, -2.5, fy - 5.2, 0.6, "#ffffff"); circle(ctx, 0, fy - 3.8, 0.6, "#ffffff");
-  ctx.globalAlpha = 0.08; ellipse(ctx, 0, fy + 2.5, 4.2, 2.2, "#000"); ctx.globalAlpha = 1;          // soft shade under the chin
+  const fy = -17.2 - breathe;
+  circle(ctx, 0, fy, 4.2, "#ffe0b2");                                                                       // a small, dainty face
+  ctx.fillStyle = "#4e342e"; ctx.beginPath(); ctx.arc(0, fy - 0.4, 4.4, Math.PI * 1.03, Math.PI * 1.97); ctx.fill();
+  line(ctx, -4, fy - 1.3, -1.2, fy - 3.6, "#6d4c41", 1);
+  poly(ctx, [[-3.8, fy - 2.6], [-2.1, fy - 5.2], [0, fy - 3.9], [2.1, fy - 6.4], [3.8, fy - 2.6]], "#ffd54f", "#f9a825", 0.7);   // tiara
+  circle(ctx, 2.1, fy - 5.6, 1, "#f06292", "#ad1457", 0.4);
+  circle(ctx, -2.1, fy - 4.5, 0.5, "#ffffff"); circle(ctx, 0, fy - 3.3, 0.5, "#ffffff");
+  ctx.globalAlpha = 0.08; ellipse(ctx, 0, fy + 2.1, 3.5, 1.9, "#000"); ctx.globalAlpha = 1;          // soft shade under the chin
   const sp = (T * 0.7) % 1;
   if (sp < 0.5) { ctx.globalAlpha = Math.sin(sp * Math.PI * 2) * 0.8; const sx = -6 + Math.sin(T * 3) * 6, sy = -6 - sp * 16; line(ctx, sx - 2, sy, sx + 2, sy, "#fff", 1); line(ctx, sx, sy - 2, sx, sy + 2, "#fff", 1); ctx.globalAlpha = 1; }
   const armSwing = -sw * 0.8;
@@ -527,19 +538,33 @@ function loongLeg(x, y, r, dir, phase, far) {
 
 function drawBird(g) {
   const flap = Math.sin(g.phase) * (g.dive && !g.dive.struck ? 0.25 : 0.9);
+  const dark = "#4e342e", mid = "#5d4037", light = "#795548", white = "#fafafa";
   ctx.save();
   ctx.translate(g.x, g.y);
   ctx.scale(g.dir, 1);
+  // Broad wings: a long leading edge, then five fingered primaries spread at the tip
   for (const side of [-1, 1]) {
-    const tipY = -2 - flap * 9;
-    poly(ctx, [[-2, -1], [side * 6, -4 - flap * 4], [side * 16, tipY], [side * 15, tipY + 4], [side * 7, 2], [0, 3]], "#5d4037", "#3e2723", 0.8);
-    for (const k of [0.6, 0.8, 1]) line(ctx, side * 16 * k, tipY + 4 * (1 - k) + 2, side * 16 * k + side * 2, tipY + 4 * (1 - k) + 4.5, "#8d6e63", 1);
+    const tipY = -3 - flap * 11, span = 21;
+    ctx.fillStyle = mid; ctx.beginPath();
+    ctx.moveTo(-1, -1); ctx.quadraticCurveTo(side * 8, -6 - flap * 5, side * span, tipY);
+    for (let i = 0; i < 5; i++) {                                                                 // the primaries
+      const t = 1 - i * 0.12, fx = side * span * t, fyy = tipY + i * 2.2 + (1 - t) * 6;
+      ctx.lineTo(fx + side * 2.5, fyy + 3.5); ctx.lineTo(fx - side * 1.5, fyy + 2);
+    }
+    ctx.quadraticCurveTo(side * 8, 4 - flap * 2, 0, 4); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = light; ctx.beginPath();                                                        // lighter coverts along the leading edge
+    ctx.moveTo(-1, -1); ctx.quadraticCurveTo(side * 8, -6 - flap * 5, side * span * 0.8, tipY + 2); ctx.quadraticCurveTo(side * 8, -2 - flap * 4, 0, 1); ctx.closePath(); ctx.fill();
   }
-  ellipse(ctx, 0, 1, 6, 3.2, "#6d4c41", "#3e2723", 0.8);
-  poly(ctx, [[-6, 1], [-11, -1], [-11, 3]], "#5d4037", "#3e2723", 0.8);
-  circle(ctx, 6.5, -1, 3, "#fff8e1", "#6d4c41", 0.6);
-  poly(ctx, [[8.5, -1.5], [12, -0.5], [8.5, 0.5]], "#ffb300", "#f57f17", 0.5);
-  circle(ctx, 7.2, -1.6, 0.7, "#212121");
+  ellipse(ctx, 0, 1.5, 6.5, 3.4, dark);                                                             // body
+  poly(ctx, [[-5, 0], [-13, -2.5], [-14, 2], [-13, 5.5], [-5, 3]], white);                          // fanned white tail
+  for (let i = -1; i <= 1; i++) line(ctx, -6, 1.5, -13, 1.5 + i * 3, "#e0e0e0", 0.7);              // tail feather lines
+  // White head with a heavy hooked yellow beak and a sharp dark eye
+  ellipse(ctx, 6.5, -1, 3.6, 3, white);
+  poly(ctx, [[8.8, -2.6], [13.2, -1.4], [12.6, 0.8], [10.2, 0.6], [9, -0.4]], "#f9a825");          // beak
+  poly(ctx, [[13.2, -1.4], [12.6, 0.8], [13.6, 1.2]], "#ef8f00");                                  // the hook
+  circle(ctx, 7.6, -1.8, 0.8, "#212121"); circle(ctx, 7.9, -2, 0.3, "#fff");
+  line(ctx, 6.2, -3.2, 8.6, -2.8, "#9e9e9e", 0.6);                                                 // a stern brow
+  if (g.dive && !g.dive.struck) for (const tx of [3, 5]) line(ctx, tx, 4, tx + 2, 8, "#f9a825", 1.2);   // talons out on a dive
   ctx.restore();
 }
 
@@ -591,29 +616,29 @@ export function drawDog() {
   shadow(ctx, d.x, d.y + 8, 10, 3);
   ctx.save();
   ctx.translate(d.x + lungeBite * Math.sign(d.face || 1), d.y - bob);
-  ctx.scale(Math.sign(d.face || 1) * Math.max(0.2, Math.abs(d.face)), 1);
+  ctx.scale(Math.sign(d.face || 1) * Math.max(0.2, Math.abs(d.face)) * 0.82, 0.82);                      // a little smaller than the heroes
   if (sit) {
     ellipse(ctx, -5, 0, 7, 5, "#5d4037");
     line(ctx, 3, 0, 3, 7, "#8d6e63", 2.5); line(ctx, 6, 0, 6, 7, "#8d6e63", 2.5);
-    poly(ctx, [[-10, 2], [8, 2], [7, -12], [-6, -4]], "#c89b5a", "#6d4c41", 1);
+    poly(ctx, [[-10, 2], [8, 2], [7, -12], [-6, -4]], "#c89b5a");
     poly(ctx, [[-9, 0], [3, -6], [6, -12], [-5, -4]], "#2b2b2b");
     line(ctx, -10, 2, -16 + wag, -4, "#2b2b2b", 3.5);
-    circle(ctx, 9, -16, 5.5, "#c89b5a", "#6d4c41", 1);
-    poly(ctx, [[5, -20], [6, -27], [9, -20]], "#2b2b2b", "#1a1a1a", 0.8);
-    poly(ctx, [[9, -20.5], [12, -27], [13, -20]], "#2b2b2b", "#1a1a1a", 0.8);
+    circle(ctx, 9, -16, 5.5, "#c89b5a");
+    poly(ctx, [[5, -20], [6, -27], [9, -20]], "#2b2b2b");
+    poly(ctx, [[9, -20.5], [12, -27], [13, -20]], "#2b2b2b");
     ellipse(ctx, 14, -14.5, 4, 2.8, "#2b2b2b");
     circle(ctx, 17.5, -15, 1.3, "#111");
     circle(ctx, 11, -17, 1.1, "#3e2723");
     rect(ctx, 6, -12, 7, 2, "#c62828");
   } else {
     for (const [lx, k] of [[-7, 1], [-3, -1], [5, 1], [9, -1]]) line(ctx, lx, 0, lx + sw * k, 7, "#8d6e63", 2.5);
-    ellipse(ctx, 0, -5, 12, 6, "#c89b5a", "#6d4c41", 1);
+    ellipse(ctx, 0, -5, 12, 6, "#c89b5a");
     poly(ctx, [[-10, -7], [-6, -11], [6, -11], [10, -7], [6, -5], [-6, -5]], "#2b2b2b");
     ellipse(ctx, 1, -2, 7, 2.5, "#e3c79a");
     line(ctx, -12, -6, -19 + wag * 0.5, -12 + wag, "#2b2b2b", 3.5);
-    circle(ctx, 12, -9 + (d.target ? 2 : 0), 5.5, "#c89b5a", "#6d4c41", 1);
-    poly(ctx, [[8, -13], [9, -20], [12, -13]], "#2b2b2b", "#1a1a1a", 0.8);
-    poly(ctx, [[12, -13.5], [15, -20], [16, -13]], "#2b2b2b", "#1a1a1a", 0.8);
+    circle(ctx, 12, -9 + (d.target ? 2 : 0), 5.5, "#c89b5a");
+    poly(ctx, [[8, -13], [9, -20], [12, -13]], "#2b2b2b");
+    poly(ctx, [[12, -13.5], [15, -20], [16, -13]], "#2b2b2b");
     ellipse(ctx, 17, -7.5, 4, 2.8, "#2b2b2b");
     circle(ctx, 20.5, -8, 1.3, "#111");
     if (d.bite > 0) line(ctx, 15, -6, 20, -5.5, "#fff", 1.2);
@@ -621,7 +646,7 @@ export function drawDog() {
     rect(ctx, 8, -6, 6, 2, "#c62828");
   }
   ctx.restore();
-  const w = 20, x = d.x - w / 2, y = d.y - 26;
+  const w = 20, x = d.x - w / 2, y = d.y - 24;
   rect(ctx, x, y, w, 3, "#222");
   rect(ctx, x, y, w * (d.hp / d.maxHp), 3, "#ffab91");
 }

@@ -41,7 +41,7 @@ export function initHero(kind = "april") {
   if (kind === "avril" || kind === "ember" || kind === "meilin") {
     // A flying companion that circles above her
     const fdef = { avril: EAGLE, ember: DRAGON, meilin: LOONG }[kind];
-    state.eagle = { def: fdef, x: hero.x, y: hero.y - 34, angle: 0, cd: 0, dive: null, phase: 0, dir: 1, owner: hero, breath: 0, trail: [], sweep: null };
+    state.eagle = { def: fdef, x: hero.x, y: hero.y - (kind === "avril" ? 58 : 34), angle: 0, cd: 0, dive: null, phase: 0, dir: 1, owner: hero, breath: 0, trail: [], sweep: null };
   } else {
     // A four-legged companion that fights at her side
     const pdef = kind === "willow" ? BEAR : kind === "adrien" ? LION : DOG;
@@ -370,6 +370,7 @@ function updateFlyer(dt) {
   const g = state.eagle;
   if (!g) return;
   const F = g.def, owner = g.owner, home = owner.hp > 0 ? owner : owner.spawn;
+  const hover = F.kind === "eagle" ? 58 : 34;               // the eagle soars higher than the little dragon
   g.phase += dt * 9;
   if (g.cd > 0) g.cd -= dt;
   if (g.breath > 0) g.breath -= dt;
@@ -414,7 +415,7 @@ function updateFlyer(dt) {
   let goal;
   if (g.sweep) {
     const s = g.sweep;
-    goal = s.stage === 0 ? s.via : s.stage === 1 ? s.to : { x: home.x, y: home.y - 34 };
+    goal = s.stage === 0 ? s.via : s.stage === 1 ? s.to : { x: home.x, y: home.y - hover };
     if (s.stage < 2) {                                       // low pass: anything the head brushes gets struck once
       for (const e of state.enemies) if (!e.dead && !s.hit.has(e) && dist(e, { x: g.x, y: g.y + 6 }) <= 24) { s.hit.add(e); hurt(e, F.damage, "physical", true, owner); addBurst(e.x, e.y, 14, "rgba(255,235,59,0.8)"); sfx("clash", 0.1); }
     }
@@ -426,7 +427,7 @@ function updateFlyer(dt) {
       goal = { x: e.x, y: e.y - (e.def.flying ? 16 : 4) };
       if (dist(g, goal) < 8) { hurt(e, F.damage, "physical", true, owner); g.dive.struck = true; sfx("clash", 0.15); }
     } else {
-      goal = { x: home.x, y: home.y - 34 };
+      goal = { x: home.x, y: home.y - hover };
       if (dist(g, goal) < 10) { g.dive = null; g.cd = 1 / F.rate; }
     }
   }
@@ -434,7 +435,7 @@ function updateFlyer(dt) {
     g.angle += dt * (F.kind === "dragon" ? 1.2 : F.kind === "loong" ? 1.0 : 1.6);
     goal = F.kind === "loong"
       ? { x: home.x + Math.sin(g.angle) * 44, y: home.y - 40 + Math.sin(g.angle * 2) * 12 }
-      : { x: home.x + Math.cos(g.angle) * 26, y: home.y - 34 + Math.sin(g.angle) * 8 };
+      : { x: home.x + Math.cos(g.angle) * 26, y: home.y - hover + Math.sin(g.angle) * 8 };
   }
   const d = dist(g, goal);
   if (d > 0.5) {
