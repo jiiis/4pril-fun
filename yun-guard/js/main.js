@@ -265,7 +265,11 @@ if (touchDevice && document.documentElement.requestFullscreen) {
   window.addEventListener("touchend", enter); window.addEventListener("pointerup", enter);
 }
 fsBtn.addEventListener("click", toggleFullscreen);
-document.addEventListener("fullscreenchange", () => { fsBtn.innerHTML = icon(fsOn() ? "shrink" : "expand"); fsBtn.title = fsOn() ? "Exit full screen (F)" : "Full screen (F)"; });
+document.addEventListener("fullscreenchange", () => {
+  fsBtn.innerHTML = icon(fsOn() ? "shrink" : "expand"); fsBtn.title = fsOn() ? "Exit full screen (F)" : "Full screen (F)";
+  // Keep Escape for closing menus instead of leaving full screen (Chromium only; Safari always exits on Escape)
+  if (fsOn()) navigator.keyboard?.lock?.(["Escape"]).catch(() => {}); else navigator.keyboard?.unlock?.();
+});
 window.addEventListener("keydown", (ev) => { if (ev.code === "KeyF" && !ev.metaKey && !ev.ctrlKey) toggleFullscreen(); });
 
 // Pause: the round button, or P / Space
