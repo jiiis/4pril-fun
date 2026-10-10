@@ -28,9 +28,10 @@ const ROAD_MIN_ROW = 2, ROAD_MAX_ROW = ROWS - 3;
 // straight entries and exits that run to the edge of the map.
 const ROAD_MIN_COL = 2, ROAD_MAX_COL = COLS - 3;
 
-export function generateMap(seed) {
+export function generateMap(seed, opts = {}) {
   const rand = rng(seed);
   map.seed = seed;
+  map.opts = { spots: 20, secondRoute: 0.85, ...opts };            // how much world this level gets (see levels.js)
 
   const main = generateMainRoute(rand);
   map.routes = [main];
@@ -41,7 +42,7 @@ export function generateMap(seed) {
   // Usually a second route. It can fork off the main road and rejoin it, come in from its own
   // entrance and merge, fork off and leave by its own exit, or be a completely separate road.
   let allCells = main.cells;
-  if (rand() < 0.85) {
+  if (rand() < map.opts.secondRoute) {
     const kinds = [forkAndRejoin, separateEntry, forkToExit, separateRoute];
     shuffle(kinds, rand);
     for (const make of kinds) {
@@ -532,7 +533,7 @@ function pickSpots(cells, rand) {
   shuffle(candidates, rand);
   const spots = [];
   for (const p of candidates) {
-    if (spots.length >= 20) break;
+    if (spots.length >= map.opts.spots) break;
     if (spots.every((s) => dist(s, p) >= 100)) spots.push(p);
   }
   return spots;

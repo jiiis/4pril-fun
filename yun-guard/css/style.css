@@ -391,3 +391,5 @@ canvas { display: block; }
 #heroPick .reset { margin-top: 18px; background: none; border: 0; padding: 6px 10px; color: rgba(255, 255, 255, 0.38); font-size: 12px; font-weight: 600; letter-spacing: 0.4px; text-transform: none; box-shadow: none; }
 #heroPick .reset:hover { color: #ef9a9a; filter: none; transform: none; text-decoration: underline; }
 @media (max-height: 540px) { #heroPick .reset { margin-top: 8px; font-size: 11px; } }
+#menu .pill[data-action="rally"] { flex: 0 0 auto; padding: 7px 12px; }
+#menu .pill[data-action="rally"] .ico { width: 24px; height: 24px; display: block; }

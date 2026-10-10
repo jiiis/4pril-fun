@@ -32,6 +32,15 @@ export function navigate(query = "") {
   else location.href = url;
 }
 
+// How much world a level gets: early levels have a handful of build pads and one road; by level 30 the full set
+export function mapOptionsFor(L) {
+  L = clampLevel(L);
+  return {
+    spots: Math.min(20, 8 + Math.floor((L - 1) * 0.45)),              // 8 pads at level 1, 20 from level 28
+    secondRoute: L < 4 ? 0 : L < 10 ? 0.5 : 0.85,                     // one road to start with; a second one creeps in
+  };
+}
+
 export function levelConfig(L) {
   L = clampLevel(L);
   return {

@@ -14,7 +14,7 @@ import { initTouch } from "./touch.js";
 import { icon } from "./icons.js";
 import { unlockAudio, toggleMute, isMuted, sfx } from "./audio.js";
 import { initWeather } from "./weather.js";
-import { MAX_LEVEL, clampLevel, savedLevel, saveLevel, levelConfig, levelSeed, carryFor, clearProgress } from "./levels.js";
+import { MAX_LEVEL, clampLevel, savedLevel, saveLevel, levelConfig, levelSeed, carryFor, clearProgress, mapOptionsFor } from "./levels.js";
 
 // Which level? ?level=N in the URL, else the last one played on this device. Each level has its own map
 // (add ?seed=1234 to force a particular map instead).
@@ -24,7 +24,7 @@ saveLevel(level);
 const diff = levelConfig(level);
 state.level = level; state.diff = diff; state.totalWaves = diff.waves; state.gold = diff.gold + carryFor(level); state.lives = diff.lives;
 const seedParam = Number(params.get("seed")) || Number(location.hash.replace(/^#/, ""));   // ?seed=123456 or #123456
-generateMap(seedParam > 0 ? seedParam : levelSeed(level));
+generateMap(seedParam > 0 ? seedParam : levelSeed(level), mapOptionsFor(level));
 // The address bar always shows the level and map being played, so a browser refresh or bookmark brings back exactly this game
 function showInUrl(heroKind) {
   const q = new URLSearchParams({ level, seed: map.seed });
@@ -43,7 +43,7 @@ function startLevel({ level: L, seed, hero }) {
   for (const k of ["enemies", "towers", "shots", "floaters", "bursts", "bolts", "fires", "smoke", "scorches", "blood", "corpses", "spawnQueue", "fish", "poops", "heroes"]) state[k] = [];
   state.hero = null; state.dog = null; state.eagle = null;
   state.selected = null; state.hover = null; state.rallyFor = null; state.hoverCritter = null; state.preview = null;
-  generateMap(seed > 0 ? seed : levelSeed(level));
+  generateMap(seed > 0 ? seed : levelSeed(level), mapOptionsFor(level));
   invalidateBackground();
   initCritters(); initWeather();
   resetUiForLevel();
