@@ -179,6 +179,7 @@ export function fitToWindow() {
 }
 // Zoom so the board point under the screen position (sx, sy) stays put: pinch on a phone, ctrl+wheel on a trackpad
 export function zoomTo(k, sx, sy) {
+  if (document.fullscreenElement) return;                        // full screen is the fixed, fitted view: no zooming
   k = clamp(k, Math.max(MIN_ZOOM, view.fit * 0.8), Math.min(MAX_ZOOM, view.fit * 1.8));   // only a little out, a fair bit in, from the natural fit
   const cx = window.innerWidth / 2, cy = (window.innerHeight - hudH()) / 2;
   const ux = (sx - cx - view.panX) / view.k, uy = (sy - cy - view.panY) / view.k;   // board offset (from its centre) under the finger
