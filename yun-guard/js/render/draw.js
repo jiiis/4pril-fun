@@ -17,7 +17,7 @@ let background = null;   // built on the first frame, after the map has been gen
 // device pixel ratio and the current zoom (in quarter steps, capped) so nothing goes soft when zoomed in.
 // The static background is re-rasterized to match, a moment after the zoom settles.
 let res = 0, bgRes = 0, resChangedAt = 0;
-const MAX_RES = 3;
+const MAX_RES = 2;                                        // crisp enough on 2× screens; above this the fill cost per frame climbs fast
 function fitResolution() {
   const want = Math.min(MAX_RES, Math.ceil((window.devicePixelRatio || 1) * view.k * 4) / 4);
   if (want !== res) {
