@@ -1,7 +1,8 @@
-import { ctx, circle, ellipse, rect, line, poly } from "./gfx.js";
+import { canvas, ctx, circle, ellipse, rect, line, poly } from "./gfx.js";
 import { state } from "../state.js";
+import { view } from "../ui.js";
 import { map } from "../map.js";
-import { SPOT_RADIUS, H, TOWERS } from "../config.js";
+import { SPOT_RADIUS, W, H, TOWERS } from "../config.js";
 import { towerRange, abilityDef } from "../towers.js";
 import { buildBackground, drawSign, CASTLE_STYLES, gatePillars, lairStakes, drawDecoItem, drawCastleAt, drawGateStructure, gateAnchorY, drawLairStructure, lairAnchorY, lairParts } from "./background.js";
 import { drawTower, flag } from "./towers.js";
@@ -12,6 +13,22 @@ import { drawHero, drawDog, drawEagle } from "./hero.js";
 import { drawWeather, drawSnowCover } from "../weather.js";
 
 let background = null;   // built on the first frame, after the map has been generated
+// Resolution: the canvas keeps its 1440×840 world size on screen, but its pixel buffer follows the
+// device pixel ratio and the current zoom (in quarter steps, capped) so nothing goes soft when zoomed in.
+// The static background is re-rasterized to match, a moment after the zoom settles.
+let res = 0, bgRes = 0, resChangedAt = 0;
+const MAX_RES = 3;
+function fitResolution() {
+  const want = Math.min(MAX_RES, Math.ceil((window.devicePixelRatio || 1) * view.k * 4) / 4);
+  if (want !== res) {
+    res = want; resChangedAt = performance.now();
+    canvas.width = Math.round(W * res); canvas.height = Math.round(H * res);
+    canvas.style.width = `${W}px`; canvas.style.height = `${H}px`;
+  }
+  if (!background || (bgRes !== res && performance.now() - resChangedAt > 150)) { background = buildBackground(res); bgRes = res; }
+  ctx.setTransform(res, 0, 0, res, 0, 0);
+}
+export const invalidateBackground = () => { background = null; };
 
 // Living water: glints drifting along the current, and fish leaping out
 function drawWater() {
@@ -132,8 +149,8 @@ function drawSpot(s, i, occupied, hovered) {
 }
 
 export function draw() {
-  if (!background) background = buildBackground();
-  ctx.drawImage(background, 0, 0);
+  fitResolution();
+  ctx.drawImage(background, 0, 0, W, H);
   // Arrows worn into the dirt at the map edges: soft filled wedges, no outlines. A gentle wave
   // runs along the three of them so each swells, brightens and nudges forward in turn.
   const wave = (k) => { const p = ((state.time * 0.55 - k * 0.22) % 1 + 1) % 1; return Math.pow(Math.sin(p * Math.PI), 3); };

@@ -5,10 +5,11 @@ import { rect, circle, ellipse, poly, line, shadow } from "./gfx.js";
 
 // The scenery never changes, so we draw it once onto a hidden canvas
 // and then just copy that picture every frame.
-export function buildBackground() {
+export function buildBackground(res = 1) {                      // res: device pixels per world pixel
   const off = document.createElement("canvas");
-  off.width = W; off.height = H;
+  off.width = Math.round(W * res); off.height = Math.round(H * res);
   const c = off.getContext("2d");
+  c.scale(res, res);
   const rand = rng(1234);
   const Y0 = 0, HH = H;
 
