@@ -22,8 +22,16 @@ export function carryFor(level) {                                   // the bonus
 export function clearProgress() { try { localStorage.removeItem(KEY); localStorage.removeItem(CARRY_KEY); } catch (e) { /* fine */ } }
 export const clampLevel = (n) => Math.max(1, Math.min(MAX_LEVEL, Math.floor(Number(n) || 1)));
 
-// A level always plays on the same map
-export const levelSeed = (L) => ((L * 2654435761 + 97) % 999983) + 1;
+// A level always plays on the same map... until progress is reset, which reshuffles every level's map.
+// The shuffle is remembered on this device so it survives refreshes and launching from the home screen.
+const SALT_KEY = "yunguard.salt";
+let salt = 0;
+try { salt = Math.floor(Number(localStorage.getItem(SALT_KEY))) || 0; } catch (e) { /* fine */ }
+export function reshuffleMaps() {
+  salt = 1 + Math.floor(Math.random() * 999999);
+  try { localStorage.setItem(SALT_KEY, String(salt)); } catch (e) { /* fine */ }
+}
+export const levelSeed = (L) => (((L + salt) * 2654435761 + 97) % 999983) + 1;
 
 // Load the page with this query (e.g. "?level=8"), dropping any #seed. Same URL: reload (some phones ignore a plain assignment).
 export function navigate(query = "") {

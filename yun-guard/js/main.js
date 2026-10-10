@@ -14,7 +14,7 @@ import { initTouch } from "./touch.js";
 import { icon } from "./icons.js";
 import { unlockAudio, toggleMute, isMuted, sfx } from "./audio.js";
 import { initWeather } from "./weather.js";
-import { MAX_LEVEL, clampLevel, savedLevel, saveLevel, levelConfig, levelSeed, carryFor, clearProgress, mapOptionsFor } from "./levels.js";
+import { MAX_LEVEL, clampLevel, savedLevel, saveLevel, levelConfig, levelSeed, carryFor, clearProgress, reshuffleMaps, mapOptionsFor } from "./levels.js";
 
 // Which level? ?level=N in the URL, else the last one played on this device. Each level has its own map
 // (add ?seed=1234 to force a particular map instead).
@@ -119,8 +119,8 @@ const disarmReset = () => { clearTimeout(resetArmed); resetArmed = null; resetBt
 resetBtn.addEventListener("click", () => {
   if (!resetArmed) { resetArmed = setTimeout(disarmReset, 3500); resetBtn.classList.add("armed"); resetLbl.textContent = "Tap again to reset"; return; }
   disarmReset();
-  clearProgress();
-  startLevel({ level: 1, seed: 1 + Math.floor(Math.random() * 999999), hero: "pick" });   // a fresh start on a fresh map
+  clearProgress(); reshuffleMaps();
+  startLevel({ level: 1, hero: "pick" });                           // a fresh start on fresh maps
 });
 // Level picker on the legend screen: arrows or type a number, and the chosen level loads
 const lvInput = document.getElementById("lvInput");
