@@ -8,6 +8,18 @@ export function savedLevel() {
   try { const n = Math.floor(Number(localStorage.getItem(KEY))); return n >= 1 && n <= MAX_LEVEL ? n : 1; } catch (e) { return 1; }
 }
 export function saveLevel(n) { try { localStorage.setItem(KEY, String(n)); } catch (e) { /* private mode: fine */ } }
+
+// Gold carried over: on finishing a level, 75% of what's left travels to the next one (remembered on this device)
+const CARRY_KEY = "yunguard.carry", CARRY_SHARE = 0.75;
+export function saveCarry(forLevel, goldLeft) {
+  const gold = Math.round(goldLeft * CARRY_SHARE);
+  try { localStorage.setItem(CARRY_KEY, JSON.stringify({ level: forLevel, gold })); } catch (e) { /* fine */ }
+  return gold;
+}
+export function carryFor(level) {                                   // the bonus waiting for this level, if any
+  try { const c = JSON.parse(localStorage.getItem(CARRY_KEY) || "null"); return c && c.level === level ? Math.max(0, Math.floor(c.gold)) : 0; } catch (e) { return 0; }
+}
+export function clearProgress() { try { localStorage.removeItem(KEY); localStorage.removeItem(CARRY_KEY); } catch (e) { /* fine */ } }
 export const clampLevel = (n) => Math.max(1, Math.min(MAX_LEVEL, Math.floor(Number(n) || 1)));
 
 // A level always plays on the same map

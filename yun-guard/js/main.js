@@ -14,7 +14,7 @@ import { initTouch } from "./touch.js";
 import { icon } from "./icons.js";
 import { unlockAudio, toggleMute, isMuted, sfx } from "./audio.js";
 import { initWeather } from "./weather.js";
-import { MAX_LEVEL, clampLevel, savedLevel, saveLevel, levelConfig, levelSeed } from "./levels.js";
+import { MAX_LEVEL, clampLevel, savedLevel, saveLevel, levelConfig, levelSeed, carryFor, clearProgress } from "./levels.js";
 
 // Which level? ?level=N in the URL, else the last one played on this device. Each level has its own map
 // (add ?seed=1234 to force a particular map instead).
@@ -22,7 +22,7 @@ const params = new URLSearchParams(location.search);
 let level = clampLevel(params.get("level") || savedLevel());
 saveLevel(level);
 const diff = levelConfig(level);
-state.level = level; state.diff = diff; state.totalWaves = diff.waves; state.gold = diff.gold; state.lives = diff.lives;
+state.level = level; state.diff = diff; state.totalWaves = diff.waves; state.gold = diff.gold + carryFor(level); state.lives = diff.lives;
 const seedParam = Number(params.get("seed")) || Number(location.hash.replace(/^#/, ""));   // ?seed=123456 or #123456
 generateMap(seedParam > 0 ? seedParam : levelSeed(level));
 // The address bar always shows the level and map being played, so a browser refresh or bookmark brings back exactly this game
@@ -38,7 +38,7 @@ showInUrl(params.get("hero"));
 function startLevel({ level: L, seed, hero }) {
   level = clampLevel(L); saveLevel(level);
   const d = levelConfig(level);
-  state.level = level; state.diff = d; state.totalWaves = d.waves; state.gold = d.gold; state.lives = d.lives;
+  state.level = level; state.diff = d; state.totalWaves = d.waves; state.gold = d.gold + carryFor(level); state.lives = d.lives;
   state.wave = 0; state.over = false; state.paused = false; state.countdown = null; state.spawnTimer = 0;
   for (const k of ["enemies", "towers", "shots", "floaters", "bursts", "bolts", "fires", "smoke", "scorches", "blood", "corpses", "spawnQueue", "fish", "poops", "heroes"]) state[k] = [];
   state.hero = null; state.dog = null; state.eagle = null;
@@ -88,6 +88,15 @@ function startSolo() {
   sfx("select");
 }
 document.getElementById("noLegend").addEventListener("click", startSolo);
+// Reset: wipe the saved level and carried gold and start from level 1 (two taps, so a slip doesn't do it)
+const resetBtn = document.getElementById("resetProgress");
+let resetArmed = null;
+resetBtn.addEventListener("click", () => {
+  if (!resetArmed) { resetArmed = setTimeout(() => { resetArmed = null; resetBtn.textContent = "Reset progress"; }, 3000); resetBtn.textContent = "Tap again to reset everything"; return; }
+  clearTimeout(resetArmed); resetArmed = null; resetBtn.textContent = "Reset progress";
+  clearProgress();
+  startLevel({ level: 1, hero: "pick" });
+});
 // Level picker on the legend screen: arrows or type a number, and the chosen level loads
 const lvInput = document.getElementById("lvInput");
 lvInput.value = level; lvInput.max = MAX_LEVEL;

@@ -1,6 +1,6 @@
 import { state } from "./state.js";
 import { TOWERS, W, H } from "./config.js";
-import { MAX_LEVEL, saveLevel } from "./levels.js";
+import { MAX_LEVEL, saveLevel, saveCarry } from "./levels.js";
 import { map } from "./map.js";
 import { towerRange, towerDamage, upgradeCost, sellValue, canUpgrade, canSpecialise, abilityCost, abilityDef, soldierCount, soldierHp, soldierDamage, createTower } from "./towers.js";
 import { ABILITIES } from "./config.js";
@@ -42,9 +42,10 @@ export function endGame(won) {
   $("pause").disabled = true;
   setWaveButton("over");
   const L = state.level, last = L >= MAX_LEVEL;
+  const carried = won && !last ? saveCarry(L + 1, state.gold) : 0;          // 75% of the gold left travels to the next level
   $("overlayTitle").textContent = won ? (last ? "Kingdom saved!" : `Level ${L} complete!`) : "Game Over";
   $("overlayText").textContent = won
-    ? (last ? `You held every one of the ${MAX_LEVEL} levels. Legendary!` : `All ${state.totalWaves} waves beaten. Level ${L + 1} awaits.`)
+    ? (last ? `You held every one of the ${MAX_LEVEL} levels. Legendary!` : `All ${state.totalWaves} waves beaten. ${carried} gold (75% of what's left) goes with you to level ${L + 1}.`)
     : `The monsters broke through on wave ${state.wave} of level ${L}. Try a different tower mix!`;
   $("overlay").style.display = "flex";
   sfx(won ? "victory" : "gameOver");
