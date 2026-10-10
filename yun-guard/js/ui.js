@@ -151,14 +151,22 @@ function handleMenuClick(ev) {
 // The board always fills the screen: shown at its natural size, or scaled up (never down) when the window is
 // larger than it. Whatever sticks out past the screen is reached by dragging (see touch.js).
 export const view = { k: 1, panX: 0, panY: 0, mobile: false };
-const MAX_ZOOM = 2;
+const MAX_ZOOM = 2, MIN_ZOOM = 0.6;                              // small screens may shrink the board to see more of it; pads stay tappable
 const hudH = () => 0;                                           // the HUD floats over the board, so the whole window is for the map
 export function fitToWindow() {
   view.mobile = window.matchMedia("(pointer: coarse)").matches || navigator.maxTouchPoints > 1;
   document.documentElement.style.setProperty("--hud", `${hudH()}px`);
   // The board is scaled to the window's height (never below natural size, never more than 2×); the width
   // follows proportionally, so a wide screen gets quiet borders at the sides and a narrow one pans sideways.
-  view.k = Math.min(MAX_ZOOM, Math.max(1, (window.innerHeight - hudH()) / H));
+  view.k = clamp((window.innerHeight - hudH()) / H, MIN_ZOOM, MAX_ZOOM);
+  applyView();
+}
+// Zoom so the board point under the screen position (sx, sy) stays put: pinch on a phone, ctrl+wheel on a trackpad
+export function zoomTo(k, sx, sy) {
+  k = clamp(k, MIN_ZOOM, MAX_ZOOM);
+  const cx = window.innerWidth / 2, cy = (window.innerHeight - hudH()) / 2;
+  const ux = (sx - cx - view.panX) / view.k, uy = (sy - cy - view.panY) / view.k;   // board offset (from its centre) under the finger
+  view.panX = sx - cx - ux * k; view.panY = sy - cy - uy * k; view.k = k;
   applyView();
 }
 export const canPan = () => W * view.k > window.innerWidth + 1 || H * view.k > window.innerHeight - hudH() + 1;
