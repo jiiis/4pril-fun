@@ -74,10 +74,10 @@ window.addEventListener("keydown", (ev) => {
   const n = ["Digit1", "Digit2", "Digit3", "Digit4", "Digit5"].indexOf(ev.code);
   if (n >= 0 && !ev.metaKey && !ev.ctrlKey && heroPick.style.display !== "none") chooseHero(["april", "avril", "ember", "willow", "meilin"][n]);
 });
-window.addEventListener("keydown", (ev) => { if (ev.code === "KeyN" && !ev.metaKey && !ev.ctrlKey && heroPick.style.display !== "none") startSolo(); });
-if (preset === "none") startSolo();
+window.addEventListener("keydown", (ev) => { if (ev.code === "KeyW" && !ev.metaKey && !ev.ctrlKey && heroPick.style.display !== "none") startSolo(); });
 document.getElementById("next").disabled = true;          // until a legend is chosen
 document.getElementById("pause").disabled = true;
+if (preset === "none") startSolo();
 for (const card of heroPick.querySelectorAll(".card")) card.addEventListener("click", () => chooseHero(card.dataset.hero));
 if (["april", "avril", "ember", "willow", "meilin"].includes(preset)) chooseHero(preset);
 
@@ -159,18 +159,25 @@ window.addEventListener("keydown", (ev) => {
 });
 
 document.getElementById("next").addEventListener("click", startWave);
-window.addEventListener("keydown", (ev) => { if (ev.code === "KeyN" && !ev.metaKey && !ev.ctrlKey && heroPick.style.display === "none" && !document.getElementById("next").disabled && !state.paused) startWave(); });   // N: next wave (on the legend screen N means no legend)
+window.addEventListener("keydown", (ev) => { if (ev.code === "KeyN" && !ev.metaKey && !ev.ctrlKey && heroPick.style.display === "none" && !document.getElementById("next").disabled && !state.paused) startWave(); });   // N: next wave
 
 // Restart: play this same map again from the start, with the same legend (R)
 // Start over: a freshly generated map and the legend choice again
 // Restart: a small in-game dialog asks for the same map (default) or a freshly generated one
 const confirmBox = document.getElementById("confirm");
+const pausedView = document.getElementById("paused");
 function restartLevel() {
-  if (state.over) return;
+  if (state.over || confirmBox.style.display === "flex") return;
   document.getElementById("confirmLevel").textContent = level;
   confirmBox.style.display = "flex";
+  pausedView.style.display = "none";                                  // the restart prompt takes the pause screen's place
+  pauseBtn.disabled = true;                                           // and pausing waits until it's answered
 }
-const closeConfirm = () => { confirmBox.style.display = "none"; };
+const closeConfirm = () => {
+  confirmBox.style.display = "none";
+  if (state.paused) pausedView.style.display = "flex";
+  pauseBtn.disabled = state.over || heroPick.style.display !== "none";
+};
 document.getElementById("confirmSame").addEventListener("click", () => navigate(`?level=${level}&seed=${map.seed}`));
 document.getElementById("confirmNew").addEventListener("click", () => navigate(`?level=${level}&seed=${1 + Math.floor(Math.random() * 999999)}`));
 confirmBox.addEventListener("click", (ev) => { if (ev.target === confirmBox) closeConfirm(); });
@@ -213,7 +220,7 @@ function setPaused(on) {
 }
 pauseBtn.addEventListener("click", () => setPaused(!state.paused));
 document.querySelector("#paused span").addEventListener("click", () => setPaused(false));   // the big play button resumes
-window.addEventListener("keydown", (ev) => { if ((ev.code === "KeyP" || ev.code === "Space") && heroPick.style.display === "none" && !state.over) { ev.preventDefault(); setPaused(!state.paused); } });
+window.addEventListener("keydown", (ev) => { if ((ev.code === "KeyP" || ev.code === "Space") && heroPick.style.display === "none" && !state.over && !pauseBtn.disabled) { ev.preventDefault(); setPaused(!state.paused); } });
 
 // Main loop
 let last = performance.now();

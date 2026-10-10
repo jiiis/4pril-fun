@@ -16,7 +16,7 @@ const BEHAVIOUR = {
   duck:  { speed: 32, wander: 30, idleMin: 1.0, idleMax: 3.5 },
 };
 
-const POOPERS = { sheep: 1.2, cow: 2.2, deer: 1.3, bunny: 0.9, duck: 0.9 };   // who poops, and how big
+const POOPERS = { sheep: 1.2, cow: 2.2, deer: 1.3, bunny: 0.9 };   // who poops, and how big (ducks are too polite)
 
 export function initCritters() {
   state.critters = map.critters.map((c) => ({
@@ -41,12 +41,23 @@ export function slayCritter(c) {
 export function updateCritters(dt) {
   const hunters = state.heroes.filter((h) => h.hp > 0 && h.hunt);
   const huntedBy = (c) => hunters.find((h) => h.hunt === c);
-  for (const p of state.poops) p.life -= dt;
+  for (const p of state.poops) { p.life -= dt; p.age += dt; }
   state.poops = state.poops.filter((p) => p.life > 0);
   for (const c of state.critters) {
-    // Grazers leave the odd dropping behind while they stand about
-    if (!c.fleeing && !c.target && POOPERS[c.type] && Math.random() < dt * 0.025 && state.poops.length < 60)
-      state.poops.push({ x: c.x - c.dir * 8, y: c.y + 3, size: POOPERS[c.type], n: 1 + Math.floor(Math.random() * 3), life: 45, seed: Math.random() * 10 });
+    // Grazers leave the odd dropping behind while they stand about: a little squat, then the dropping falls
+    if (!c.fleeing && !c.target && !c.pooping && POOPERS[c.type] && Math.random() < dt * 0.025 && state.poops.length < 60) {
+      c.pooping = 1.3; c.poopDue = 0.55;                                           // the squat lasts 1.3s; the dropping lands a little way in
+      c.idle = Math.max(c.idle || 0, 1.5);                                          // and the animal stays put for it
+    }
+    if (c.pooping && c.fleeing) { c.pooping = 0; c.poopDue = null; }           // no time for that when chased
+    if (c.pooping) {
+      c.pooping -= dt;
+      if (c.poopDue !== null && (c.poopDue -= dt) <= 0) {
+        state.poops.push({ x: c.x - c.dir * 8, y: c.y + 3, size: POOPERS[c.type], n: 1 + Math.floor(Math.random() * 3), life: 45, age: 0, seed: Math.random() * 10 });
+        c.poopDue = null;
+      }
+      if (c.pooping <= 0) c.pooping = 0;
+    }
     const b = BEHAVIOUR[c.type];
     const hunter = huntedBy(c);
     c.hunted = !!hunter;

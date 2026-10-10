@@ -18,6 +18,11 @@ export function drawCritter(c) {
   ctx.save();
   ctx.translate(c.x, c.y);
   ctx.scale(c.dir * k, k);
+  if (c.pooping) {                                                           // squatting: hunkers down at the back, with a little strain
+    const u = 1 - c.pooping / 1.3, squat = Math.sin(Math.min(1, u * 1.15) * Math.PI);
+    ctx.translate(Math.sin(state.time * 40) * squat * 0.4, 0);
+    ctx.transform(1, 0, 0.18 * squat, 1 - 0.12 * squat, 0, 0);               // lean back and sink
+  }
   DRAW[c.type](c.phase, moving);
   ctx.restore();
 }
@@ -64,11 +69,11 @@ const DRAW = {
     const nod = moving ? 0 : Math.sin(phase) * 2.5;                 // head bobs while grazing
     const edge = "#8a5a2a";                                          // a soft outline a shade darker than the coat
     for (const [lx, d] of [[-8, 1], [-4, -1], [6, 1], [10, -1]]) line(ctx, lx, -12, lx + sw * d, 0, "#9c6a35", 2.5);
-    ellipse(ctx, 0, -15, 12, 7, "#b07a3b", edge, 0.8);             // body
+    ellipse(ctx, 0, -15, 12, 7, "#b07a3b");                        // body, no outline
     for (const [sx, sy] of [[-5, -16], [0, -19], [4, -14], [-1, -12]]) circle(ctx, sx, sy, 1.2, "#efdcc3");   // spots
     line(ctx, -12, -17, -16, -13, "#b07a3b", 3);                    // tail
     line(ctx, 10, -19, 15, -27 + nod, "#b07a3b", 5);                // neck
-    ellipse(ctx, 17, -29 + nod, 5.5, 4, "#b07a3b", edge, 0.8);      // head
+    ellipse(ctx, 17, -29 + nod, 5.5, 4, "#b07a3b");                 // head, no outline
     ellipse(ctx, 21.5, -28 + nod, 2.5, 1.8, "#c9a06a");             // muzzle, a lighter shade of the coat
     circle(ctx, 23, -28.5 + nod, 0.9, "#212121");                   // nose
     circle(ctx, 18, -30.5 + nod, 1, "#212121");                     // eye

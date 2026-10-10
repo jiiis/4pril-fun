@@ -196,8 +196,22 @@ export function draw() {
 
   // Droppings left by the animals, fading away
   for (const p of state.poops) {
+    const t = Math.min(1, (p.age || 0) / 0.35), fall = 1 - t;                  // drops in and settles with a tiny bounce
+    const bounce = p.age > 0.35 && p.age < 0.6 ? Math.sin(((p.age - 0.35) / 0.25) * Math.PI) * 1.2 : 0;
+    const sz = p.size * (0.6 + 0.4 * t);
     ctx.globalAlpha = Math.min(1, p.life / 6) * 0.9;
-    for (let i = 0; i < p.n; i++) ellipse(ctx, p.x + Math.sin(p.seed + i * 2.1) * p.size * 1.6, p.y + Math.cos(p.seed + i * 1.7) * p.size * 0.8, p.size, p.size * 0.7, "#4e342e", "#3e2723", 0.5);
+    for (let i = 0; i < p.n; i++) ellipse(ctx, p.x + Math.sin(p.seed + i * 2.1) * sz * 1.6, p.y + Math.cos(p.seed + i * 1.7) * sz * 0.8 - fall * fall * 7 - bounce, sz, sz * 0.7, "#4e342e", "#3e2723", 0.5);
+    if (p.age > 0.4 && p.age < 2.4) {                                            // a few wavy whiffs rise and fade
+      const a = (p.age - 0.4) / 2;
+      ctx.globalAlpha = (1 - a) * 0.35; ctx.strokeStyle = "#9e9d8a"; ctx.lineWidth = 0.9; ctx.lineCap = "round";
+      for (let i = -1; i <= 1; i++) {
+        const x0 = p.x + i * 3 * p.size, y0 = p.y - 2 - a * 14;
+        ctx.beginPath(); ctx.moveTo(x0, y0 + 6);
+        ctx.quadraticCurveTo(x0 + 2, y0 + 3 + Math.sin(state.time * 6 + i) * 1.2, x0, y0);
+        ctx.quadraticCurveTo(x0 - 2, y0 - 3 - Math.sin(state.time * 6 + i) * 1.2, x0, y0 - 6);
+        ctx.stroke();
+      }
+    }
   }
   ctx.globalAlpha = 1;
 

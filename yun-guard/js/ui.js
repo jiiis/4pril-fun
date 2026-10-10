@@ -108,7 +108,6 @@ export function openMenu(spotIndex) {
     }
     html += `</div><div class="hint">Pick a tower</div>`;
   }
-  html += `<button class="x" data-action="close" title="Close">${icon("x")}</button>`;
 
   const menu = $("menu");
   menu.innerHTML = html;
