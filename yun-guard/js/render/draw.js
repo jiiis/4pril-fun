@@ -1,7 +1,7 @@
 import { ctx, circle, ellipse, rect, line, poly } from "./gfx.js";
 import { state } from "../state.js";
 import { map } from "../map.js";
-import { SPOT_RADIUS } from "../config.js";
+import { SPOT_RADIUS, H } from "../config.js";
 import { towerRange, abilityDef } from "../towers.js";
 import { buildBackground, drawSign, CASTLE_STYLES, gatePillars, lairStakes, drawDecoItem, drawCastleAt, drawGateStructure, gateAnchorY, drawLairStructure, lairAnchorY } from "./background.js";
 import { drawTower, flag } from "./towers.js";
@@ -88,10 +88,13 @@ function drawRallyFlag(p, moving) {
 // An empty build spot: a weathered stone pad half-sunk in the grass, kept muted so it reads as
 // scenery until the mouse is over it. Once a tower stands there, the pad is gone.
 export const SPOT_SQUASH = 0.62;   // how much the build pads are foreshortened (1 = seen straight from above)
+// A light sense of depth: things lower on the map (nearer the viewer) are drawn a little larger
+export const depthScale = (y) => 0.9 + 0.2 * Math.min(1, Math.max(0, y / H));
 function drawSpot(s, i, occupied, hovered) {
   if (occupied) return;
   const { x, y } = s, R = SPOT_RADIUS;
   ctx.save();
+  const ds = depthScale(y); ctx.translate(x, y); ctx.scale(ds, ds); ctx.translate(-x, -y);
   ctx.globalAlpha = hovered ? 1 : 0.6;
   // Seen from the front and above: the pad is a foreshortened disc with a visible front edge
   ctx.translate(x, y); ctx.scale(1, SPOT_SQUASH); ctx.translate(-x, -y);
@@ -257,24 +260,26 @@ export function draw() {
 
   // Towers, soldiers, monsters and animals, sorted so things lower on screen are drawn in front.
   // A tower's "feet" are the bottom of its stone pad, so monsters walking above it go behind it.
+  // Everything standing on the ground is scaled about its feet by depthScale (buildings excepted)
   const actors = [];
-  for (const d of map.deco) actors.push({ y: d.y, draw: () => drawDecoItem(ctx, d) });                 // trees, bushes, rocks, flowers...
+  const scaled = (x, y, fn) => () => { const ds = depthScale(y); ctx.save(); ctx.translate(x, y); ctx.scale(ds, ds); ctx.translate(-x, -y); fn(); ctx.restore(); };
+  for (const d of map.deco) actors.push({ y: d.y, draw: scaled(d.x, d.y, () => drawDecoItem(ctx, d)) });   // trees, bushes, rocks, flowers...
   for (const k of map.castles) actors.push({ y: k.y + 8 * k.scale, draw: () => drawCastleAt(ctx, k) });
   for (const g of map.exits) actors.push({ y: gateAnchorY(g), draw: () => drawGateStructure(ctx, g) });
   for (const e of map.entries) actors.push({ y: lairAnchorY(e), draw: () => drawLairStructure(ctx, e) });
-  for (const e of map.entries) actors.push({ y: e.y + 12, draw: () => { drawSign(ctx, e.x, e.y, e.face); flag(e.x, e.y - 40, 20, "#c62828", 2 + e.y); } });
-  for (const t of state.towers) actors.push({ y: t.y + 12, draw: () => {
+  for (const e of map.entries) actors.push({ y: e.y + 12, draw: scaled(e.x, e.y, () => { drawSign(ctx, e.x, e.y, e.face); flag(e.x, e.y - 40, 20, "#c62828", 2 + e.y); }) });
+  for (const t of state.towers) actors.push({ y: t.y + 12, draw: scaled(t.x, t.y, () => {
     drawTower(t);
     if (t.level > 1) {
       ctx.fillStyle = "#ffd54f"; ctx.font = "11px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
       ctx.fillText("★".repeat(t.level), t.x, t.y + 34);
     }
-  } });
-  for (const t of state.towers) for (const s of t.soldiers) if (s.hp > 0) actors.push({ y: s.y, draw: () => drawSoldier(s) });
-  for (const e of state.enemies) actors.push({ y: e.y, draw: () => drawEnemy(e) });
-  for (const c of state.critters) actors.push({ y: c.y, draw: () => drawCritter(c) });
-  for (const h of state.heroes) actors.push({ y: h.hp > 0 ? h.y : h.spawn.y, draw: () => drawHero(h) });
-  if (state.dog && state.dog.hp > 0) actors.push({ y: state.dog.y, draw: drawDog });
+  }) });
+  for (const t of state.towers) for (const s of t.soldiers) if (s.hp > 0) actors.push({ y: s.y, draw: scaled(s.x, s.y, () => drawSoldier(s)) });
+  for (const e of state.enemies) actors.push({ y: e.y, draw: scaled(e.x, e.y, () => drawEnemy(e)) });
+  for (const c of state.critters) actors.push({ y: c.y, draw: scaled(c.x, c.y, () => drawCritter(c)) });
+  for (const h of state.heroes) actors.push({ y: h.hp > 0 ? h.y : h.spawn.y, draw: scaled(h.hp > 0 ? h.x : h.spawn.x, h.hp > 0 ? h.y : h.spawn.y, () => drawHero(h)) });
+  if (state.dog && state.dog.hp > 0) actors.push({ y: state.dog.y, draw: scaled(state.dog.x, state.dog.y, drawDog) });
   actors.sort((a, b) => a.y - b.y).forEach((a) => a.draw());
   // Living details on the structures, drawn over them: lantern glows, torches, banners, the temple's glint, the fountain
   // Lairs: the skulls' eyes glow and green mist seeps out of the entrance

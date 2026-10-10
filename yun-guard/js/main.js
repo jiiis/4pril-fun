@@ -4,7 +4,7 @@ import { W, H, SPOT_RADIUS } from "./config.js";
 import { dist } from "./util.js";
 import { map, generateMap } from "./map.js";
 import { update } from "./update.js";
-import { draw, SPOT_SQUASH } from "./render/draw.js";
+import { draw, SPOT_SQUASH, depthScale } from "./render/draw.js";
 import { initUi, openMenu, closeMenu } from "./ui.js";
 import { startWave, spawnEnemy } from "./waves.js";
 import { createTower, setRally } from "./towers.js";
@@ -69,7 +69,7 @@ canvas.addEventListener("click", (ev) => {
     deselectHeroes();
     sfx("order");
   } else {
-    const i = map.spots.findIndex((s) => Math.hypot(p.x - s.x, (p.y - s.y) / SPOT_SQUASH) <= SPOT_RADIUS + 5);
+    const i = map.spots.findIndex((s) => Math.hypot(p.x - s.x, (p.y - s.y) / SPOT_SQUASH) <= SPOT_RADIUS * depthScale(s.y) + 5);
     if (i >= 0) { openMenu(i); sfx("click"); } else closeMenu();
   }
   canvas.style.cursor = selectedHero() || state.rallyFor ? "crosshair" : state.hover !== null ? "pointer" : "default";
@@ -79,7 +79,7 @@ canvas.addEventListener("click", (ev) => {
 canvas.addEventListener("mousemove", (ev) => {
   const r = canvas.getBoundingClientRect();
   const p = { x: (ev.clientX - r.left) * (W / r.width), y: (ev.clientY - r.top) * (H / r.height) };
-  const i = map.spots.findIndex((s) => Math.hypot(p.x - s.x, (p.y - s.y) / SPOT_SQUASH) <= SPOT_RADIUS + 5);
+  const i = map.spots.findIndex((s) => Math.hypot(p.x - s.x, (p.y - s.y) / SPOT_SQUASH) <= SPOT_RADIUS * depthScale(s.y) + 5);
   state.hover = i >= 0 ? i : null;
   // With a hero selected, an animal under the mouse is marked as the would-be target
   state.hoverCritter = selectedHero() ? state.critters.find((c) => dist(c, { x: p.x, y: p.y + 6 }) <= 16) || null : null;
