@@ -447,16 +447,27 @@ const CREATURES = {
     const hop = still ? 0 : Math.max(0, Math.sin(phase * 1.3));
     const sq = 1 + (still ? Math.sin(phase * 2) * 0.05 : (0.18 - hop * 0.3));          // squash wide on landing, stretch tall mid-hop
     ctx.save(); ctx.translate(0, 12 - hop * 6); ctx.scale(sq, 1 / sq);
-    body(0, -9, 12, 9.5, "#80deea", "#00897b", "#00695c");
-    ctx.globalAlpha = 0.45;
-    for (const [bx, by, br] of [[-5, -8, 1.6], [3, -12, 1.2], [5, -5, 1]]) circle(ctx, bx + Math.sin(phase + bx) * 0.6, by + Math.sin(phase * 0.7 + by) * 0.8, br, "#e0f7fa");   // bubbles
+    // A glassy dome of gel: deep teal at the rim, bright and see-through toward the top, sitting on a wavy skirt
+    const skirt = [];
+    for (let i = 0; i <= 12; i++) { const a = Math.PI + (i / 12) * Math.PI; skirt.push([Math.cos(a) * 12.5, Math.sin(a) * 2.4 + Math.sin(phase * 2 + i * 1.7) * 0.5]); }
+    ctx.fillStyle = "#00796b"; ctx.beginPath(); ctx.ellipse(0, 0, 12.5, 3, 0, 0, Math.PI * 2); ctx.fill();            // the puddle it sits in
+    const gel = ctx.createRadialGradient(-3, -13, 1, 0, -8, 14);
+    gel.addColorStop(0, "#b2ebf2"); gel.addColorStop(0.45, "#4dd0e1"); gel.addColorStop(1, "#00897b");
+    ctx.fillStyle = gel; ctx.beginPath(); ctx.moveTo(-12.5, 0);
+    ctx.bezierCurveTo(-13, -9, -8, -19, 0, -19); ctx.bezierCurveTo(8, -19, 13, -9, 12.5, 0); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = "rgba(0,105,92,0.55)"; ctx.lineWidth = 0.9; ctx.stroke();
+    // A dark core floating inside, wobbling a beat behind the body
+    const cx = Math.sin(phase * 1.3) * 1.2, cy = -8 + Math.cos(phase) * 0.8;
+    ctx.globalAlpha = 0.75; ellipse(ctx, cx, cy, 4.6, 4, "#00695c"); ctx.globalAlpha = 0.5; ellipse(ctx, cx - 0.8, cy - 0.8, 2.4, 2, "#00897b"); ctx.globalAlpha = 1;
+    ctx.globalAlpha = 0.5;
+    for (const [bx, by, br] of [[-6, -6, 1.4], [5, -13, 1.1], [7, -5, 1]]) circle(ctx, bx + Math.sin(phase + bx) * 0.6, by + Math.sin(phase * 0.7 + by) * 0.8, br, "#e0f7fa");   // bubbles
     ctx.globalAlpha = 1;
-    ellipse(ctx, -4, -15, 3.5, 1.6, "rgba(255,255,255,0.55)");                        // shine
-    circle(ctx, 3, -10, 1.6, "#1b1b1b"); circle(ctx, 7.5, -9.5, 1.3, "#1b1b1b");       // beady eyes
-    circle(ctx, 3.4, -10.4, 0.5, "#fff"); circle(ctx, 7.8, -9.9, 0.4, "#fff");
-    ctx.strokeStyle = "#00695c"; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(5.5, -5.5, 2.5, 0.2, Math.PI - 0.2); ctx.stroke();   // little smile
+    ellipse(ctx, -4.5, -14.5, 3.6, 1.5, "rgba(255,255,255,0.7)"); circle(ctx, 1.5, -16.5, 0.9, "rgba(255,255,255,0.8)");   // glassy highlights
+    circle(ctx, 3, -10, 1.7, "#102a2a"); circle(ctx, 7.5, -9.5, 1.4, "#102a2a");                                          // beady eyes
+    circle(ctx, 3.5, -10.5, 0.55, "#fff"); circle(ctx, 7.9, -9.9, 0.45, "#fff");
+    ctx.strokeStyle = "#00695c"; ctx.lineWidth = 1; ctx.lineCap = "round"; ctx.beginPath(); ctx.moveTo(4, -6); ctx.quadraticCurveTo(5.5, -4.6, 7.5, -6); ctx.stroke();   // a small, slightly grumpy mouth
     ctx.restore();
-    for (let i = 0; i < 2; i++) { ctx.globalAlpha = 0.5; circle(ctx, -9 + i * 16, 13.5, 1.6 + hop, "#80deea"); ctx.globalAlpha = 1; }   // drips
+    for (let i = 0; i < 2; i++) { ctx.globalAlpha = 0.5; circle(ctx, -9 + i * 16, 13.5, 1.6 + hop, "#4dd0e1"); ctx.globalAlpha = 1; }   // drips
   },
 
   // A baby slime: half the size, twice as bouncy
@@ -464,8 +475,13 @@ const CREATURES = {
     const hop = still ? 0 : Math.max(0, Math.sin(phase * 2));
     const sq = 1 + (still ? Math.sin(phase * 3) * 0.06 : (0.2 - hop * 0.35));
     ctx.save(); ctx.translate(0, 7 - hop * 5); ctx.scale(sq, 1 / sq);
-    body(0, -5, 7, 5.5, "#a7ffeb", "#26a69a", "#00796b");
-    ellipse(ctx, -2.5, -8.5, 2, 1, "rgba(255,255,255,0.55)");
+    ctx.fillStyle = "#00796b"; ctx.beginPath(); ctx.ellipse(0, 0, 7, 1.8, 0, 0, Math.PI * 2); ctx.fill();
+    const gel = ctx.createRadialGradient(-1.5, -7, 0.5, 0, -4.5, 8);
+    gel.addColorStop(0, "#e0f7fa"); gel.addColorStop(0.5, "#80deea"); gel.addColorStop(1, "#26a69a");
+    ctx.fillStyle = gel; ctx.beginPath(); ctx.moveTo(-7, 0); ctx.bezierCurveTo(-7.5, -5, -4.5, -11, 0, -11); ctx.bezierCurveTo(4.5, -11, 7.5, -5, 7, 0); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = "rgba(0,105,92,0.5)"; ctx.lineWidth = 0.8; ctx.stroke();
+    ctx.globalAlpha = 0.7; ellipse(ctx, Math.sin(phase * 2) * 0.7, -4.5, 2.4, 2.1, "#00796b"); ctx.globalAlpha = 1;   // its little core
+    ellipse(ctx, -2.5, -8.5, 2, 1, "rgba(255,255,255,0.7)");
     circle(ctx, 2, -5.5, 1.1, "#1b1b1b"); circle(ctx, 4.8, -5, 0.9, "#1b1b1b");
     circle(ctx, 2.3, -5.8, 0.35, "#fff");
     ctx.restore();

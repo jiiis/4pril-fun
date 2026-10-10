@@ -8,7 +8,7 @@ import { updateHero } from "./hero.js";
 import { slayCritter } from "./critters.js";
 import { updateWeather } from "./weather.js";
 import { hurt, addFloater, addBurst, addSmoke, addScorch } from "./combat.js";
-import { towerRange, towerDamage, shotOrigin, archerSlots, abilityDef } from "./towers.js";
+import { towerRange, towerDamage, towerRate, shotOrigin, archerSlots, abilityDef } from "./towers.js";
 import { dist, clamp } from "./util.js";
 import { refreshHud, setWaveButton, endGame } from "./ui.js";
 import { sfx } from "./audio.js";
@@ -262,7 +262,7 @@ export function update(dt) {
         t.anim = FIRE_ANIM;
         sfx(t.def.type === "magic" ? "magic" : "arrow", 0.06);
       }
-      t.cd = 1 / t.def.rate;
+      t.cd = 1 / towerRate(t);
     }
   }
 

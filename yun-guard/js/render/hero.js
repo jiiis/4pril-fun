@@ -707,20 +707,22 @@ function drawBear(d) {
   ctx.scale(Math.sign(d.face || 1) * Math.max(0.2, Math.abs(d.face)), 1);
   // Legs: thick, with claws
   for (const [lx, k] of [[-10, 1], [-5, -1], [7, 1], [12, -1]]) {
-    line(ctx, lx, 0, lx + sw * k, 9, "#4e342e", 5);
-    for (const c of [-2, 0, 2]) line(ctx, lx + sw * k + c, 10, lx + sw * k + c * 1.2, 12.5, "#eceff1", 1);
+    const fx = lx + sw * k;
+    line(ctx, lx, 0, fx, 9, "#4e342e", 5);
+    ellipse(ctx, fx + 1, 10.5, 3.6, 1.8, "#4e342e");                                                   // paw
+    for (const c of [-1.6, 0, 1.6]) line(ctx, fx + 2.5 + c * 0.8, 10 + Math.abs(c) * 0.3, fx + 5 + c, 11 + Math.abs(c) * 0.4, "#eceff1", 1);   // claws pointing forward
   }
   // Body: a big shaggy mound, lighter muzzle and belly
   const fur = ctx.createRadialGradient(-2, -10, 2, 0, -4, 20);
   fur.addColorStop(0, "#8d6e63"); fur.addColorStop(1, "#4e342e");
-  ellipse(ctx, 0, -5 + (idle ? Math.sin(T * 1.5) * 0.4 : 0), 17, 10, fur, "#3e2723", 1);
-  for (const [fx, fy] of [[-10, -11], [-3, -14], [5, -13], [11, -9]]) line(ctx, fx, fy, fx - 1.5, fy - 4, "#3e2723", 1.5);   // shaggy tufts
+  const by = -5 + (idle ? Math.sin(T * 1.5) * 0.4 : 0);
+  ellipse(ctx, 0, by, 17, 10, fur, "rgba(62,39,35,0.45)", 0.8);                                     // a smooth, rounded back
   ellipse(ctx, 2, 0, 9, 4, "#a1887f");
   circle(ctx, -15, -6, 3, "#5d4037");                                          // stubby tail
   // Head, raised when swiping
   const hy = -12 - swipe * 6, hx = 14 - swipe * 3;
-  circle(ctx, hx, hy, 7.5, "#6d4c41", "#3e2723", 1);
-  for (const ex of [-4, 4]) { circle(ctx, hx + ex, hy - 6.5, 2.6, "#5d4037", "#3e2723", 0.8); circle(ctx, hx + ex, hy - 6.5, 1.3, "#a1887f"); }   // round ears
+  circle(ctx, hx, hy, 7.5, "#6d4c41", "rgba(62,39,35,0.45)", 0.8);
+  for (const ex of [-4, 4]) { circle(ctx, hx + ex, hy - 6.5, 2.6, "#5d4037", "rgba(62,39,35,0.45)", 0.7); circle(ctx, hx + ex, hy - 6.5, 1.3, "#a1887f"); }   // round ears
   ellipse(ctx, hx + 6, hy + 1.5, 4.5, 3.2, "#a1887f");                          // muzzle
   circle(ctx, hx + 9.5, hy + 0.5, 1.6, "#212121");                               // nose
   circle(ctx, hx + 3, hy - 1.5, 1.2, "#212121");                                 // eye
@@ -728,7 +730,7 @@ function drawBear(d) {
     line(ctx, hx + 4, hy + 3.5, hx + 9, hy + 4, "#3e2723", 1.4);
     poly(ctx, [[hx + 5, hy + 3.5], [hx + 6, hy + 3.5], [hx + 5.5, hy + 5.5]], "#fff");
     line(ctx, 9, -8, 18 + swipe * 4, -16 - swipe * 6, "#4e342e", 5);
-    for (const c of [-2, 0, 2]) line(ctx, 18 + swipe * 4 + c, -17 - swipe * 6, 20 + swipe * 4 + c * 1.3, -20 - swipe * 6, "#eceff1", 1.2);
+    for (const c of [-2, 0, 2]) line(ctx, 18 + swipe * 4 + c * 0.6, -17 - swipe * 6, 22 + swipe * 4 + c * 1.1, -18 - swipe * 6 + c * 0.6, "#eceff1", 1.2);   // claws out along the swipe
   }
   ctx.restore();
   const w = 26, x = d.x - w / 2, y = d.y - 30;

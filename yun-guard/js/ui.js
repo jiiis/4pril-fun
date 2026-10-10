@@ -2,7 +2,7 @@ import { state } from "./state.js";
 import { TOWERS, W, H } from "./config.js";
 import { MAX_LEVEL, saveLevel, saveCarry } from "./levels.js";
 import { map } from "./map.js";
-import { towerRange, towerDamage, upgradeCost, sellValue, canUpgrade, canSpecialise, abilityCost, abilityDef, soldierCount, soldierHp, soldierDamage, createTower } from "./towers.js";
+import { towerRange, towerDamage, towerRate, upgradeCost, sellValue, canUpgrade, canSpecialise, abilityCost, abilityDef, soldierCount, soldierHp, soldierDamage, createTower } from "./towers.js";
 import { ABILITIES } from "./config.js";
 import { icon, applyIcons } from "./icons.js";
 import { clamp } from "./util.js";
@@ -81,7 +81,7 @@ export function openMenu(spotIndex) {
     const stat = (label, value) => `<span class="stat"><small>${label}</small><b>${value}</b></span>`;
     html += `<div class="stats">` + (tower.def.soldiers
       ? stat("Damage", soldierDamage(tower)) + stat("Health", soldierHp(tower)) + stat("Soldiers", soldierCount(tower))
-      : stat("Damage", towerDamage(tower)) + stat("Range", towerRange(tower)) + (tower.def.chain ? stat("Hops", tower.def.chain + tower.level - 1) : tower.def.splash ? stat("Splash", tower.def.splash) : stat("Rate", `${tower.def.rate}/s`)))
+      : stat("Damage", towerDamage(tower)) + stat("Range", towerRange(tower)) + (tower.def.chain ? stat("Hops", tower.def.chain + tower.level - 1) : tower.def.splash ? stat("Splash", tower.def.splash) : stat("Rate", `${towerRate(tower).toFixed(1)}/s`)))
       + `</div>`;
     html += `<div class="row">`;
     if (canUpgrade(tower)) {

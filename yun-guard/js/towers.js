@@ -2,8 +2,11 @@ import { TOWERS, MAX_LEVEL, UPGRADE_COST_FACTOR, ABILITIES, ABILITY_COST_FACTOR,
 import { closestPointOnPath, clamp } from "./util.js";
 import { map } from "./map.js";
 
-export const towerRange = (t) => t.def.range + 12 * (t.level - 1);
-export const towerDamage = (t) => Math.round(t.def.damage * (1 + 0.6 * (t.level - 1)));
+// Each upgrade adds range, damage and fire rate; the level-4 speciality is a big jump on top
+const FINAL = (t) => (t.level >= MAX_LEVEL ? 1 : 0);
+export const towerRange = (t) => t.def.range + 16 * (t.level - 1) + 22 * FINAL(t);
+export const towerDamage = (t) => Math.round(t.def.damage * (1 + 0.7 * (t.level - 1)) * (1 + 0.35 * FINAL(t)));
+export const towerRate = (t) => t.def.rate * (1 + 0.12 * (t.level - 1)) * (1 + 0.25 * FINAL(t));
 export const upgradeCost = (t) => Math.round(t.def.cost * UPGRADE_COST_FACTOR * t.level);
 export const sellValue = (t) => Math.round(t.spent * 0.7);
 export const canUpgrade = (t) => t.level < MAX_LEVEL - 1;               // plain upgrades up to level 3 ...
@@ -46,7 +49,7 @@ export function setRally(t, p) {
 export const soldierCount = (t) => t.def.soldiers + (t.level >= 3 ? 1 : 0);
 export const soldierHp = (t) => Math.round(t.def.soldierHp * (1 + 0.6 * (t.level - 1)) * (abilityDef(t)?.hpFactor || 1));
 export const soldierDamage = (t) => Math.round(towerDamage(t) * (abilityDef(t)?.damageFactor || 1));
-export const soldierRate = (t) => t.def.rate * (abilityDef(t)?.rateFactor || 1);
+export const soldierRate = (t) => towerRate(t) * (abilityDef(t)?.rateFactor || 1);
 
 export function createTower(spotIndex, type) {
   const s = map.spots[spotIndex];

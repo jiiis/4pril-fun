@@ -181,8 +181,7 @@ export function draw() {
     ctx.moveTo(cx - ax * 4 + px * 8, cy - ay * 4 + py * 8);
     ctx.lineTo(cx + ax * 4, cy + ay * 4);
     ctx.lineTo(cx - ax * 4 - px * 8, cy - ay * 4 - py * 8);
-    ctx.stroke();
-    ctx.strokeStyle = `rgba(255,236,170,${glow * 0.3})`; ctx.lineWidth = 2; ctx.stroke();   // a soft light down the middle as it brightens
+    ctx.stroke();                                                                           // one plain stroke, no inner light or edge
   };
   for (const g of map.exits) for (let k = 0; k < 3; k++) {                 // beyond the gate, on the way out
     const glow = wave(k);
