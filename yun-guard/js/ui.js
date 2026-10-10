@@ -234,6 +234,15 @@ export function initUi() {
     navigator.clipboard?.writeText(url).catch(() => {});
   });
   window.addEventListener("resize", fitToWindow);
+  // Phones report their final viewport late and sometimes without a resize event (iOS toolbars settling after load,
+  // rotation, returning from the background): re-fit on every signal we can get, and once more shortly after load
+  let lastW = window.innerWidth, lastH = window.innerHeight;
+  const refit = () => { if (window.innerWidth !== lastW || window.innerHeight !== lastH) { lastW = window.innerWidth; lastH = window.innerHeight; fitToWindow(); } };   // only when the size really changed, so a player's zoom isn't reset for nothing
+  window.visualViewport?.addEventListener("resize", refit);
+  window.addEventListener("orientationchange", () => { refit(); setTimeout(refit, 300); });
+  window.addEventListener("pageshow", refit);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) refit(); });
+  for (const t of [100, 400, 1000, 2000]) setTimeout(refit, t);
   fitToWindow();
   refreshHud();
 }
