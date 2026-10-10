@@ -1,6 +1,6 @@
 import { state } from "./state.js";
 import { TOWERS, W, H } from "./config.js";
-import { MAX_LEVEL, saveLevel, navigate } from "./levels.js";
+import { MAX_LEVEL, saveLevel } from "./levels.js";
 import { map } from "./map.js";
 import { towerRange, towerDamage, upgradeCost, sellValue, canUpgrade, canSpecialise, abilityCost, abilityDef, soldierCount, soldierHp, soldierDamage, createTower } from "./towers.js";
 import { ABILITIES } from "./config.js";
@@ -54,16 +54,16 @@ export function endGame(won) {
     saveLevel(L + 1);
     const hero = state.hero ? state.hero.kind : "none";
     let left = 8;
-    const go = () => navigate(`?level=${L + 1}&hero=${hero}`);      // straight in, same legend
+    const go = () => startLevel({ level: L + 1, hero });               // straight in, same legend
     const tick = () => { btn.textContent = `Next level  ·  ${left}s`; if (left-- <= 0) go(); else endTimer = setTimeout(tick, 1000); };
     tick();
     btn.onclick = go;
     alt.style.display = "";
-    alt.onclick = () => { clearTimeout(endTimer); navigate(`?level=${L + 1}`); };   // pick a legend first
+    alt.onclick = () => { clearTimeout(endTimer); startLevel({ level: L + 1, hero: "pick" }); };   // pick a legend first
   } else {
     alt.style.display = "none";
     btn.textContent = won ? "Play again from level 1" : "Try again";
-    btn.onclick = () => navigate(won ? "?level=1" : `?level=${L}`);
+    btn.onclick = () => startLevel(won ? { level: 1, hero: "pick" } : { level: L, seed: map.seed, hero: state.hero ? state.hero.kind : "none" });
   }
 }
 let endTimer = null;
@@ -212,6 +212,21 @@ function applyView() {
   $("wrap").style.transform = `translate(calc(-50% + ${view.panX}px), calc(-50% + ${view.panY}px)) scale(${view.k})`;
   placeMenu();                                                  // the open menu follows its spot as the view moves
 }
+
+// A fresh level in the same page (no reload, so full screen survives): clear the end screen, reset the HUD
+export function resetUiForLevel() {
+  clearTimeout(endTimer);
+  $("overlay").style.display = "none";
+  $("paused").style.display = "none";
+  closeMenu();
+  setWaveButton("start");
+  $("totalWaves").textContent = state.totalWaves;
+  $("lvl").textContent = state.level;
+  $("seed").textContent = map.seed;
+  $("seedLink").href = `#${map.seed}`;
+  refreshHud();
+}
+const startLevel = (detail) => window.dispatchEvent(new CustomEvent("startLevel", { detail }));   // handled in main.js
 
 export function initUi() {
   $("totalWaves").textContent = state.totalWaves;

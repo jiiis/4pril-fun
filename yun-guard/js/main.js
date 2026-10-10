@@ -4,8 +4,8 @@ import { W, H, SPOT_RADIUS, TOWERS } from "./config.js";
 import { dist } from "./util.js";
 import { map, generateMap } from "./map.js";
 import { update } from "./update.js";
-import { draw, SPOT_SQUASH, depthScale } from "./render/draw.js";
-import { initUi, openMenu, closeMenu } from "./ui.js";
+import { draw, SPOT_SQUASH, depthScale, invalidateBackground } from "./render/draw.js";
+import { initUi, openMenu, closeMenu, resetUiForLevel } from "./ui.js";
 import { startWave, spawnEnemy } from "./waves.js";
 import { createTower, setRally, archerHeight, mageHeight, teslaHeight, visLevel } from "./towers.js";
 import { initCritters } from "./critters.js";
@@ -14,23 +14,49 @@ import { initTouch } from "./touch.js";
 import { icon } from "./icons.js";
 import { unlockAudio, toggleMute, isMuted, sfx } from "./audio.js";
 import { initWeather } from "./weather.js";
-import { MAX_LEVEL, clampLevel, savedLevel, saveLevel, levelConfig, levelSeed, navigate } from "./levels.js";
+import { MAX_LEVEL, clampLevel, savedLevel, saveLevel, levelConfig, levelSeed } from "./levels.js";
 
 // Which level? ?level=N in the URL, else the last one played on this device. Each level has its own map
 // (add ?seed=1234 to force a particular map instead).
 const params = new URLSearchParams(location.search);
-const level = clampLevel(params.get("level") || savedLevel());
+let level = clampLevel(params.get("level") || savedLevel());
 saveLevel(level);
 const diff = levelConfig(level);
 state.level = level; state.diff = diff; state.totalWaves = diff.waves; state.gold = diff.gold; state.lives = diff.lives;
 const seedParam = Number(params.get("seed")) || Number(location.hash.replace(/^#/, ""));   // ?seed=123456 or #123456
 generateMap(seedParam > 0 ? seedParam : levelSeed(level));
 // The address bar always shows the level and map being played, so a browser refresh or bookmark brings back exactly this game
-{
+function showInUrl(heroKind) {
   const q = new URLSearchParams({ level, seed: map.seed });
-  if (params.get("hero")) q.set("hero", params.get("hero"));
+  if (heroKind) q.set("hero", heroKind);
   history.replaceState(null, "", `${location.pathname}?${q}`);
 }
+showInUrl(params.get("hero"));
+
+// Start a level in this same page (no reload, so full screen and the audio stay as they are):
+// rebuild the world, reset everything that changes while playing, then choose a legend or jump straight in.
+function startLevel({ level: L, seed, hero }) {
+  level = clampLevel(L); saveLevel(level);
+  const d = levelConfig(level);
+  state.level = level; state.diff = d; state.totalWaves = d.waves; state.gold = d.gold; state.lives = d.lives;
+  state.wave = 0; state.over = false; state.paused = false; state.countdown = null; state.spawnTimer = 0;
+  for (const k of ["enemies", "towers", "shots", "floaters", "bursts", "bolts", "fires", "smoke", "scorches", "blood", "corpses", "spawnQueue", "fish", "poops", "heroes"]) state[k] = [];
+  state.hero = null; state.dog = null; state.eagle = null;
+  state.selected = null; state.hover = null; state.rallyFor = null; state.hoverCritter = null; state.preview = null;
+  generateMap(seed > 0 ? seed : levelSeed(level));
+  invalidateBackground();
+  initCritters(); initWeather();
+  resetUiForLevel();
+  pauseBtn.innerHTML = icon("pause"); pauseBtn.title = "Pause (P)";
+  lvInput.value = level; document.getElementById("lvPrev").disabled = level <= 1; document.getElementById("lvNext").disabled = level >= MAX_LEVEL;
+  if (hero === "pick" || !hero) {                                     // the legend screen again
+    heroPick.style.display = "flex";
+    document.getElementById("next").disabled = true; document.getElementById("pause").disabled = true;
+    showInUrl(null);
+  } else if (hero === "none") { startSolo(); showInUrl("none"); }
+  else { chooseHero(hero); showInUrl(hero); }
+}
+window.addEventListener("startLevel", (ev) => startLevel(ev.detail));
 // Editing the #seed in the address bar doesn't reload the page by itself; do it when it means a different map
 window.addEventListener("hashchange", () => {
   const want = Number(location.hash.replace(/^#/, "")) || levelSeed(level);
@@ -64,7 +90,7 @@ document.getElementById("noLegend").addEventListener("click", startSolo);
 // Level picker on the legend screen: arrows or type a number, and the chosen level loads
 const lvInput = document.getElementById("lvInput");
 lvInput.value = level; lvInput.max = MAX_LEVEL;
-const goLevel = (n) => { n = clampLevel(n); if (n !== level) navigate(`?level=${n}`); else lvInput.value = n; };
+const goLevel = (n) => { n = clampLevel(n); if (n !== level) startLevel({ level: n, hero: "pick" }); else lvInput.value = n; };
 document.getElementById("lvPrev").addEventListener("click", () => goLevel(level - 1));
 document.getElementById("lvNext").addEventListener("click", () => goLevel(level + 1));
 lvInput.addEventListener("change", () => goLevel(lvInput.value));
@@ -178,8 +204,9 @@ const closeConfirm = () => {
   if (state.paused) pausedView.style.display = "flex";
   pauseBtn.disabled = state.over || heroPick.style.display !== "none";
 };
-document.getElementById("confirmSame").addEventListener("click", () => navigate(`?level=${level}&seed=${map.seed}`));
-document.getElementById("confirmNew").addEventListener("click", () => navigate(`?level=${level}&seed=${1 + Math.floor(Math.random() * 999999)}`));
+// Either way the legend screen comes back first
+document.getElementById("confirmSame").addEventListener("click", () => { closeConfirm(); startLevel({ level, seed: map.seed, hero: "pick" }); });
+document.getElementById("confirmNew").addEventListener("click", () => { closeConfirm(); startLevel({ level, seed: 1 + Math.floor(Math.random() * 999999), hero: "pick" }); });
 confirmBox.addEventListener("click", (ev) => { if (ev.target === confirmBox) closeConfirm(); });
 window.addEventListener("keydown", (ev) => { if (ev.key === "Escape" && confirmBox.style.display === "flex") closeConfirm(); });
 document.getElementById("restart-level").addEventListener("click", restartLevel);
