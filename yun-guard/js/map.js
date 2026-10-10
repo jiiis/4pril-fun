@@ -89,7 +89,9 @@ export function generateMap(seed) {
   const gatePillarPoints = (g) => { const px = -g.out.y, py = g.out.x, span = ROAD_WIDTH / 2 + 14; return [{ x: g.x + px * span, y: g.y + py * span }, { x: g.x - px * span, y: g.y - py * span }]; };
   const gateClear = (x, y, sc) => map.exits.every((g) => gatePillarPoints(g).every((pp) => Math.abs(pp.x - x) > 52 * sc + 14 || pp.y < y - 96 * sc - 10 || pp.y > y + 12 * sc + 60));
   // Enough room around it first (a road's width of grass), then as close to its own road as possible, full size preferred
-  const score = (o) => (gateClear(o.x, o.y, o.sc) ? 0 : -1000) + Math.min(roomAround(o.x, o.y, o.sc), 70) + (o.pref ? 10 : 0) - o.d * 0.06 + o.sc * 110;   // a big home matters more than a short walk from the gate
+  const placed = [];                                                                                      // homes already placed: never two on the same ground
+  const overlaps = (o) => placed.some((k) => Math.hypot(k.x - o.x, k.y - o.y) < 60 * (k.scale + o.sc) + 24);
+  const score = (o) => (gateClear(o.x, o.y, o.sc) ? 0 : -1000) + (overlaps(o) ? -2000 : 0) + Math.min(roomAround(o.x, o.y, o.sc), 70) + (o.pref ? 10 : 0) - o.d * 0.06 + o.sc * 110;   // a big home matters more than a short walk from the gate
   // Each castle picks, from spots along its edge on both sides of the road (and a smaller size if it must),
   // the one with the most open grass, leaning away from a sister castle on the same edge when both are fine
   map.castles = exits.map((ex, i) => {
@@ -115,7 +117,9 @@ export function generateMap(seed) {
       }
     }
     const best = options.sort((p, q) => score(q) - score(p))[0];
-    return { x: best.x, y: best.y, scale: best.sc, style: 0 };
+    const k = { x: best.x, y: best.y, scale: best.sc, style: 0 };
+    placed.push(k);
+    return k;
   });
   // Every exit on a map gets a different design, drawn from a shuffled deck of the three
   const deck = [0, 1, 2]; shuffle(deck, rand);

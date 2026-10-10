@@ -542,18 +542,18 @@ function drawBird(g) {
   ctx.save();
   ctx.translate(g.x, g.y);
   ctx.scale(g.dir, 1);
-  // Broad wings: a long leading edge, then five fingered primaries spread at the tip
+  // Broad wings: a smooth swept leading edge out to the tip, and a trailing edge notched into four
+  // long primaries. The whole wing hinges at the shoulder as it flaps.
   for (const side of [-1, 1]) {
-    const tipY = -3 - flap * 11, span = 21;
+    ctx.save(); ctx.translate(side * 2, 0); ctx.scale(side, 1); ctx.rotate(-flap * 0.55);
     ctx.fillStyle = mid; ctx.beginPath();
-    ctx.moveTo(-1, -1); ctx.quadraticCurveTo(side * 8, -6 - flap * 5, side * span, tipY);
-    for (let i = 0; i < 5; i++) {                                                                 // the primaries
-      const t = 1 - i * 0.12, fx = side * span * t, fyy = tipY + i * 2.2 + (1 - t) * 6;
-      ctx.lineTo(fx + side * 2.5, fyy + 3.5); ctx.lineTo(fx - side * 1.5, fyy + 2);
-    }
-    ctx.quadraticCurveTo(side * 8, 4 - flap * 2, 0, 4); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = light; ctx.beginPath();                                                        // lighter coverts along the leading edge
-    ctx.moveTo(-1, -1); ctx.quadraticCurveTo(side * 8, -6 - flap * 5, side * span * 0.8, tipY + 2); ctx.quadraticCurveTo(side * 8, -2 - flap * 4, 0, 1); ctx.closePath(); ctx.fill();
+    ctx.moveTo(0, -1);
+    ctx.quadraticCurveTo(9, -5, 21, -5);                                   // leading edge
+    for (const [x1, y1, x2, y2] of [[21, -5, 19, 1], [17.5, -1, 16, 4], [14.5, 1.5, 13, 6], [11.5, 3.5, 10, 7.5]]) { ctx.lineTo(x1, y1); ctx.lineTo(x2, y2); }   // primaries
+    ctx.quadraticCurveTo(5, 6, 0, 4); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = light; ctx.beginPath();                                 // lighter coverts along the leading edge
+    ctx.moveTo(0, -1); ctx.quadraticCurveTo(9, -5, 19, -4.5); ctx.quadraticCurveTo(9, -1.5, 0, 1.5); ctx.closePath(); ctx.fill();
+    ctx.restore();
   }
   ellipse(ctx, 0, 1.5, 6.5, 3.4, dark);                                                             // body
   poly(ctx, [[-5, 0], [-13, -2.5], [-14, 2], [-13, 5.5], [-5, 3]], white);                          // fanned white tail
