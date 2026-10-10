@@ -71,15 +71,15 @@ lvInput.addEventListener("change", () => goLevel(lvInput.value));
 lvInput.addEventListener("keydown", (ev) => { ev.stopPropagation(); if (ev.key === "Enter") goLevel(lvInput.value); });
 document.getElementById("lvPrev").disabled = level <= 1; document.getElementById("lvNext").disabled = level >= MAX_LEVEL;
 window.addEventListener("keydown", (ev) => {
-  const n = ["Digit1", "Digit2", "Digit3", "Digit4", "Digit5"].indexOf(ev.code);
-  if (n >= 0 && !ev.metaKey && !ev.ctrlKey && heroPick.style.display !== "none") chooseHero(["april", "avril", "ember", "willow", "meilin"][n]);
+  const n = ["Digit1", "Digit2", "Digit3", "Digit4", "Digit5", "Digit6"].indexOf(ev.code);
+  if (n >= 0 && !ev.metaKey && !ev.ctrlKey && heroPick.style.display !== "none") chooseHero(["april", "avril", "adrien", "ember", "willow", "meilin"][n]);
 });
 window.addEventListener("keydown", (ev) => { if (ev.code === "KeyW" && !ev.metaKey && !ev.ctrlKey && heroPick.style.display !== "none") startSolo(); });
 document.getElementById("next").disabled = true;          // until a legend is chosen
 document.getElementById("pause").disabled = true;
 if (preset === "none") startSolo();
 for (const card of heroPick.querySelectorAll(".card")) card.addEventListener("click", () => chooseHero(card.dataset.hero));
-if (["april", "avril", "ember", "willow", "meilin"].includes(preset)) chooseHero(preset);
+if (["april", "avril", "ember", "willow", "meilin", "adrien"].includes(preset)) chooseHero(preset);
 
 // Which build spot is under the point? An empty pad is its foreshortened disc; a tower counts over its
 // whole body, from the pad up to the roof. Where towers overlap, the one in front (lower on screen) wins.

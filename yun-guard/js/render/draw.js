@@ -145,6 +145,25 @@ function drawSpot(s, i, occupied, hovered) {
   line(ctx, x, y - m + 1, x, y + m + 1, "rgba(255,255,255,0.35)", 2);
   line(ctx, x - m, y, x + m, y, hovered ? "#8d6e2a" : "rgba(80,85,70,0.8)", 2);
   line(ctx, x, y - m, x, y + m, hovered ? "#8d6e2a" : "rgba(80,85,70,0.8)", 2);
+  // The old stones hold a little magic: every few seconds a glint of light sweeps across the pad,
+  // and now and then a golden mote lifts off and fades into the air. Each pad keeps its own rhythm.
+  const T = state.time + i * 1.37;
+  const sweep = (T % 4.2) / 4.2;                                           // 0..1 across the stone, then a long rest
+  if (sweep < 0.35) {
+    const u = sweep / 0.35, sx = x - R + u * 2 * R;
+    ctx.save(); ctx.beginPath(); ctx.ellipse(x, y, R - 1, R - 1, 0, 0, Math.PI * 2); ctx.clip();
+    ctx.globalAlpha *= Math.sin(u * Math.PI) * 0.55;
+    const g2 = ctx.createLinearGradient(sx - 7, 0, sx + 7, 0);
+    g2.addColorStop(0, "rgba(255,245,200,0)"); g2.addColorStop(0.5, "rgba(255,245,200,0.9)"); g2.addColorStop(1, "rgba(255,245,200,0)");
+    ctx.fillStyle = g2; ctx.beginPath(); ctx.moveTo(sx - 12, y + R + 2); ctx.lineTo(sx + 2, y - R - 2); ctx.lineTo(sx + 16, y - R - 2); ctx.lineTo(sx + 2, y + R + 2); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+  for (let k = 0; k < 2; k++) {                                            // motes: rise about 14px over 2.4s, drifting a little
+    const life = ((T * 0.42 + k * 0.5 + i * 0.21) % 1), a = Math.sin(life * Math.PI);
+    if (life > 0.98) continue;
+    const mx = x + Math.sin(i * 2.3 + k * 4.1) * R * 0.45 + Math.sin(T * 2 + k) * 1.5, my = y - life * 14 / SPOT_SQUASH;   // counter the squash so they rise straight up
+    ctx.globalAlpha = a * 0.7; circle(ctx, mx, my, 1.1, "#ffe08a"); ctx.globalAlpha = a * 0.25; circle(ctx, mx, my, 2.6, "#ffd54f");
+  }
   ctx.restore();
 }
 

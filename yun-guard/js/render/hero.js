@@ -2,9 +2,9 @@ import { ctx, rect, circle, ellipse, poly, line, shadow } from "./gfx.js";
 import { state } from "../state.js";
 import { xpToNext } from "../hero.js";
 
-const ACCENT = { april: "#90caf9", avril: "#f48fb1", ember: "#ffab91", willow: "#aed581", meilin: "#b2ebf2" };
-const RING = { april: "rgba(144,202,249,0.25)", avril: "rgba(244,143,177,0.25)", ember: "rgba(255,171,145,0.25)", willow: "rgba(174,213,129,0.25)", meilin: "rgba(178,235,242,0.28)" };
-const BAR = { april: "#42a5f5", avril: "#f06292", ember: "#ff7043", willow: "#8bc34a", meilin: "#4dd0e1" };
+const ACCENT = { april: "#90caf9", avril: "#f48fb1", ember: "#ffab91", willow: "#aed581", meilin: "#b2ebf2", adrien: "#ffe082" };
+const RING = { april: "rgba(144,202,249,0.25)", avril: "rgba(244,143,177,0.25)", ember: "rgba(255,171,145,0.25)", willow: "rgba(174,213,129,0.25)", meilin: "rgba(178,235,242,0.28)", adrien: "rgba(255,224,130,0.28)" };
+const BAR = { april: "#42a5f5", avril: "#f06292", ember: "#ff7043", willow: "#8bc34a", meilin: "#4dd0e1", adrien: "#ffca28" };
 
 // Draws whichever hero is in play. Shared: selection ring, movement animation, bars and badges.
 export function drawHero(h) {
@@ -38,6 +38,10 @@ export function drawHero(h) {
     ctx.globalAlpha = 1;
   }
 
+  if (h.charge) {                                                             // Sir Adrien's charge: a golden streak and dust behind him
+    for (const p of h.charge.trail) { ctx.globalAlpha = (1 - p.t / 0.25) * 0.35; circle(ctx, p.x, p.y - 8, 9 * (1 - p.t / 0.25) + 2, "#ffe082"); }
+    ctx.globalAlpha = 1;
+  }
   const run = Math.min(1, h.speedNow / h.def.speed);
   const anim = {
     run,
@@ -59,7 +63,7 @@ export function drawHero(h) {
   ctx.translate(h.x + h.face * anim.lunge, h.y - anim.bob);
   ctx.scale(Math.sign(h.face || 1) * Math.max(0.2, Math.abs(h.face)), 1);
   ctx.rotate(anim.lean);
-  ({ april: drawApril, avril: drawAvril, ember: drawEmber, willow: drawWillow, meilin: drawMeiLin }[h.kind] || drawApril)(h, anim);
+  ({ april: drawApril, avril: drawAvril, ember: drawEmber, willow: drawWillow, meilin: drawMeiLin, adrien: drawAdrien }[h.kind] || drawApril)(h, anim);
   ctx.restore();
 
   if (h.levelFlash > 0) {
@@ -404,6 +408,54 @@ function drawMeiLin(h, a) {
   ctx.globalAlpha = 1;
 }
 
+// ---------- Sir Adrien: a gallant paladin in white and gold plate, crimson cape, lance and kite shield ----------
+function drawAdrien(h, a) {
+  const { run, sw, breathe } = a;
+  const T = state.time, charging = !!h.charge;
+  const gold = "#e9c55a", goldDark = "#b8902a", plate = "#eceff1", plateDark = "#90a4ae", blue = "#1e3a8a", blueLight = "#3b5bb5", crimson = "#b71c1c", crimsonDark = "#7f0000";
+  // Cape: crimson with a gold hem, streaming out behind when he moves (and whipping flat in a charge)
+  const flow = 1 + run * 6 + Math.sin(h.phase * 0.5) * run * 1.5 + (charging ? 8 : 0);
+  poly(ctx, [[-4, -14], [4, -14], [-1 - flow, 7 + run * 2 - (charging ? 6 : 0)], [-10 - flow, 4 + run * 3 - (charging ? 8 : 0)]], crimson, crimsonDark, 1);
+  line(ctx, -1 - flow, 7 + run * 2 - (charging ? 6 : 0), -10 - flow, 4 + run * 3 - (charging ? 8 : 0), gold, 1.2);
+  // Legs: steel greaves and dark boots
+  line(ctx, -3, 4, -3 + sw, 11, plateDark, 3.5); line(ctx, 3, 4, 3 - sw, 11, plateDark, 3.5);
+  rect(ctx, -5 + sw, 10, 5, 3, "#37474f"); rect(ctx, 1 - sw, 10, 5, 3, "#37474f");
+  // Breastplate with a royal-blue tabard and a gold sun
+  poly(ctx, [[-7, -12 - breathe], [7, -12 - breathe], [6, 5], [-6, 5]], plate, plateDark, 1);
+  rect(ctx, -3.5, -11 - breathe, 7, 15 + breathe, blue);
+  line(ctx, -3.5, -11 - breathe, -3.5, 4, gold, 0.8); line(ctx, 3.5, -11 - breathe, 3.5, 4, gold, 0.8);
+  circle(ctx, 0, -5, 2.4, gold); for (let i = 0; i < 8; i++) { const an = i * Math.PI / 4 + T * 0.5; line(ctx, Math.cos(an) * 2.8, -5 + Math.sin(an) * 2.8, Math.cos(an) * 4, -5 + Math.sin(an) * 4, gold, 0.8); }   // sun rays
+  rect(ctx, -6.5, 1, 13, 2.5, "#4e342e"); circle(ctx, 0, 2.2, 1.3, gold);   // belt
+  // Gold pauldrons
+  ellipse(ctx, -6.5, -12 - breathe, 4.5, 2.8, gold, goldDark, 1); ellipse(ctx, 6.5, -12 - breathe, 4.5, 2.8, gold, goldDark, 1);
+  // Head: fair skin, golden hair swept back, a slim gold circlet; a clean face like the other legends
+  const fy = -18 - breathe;
+  poly(ctx, [[-5, fy - 2], [-7, fy + 4], [-4, fy + 5], [-4, fy]], "#f0b84a");                                   // hair falling behind the jaw
+  circle(ctx, 0, fy, 5.2, "#ffe0b2");
+  ctx.fillStyle = "#f6c453"; ctx.beginPath(); ctx.arc(0, fy - 0.6, 5.4, Math.PI * 1.02, Math.PI * 1.98); ctx.fill();   // hair
+  poly(ctx, [[-5.2, fy - 1.5], [-2, fy - 6.5], [1.5, fy - 4.5], [3.5, fy - 6.8], [5.2, fy - 1.5]], "#f6c453");   // swept-back fringe
+  line(ctx, -5.2, fy - 1.2, 5.2, fy - 1.2, gold, 1.2); circle(ctx, 0, fy - 1.4, 0.9, "#64b5f6");                  // circlet with a sapphire
+  ctx.globalAlpha = 0.08; ellipse(ctx, 0, fy + 2.6, 4.2, 2.2, "#000"); ctx.globalAlpha = 1;                        // soft shade under the chin
+  // Kite shield on the left arm: blue with a gold sun and rim
+  const armSwing = -sw * 0.8;
+  line(ctx, -5, -9, -9 + armSwing, -3, plateDark, 3);
+  poly(ctx, [[-14 + armSwing, -9], [-5 + armSwing, -9], [-5 + armSwing, -1], [-9.5 + armSwing, 4], [-14 + armSwing, -1]], blue, gold, 1.5);
+  circle(ctx, -9.5 + armSwing, -4, 2.2, gold); circle(ctx, -9.5 + armSwing, -4, 1, blueLight);
+  // Lance: long ash shaft, steel tip, a blue pennant that flutters. Carried upright; levelled for a thrust or charge
+  const level = charging ? 1 : h.swing > 0 ? Math.sin((h.swing / 0.25) * Math.PI) : 0;
+  ctx.save();
+  ctx.translate(5, -9);
+  ctx.rotate(-1.15 + level * 1.15);                                      // from pointing up-forward to dead level
+  line(ctx, 0, 0, 6, 0, plateDark, 3);                                   // arm
+  line(ctx, 2, 3, 34, 3, "#d7ccc8", 2.6);                                // shaft
+  circle(ctx, 4, 3, 2.2, gold);                                          // grip guard
+  poly(ctx, [[34, 1.4], [42, 3], [34, 4.6]], "#eceff1", plateDark, 0.6); // steel tip
+  const fl = Math.sin(T * 9 + h.phase) * 1.5 + level * 2;
+  poly(ctx, [[28, 3], [28, -5], [20 - fl, -2 + fl * 0.3], [24, 3]], blueLight, blue, 0.6);   // pennant
+  if (charging) { ctx.globalAlpha = 0.6; line(ctx, 42, 3, 50, 3, "#fff8dc", 2.5); ctx.globalAlpha = 1; }   // the tip gleams
+  ctx.restore();
+}
+
 // ---------- Flying companions ----------
 export function drawEagle() {
   const g = state.eagle;
@@ -529,6 +581,7 @@ export function drawDog() {
   const d = state.dog;
   if (!d || d.hp <= 0) return;
   if (d.def.kind === "bear") { drawBear(d); return; }
+  if (d.def.kind === "lion") { drawLion(d); return; }
   const run = Math.min(1, d.speedNow / d.def.speed);
   const sw = Math.sin(d.phase) * 4 * run;
   const bob = Math.abs(Math.sin(d.phase)) * 1.5 * run;
@@ -571,6 +624,49 @@ export function drawDog() {
   const w = 20, x = d.x - w / 2, y = d.y - 26;
   rect(ctx, x, y, w, 3, "#222");
   rect(ctx, x, y, w * (d.hp / d.maxHp), 3, "#ffab91");
+}
+
+// Leon: a golden lion with a deep russet mane, a tufted tail and a proud stance
+function drawLion(d) {
+  const run = Math.min(1, d.speedNow / d.def.speed);
+  const sw = Math.sin(d.phase) * 5 * run, bob = Math.abs(Math.sin(d.phase)) * 1.6 * run;
+  const sit = !d.moving && !d.target;
+  const flick = Math.sin(state.time * (sit ? 3 : 6)) * 3;
+  const lunge = d.bite > 0 ? Math.sin((d.bite / 0.2) * Math.PI) * 4 : 0;
+  const coat = "#d9a441", coatDark = "#b9842c", belly = "#efd194", mane = "#8b4a1f", maneDark = "#6b3514";
+  shadow(ctx, d.x, d.y + 8, 13, 3.5);
+  ctx.save();
+  ctx.translate(d.x + lunge * Math.sign(d.face || 1), d.y - bob);
+  ctx.scale(Math.sign(d.face || 1) * Math.max(0.2, Math.abs(d.face)), 1);
+  // tail with a tuft, sweeping behind
+  line(ctx, -13, -6, -22 + flick * 0.4, -14 + flick, coatDark, 2.5);
+  circle(ctx, -22.5 + flick * 0.4, -15 + flick, 2.6, maneDark);
+  if (sit) {                                                                  // sitting tall, haunches down
+    ellipse(ctx, -5, -1, 9, 6, coatDark);                                      // haunch
+    line(ctx, 3, -2, 3, 7, coat, 3); line(ctx, 7, -2, 7, 7, coat, 3);          // forelegs
+    ellipse(ctx, 3, 7, 3, 1.4, coatDark); ellipse(ctx, 7, 7, 3, 1.4, coatDark);
+    poly(ctx, [[-13, 2], [10, 2], [10, -14], [-5, -8]], coat);                 // body rising to the shoulders
+    ellipse(ctx, 4, -3, 5, 4, belly);
+  } else {
+    for (const [lx, k] of [[-8, 1], [-4, -1], [6, 1], [10, -1]]) { line(ctx, lx, -1, lx + sw * k, 7, coat, 3); ellipse(ctx, lx + sw * k, 7, 2.6, 1.3, coatDark); }
+    ellipse(ctx, 0, -7, 14, 7, coat);                                          // body
+    ellipse(ctx, 1, -3, 8, 2.8, belly);
+  }
+  // the mane: a big ragged ring of russet around the head, lighter tips on top
+  const hx = sit ? 11 : 13, hy = sit ? -17 : (d.target ? -8 : -11);
+  for (let i = 0; i < 9; i++) { const a = -Math.PI * 0.95 + (i / 8) * Math.PI * 1.9, r = 9 + (i % 2) * 2; circle(ctx, hx - 3 + Math.cos(a) * r * 0.8, hy + Math.sin(a) * r, 4.2, i % 3 === 0 ? maneDark : mane); }
+  circle(ctx, hx - 3, hy, 8.5, mane);
+  // the face
+  circle(ctx, hx, hy, 6, coat);
+  ellipse(ctx, hx + 3.5, hy + 1.5, 3.4, 2.4, belly);                           // muzzle
+  circle(ctx, hx + 6, hy + 0.5, 1.4, "#3e2723");                               // nose
+  circle(ctx, hx + 1.5, hy - 2, 1.1, "#3e2723");                               // eye
+  for (const ex of [-2, 2]) circle(ctx, hx + ex, hy - 6.5, 2.2, coat, coatDark, 0.6);   // round ears
+  if (d.bite > 0) poly(ctx, [[hx + 4, hy + 3], [hx + 8, hy + 2.5], [hx + 5, hy + 5]], "#fff");   // teeth
+  ctx.restore();
+  const w = 20, x = d.x - w / 2, y = d.y - 30;
+  rect(ctx, x, y, w, 3, "#222");
+  rect(ctx, x, y, w * (d.hp / d.maxHp), 3, "#ffe082");
 }
 
 // Bramble: a big brown bear who lumbers along and rears up to swipe

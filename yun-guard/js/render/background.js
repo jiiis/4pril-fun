@@ -430,7 +430,7 @@ const DRAW_DECO = {
     for (let i = 0; i < n; i++) {
       const px = x + (i - (n - 1) / 2) * 6 * s + (r() - 0.5) * 4, py = y + (r() - 0.5) * 4, pr = (1.6 + r() * 1.6) * s;
       ellipse(c, px, py + 1, pr * 1.1, pr * 0.5, "rgba(20,50,15,0.25)");
-      ellipse(c, px, py, pr, pr * 0.7, greys[0], "rgba(60,60,60,0.5)", 0.6);
+      ellipse(c, px, py, pr, pr * 0.7, greys[0], "rgba(40,40,40,0.22)", 0.5);
       ellipse(c, px - pr * 0.25, py - pr * 0.25, pr * 0.45, pr * 0.3, greys[1]);
     }
   },
@@ -439,7 +439,7 @@ const DRAW_DECO = {
     const greys = [["#8d8d8d", "#5f5f5f", "#aaaaaa"], ["#9e9789", "#6b655a", "#bdb5a6"], ["#7d8a92", "#4f5a61", "#9fadb5"]][v];
     const n = 5 + Math.floor(r() * 3), pts = [];
     for (let i = 0; i < n; i++) { const a = (i / n) * Math.PI * 2, rad = (6 + r() * 6) * s; pts.push([x + Math.cos(a) * rad, y + Math.sin(a) * rad * 0.65]); }
-    poly(c, pts, greys[0], greys[1], 0.7);
+    poly(c, pts, greys[0], "rgba(40,40,40,0.22)", 0.6);
     poly(c, pts.slice(0, Math.ceil(n / 2)).map(([px, py]) => [x + (px - x) * 0.55, y - 3 * s + (py - y) * 0.45]), greys[2]);   // lit top facet
     if (r() < 0.5) line(c, x - 3 * s, y + 1 * s, x + 2 * s, y - 3 * s, greys[1], 1);                                           // crack
     if (r() < 0.5) { circle(c, x + (r() - 0.5) * 8 * s, y + 2 * s, 2.2 * s, "#5b8f33"); circle(c, x + (r() - 0.5) * 8 * s, y - 2 * s, 1.5 * s, "#6ea83f"); }   // moss

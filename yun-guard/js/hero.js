@@ -1,5 +1,5 @@
 import { state } from "./state.js";
-import { HERO_KINDS, DOG, EAGLE, DRAGON, BEAR, LOONG, W, H } from "./config.js";
+import { HERO_KINDS, DOG, EAGLE, DRAGON, BEAR, LOONG, LION, W, H } from "./config.js";
 import { map } from "./map.js";
 import { hurt, addFloater, addBurst, addSmoke } from "./combat.js";
 import { slayCritter } from "./critters.js";
@@ -21,6 +21,7 @@ function makeHero(def, kind, spawn, dir) {
     phase: 0, cd: 0, swing: 0, respawn: 0, moving: false,
     bowCd: 0, shoot: 0, aim: null,      // ranged attack cooldown, animation, and who they are aiming at
     rootCd: 1.5, cast: 0,               // Willow's vines
+    chargeCd: 2, charge: null,          // Sir Adrien's lance charge
     hunt: null,                         // an animal they have been told to chase
     level: 1, xp: 0, xpPending: 0, levelFlash: 0,
   };
@@ -43,7 +44,7 @@ export function initHero(kind = "april") {
     state.eagle = { def: fdef, x: hero.x, y: hero.y - 34, angle: 0, cd: 0, dive: null, phase: 0, dir: 1, owner: hero, breath: 0, trail: [], sweep: null };
   } else {
     // A four-legged companion that fights at her side
-    const pdef = kind === "willow" ? BEAR : DOG;
+    const pdef = kind === "willow" ? BEAR : kind === "adrien" ? LION : DOG;
     state.dog = {
       def: pdef, x: hero.x + 26, y: hero.y + 6,
       hp: pdef.hp, maxHp: pdef.hp,
@@ -110,6 +111,7 @@ function updateOne(h, dt) {
   if (h.shoot > 0) h.shoot -= dt;
   if (h.bowCd > 0) h.bowCd -= dt;
   if (h.cast > 0) h.cast -= dt;
+  if (h.chargeCd > 0) h.chargeCd -= dt;
   h.face += (h.dir - h.face) * Math.min(1, dt * TURN);
 
   // Fallen: wait, then return at the castle
@@ -118,6 +120,9 @@ function updateOne(h, dt) {
     if (h.respawn <= 0) { h.hp = h.maxHp; h.x = h.spawn.x; h.y = h.spawn.y; h.vx = h.vy = 0; h.moveTo = null; h.target = null; }
     return;
   }
+
+  // Mid-charge: thunder along the line, running through every monster on it
+  if (h.charge) { updateCharge(h, dt); return; }
 
   // Decide where to go this frame
   let goal = null, stopAt = 0;
@@ -154,6 +159,10 @@ function updateOne(h, dt) {
     }
     if (h.target) { goal = h.target; stopAt = 18; }
     else if (def.ranged) rangedAttack(h);                    // nothing in melee reach: shoot
+    if (def.charge && h.target && h.chargeCd <= 0) {         // Sir Adrien: a monster in reach but not at the lance's point: charge!
+      const d = dist(h, h.target);
+      if (d >= def.charge.min && d <= def.charge.range) { startCharge(h, h.target); return; }
+    }
     if (def.root) rootNearby(h, dt);
   }
   if (h.moveTo || h.target || (h.hunt && !def.ranged)) h.aim = null;
@@ -208,6 +217,38 @@ function updateOne(h, dt) {
   } else if (!goal && h.hp < h.maxHp) {
     h.hp = Math.min(h.maxHp, h.hp + def.regen * dt);         // resting heals
   }
+}
+
+// ---------- Sir Adrien's lance charge ----------
+// He lowers the lance and sprints in a straight line a little past his target. Every monster within the
+// lance's width takes a heavy hit once and is left reeling (held in place) for a moment.
+function startCharge(h, target) {
+  const dx = target.x - h.x, dy = target.y - h.y, d = Math.hypot(dx, dy) || 1;
+  const len = d + 36;
+  h.charge = { ux: dx / d, uy: dy / d, left: len, hit: new Set(), trail: [] };
+  h.dir = dx >= 0 ? 1 : -1; h.face = h.dir;
+  h.chargeCd = h.def.charge.every; h.target = null; h.swing = 0.3;
+  sfx("order");
+}
+function updateCharge(h, dt) {
+  const c = h.charge, C = h.def.charge, step = Math.min(c.left, C.speed * dt);
+  h.x += c.ux * step; h.y += c.uy * step; c.left -= step;
+  h.x = clamp(h.x, 16, W - 16); h.y = clamp(h.y, 20, H - 20);
+  h.vx = c.ux * C.speed; h.vy = c.uy * C.speed; h.speedNow = C.speed; h.moving = true;
+  h.phase += dt * 22;
+  c.trail.push({ x: h.x, y: h.y, t: 0 }); for (const p of c.trail) p.t += dt; c.trail = c.trail.filter((p) => p.t < 0.25);
+  for (const e of state.enemies) {
+    if (e.dead || e.def.flying || c.hit.has(e)) continue;
+    const rx = e.x - h.x, ry = e.y - h.y;
+    if (Math.abs(rx * c.uy - ry * c.ux) <= C.width && rx * c.ux + ry * c.uy > -10 && Math.hypot(rx, ry) < 40) {
+      c.hit.add(e);
+      hurt(e, heroDamage(h) * C.factor, "physical", true, h);
+      e.rooted = Math.max(e.rooted || 0, C.stun);
+      addBurst(e.x, e.y - e.def.size * 0.3, e.def.size * 0.5, "rgba(255,224,130,0.9)");
+      sfx("clash", 0.2);
+    }
+  }
+  if (c.left <= 0) { h.charge = null; h.vx = h.vy = 0; h.speedNow = 0; h.cd = 0.3; }
 }
 
 // ---------- Ranged attacks: Avril's frost arrows, Ember's fireballs ----------

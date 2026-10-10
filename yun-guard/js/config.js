@@ -132,7 +132,32 @@ export const MEILIN = {
   xpPerLevel: 40, maxLevel: 10, damageGrowth: 0.08, hpGrowth: 0.06,
 };
 
-export const HERO_KINDS = { april: HERO, avril: AVRIL, ember: EMBER, willow: WILLOW, meilin: MEILIN };
+// Sir Adrien: a gallant paladin in white and gold. When a monster is near but not yet at his lance's point he
+// lowers it and charges, running every monster in his path through and leaving them reeling. His lion Leon fights beside him.
+export const ADRIEN = {
+  name: "Sir Adrien",
+  hp: 280, damage: 14, rate: 1.1,
+  speed: 112, armor: 0.35,
+  engage: 75,
+  charge: { every: 6, range: 120, min: 40, speed: 460, factor: 1.8, stun: 1.0, width: 24 },   // the lance charge
+  regen: 5,
+  respawn: 12,
+  xpPerLevel: 40, maxLevel: 10, damageGrowth: 0.08, hpGrowth: 0.06,
+};
+
+export const HERO_KINDS = { april: HERO, avril: AVRIL, ember: EMBER, willow: WILLOW, meilin: MEILIN, adrien: ADRIEN };
+
+// Leon, Sir Adrien's lion. Proud and fierce: slower than the dog but hits harder and takes more.
+export const LION = {
+  name: "Leon",
+  hp: 210, damage: 13, rate: 1.1,
+  speed: 150, armor: 0.2,
+  follow: 30,
+  engage: 75,
+  regen: 6,
+  respawn: 9,
+  kind: "lion",
+};
 
 // Yun (云), Mei Lin's loong. A long serpentine dragon that coils through the sky, then dives and
 // sweeps along the road, striking every monster in its path. It can reach flying monsters.

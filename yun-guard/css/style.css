@@ -226,7 +226,7 @@ canvas { display: block; }
   opacity: 0.22; pointer-events: none; transition: opacity 0.18s;
 }
 #heroPick .card:nth-child(2) { animation-delay: 0.06s; } #heroPick .card:nth-child(3) { animation-delay: 0.12s; }
-#heroPick .card:nth-child(4) { animation-delay: 0.18s; } #heroPick .card:nth-child(5) { animation-delay: 0.24s; }
+#heroPick .card:nth-child(4) { animation-delay: 0.18s; } #heroPick .card:nth-child(5) { animation-delay: 0.24s; } #heroPick .card:nth-child(6) { animation-delay: 0.3s; }
 @keyframes cardIn { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
 #heroPick .card:hover { transform: translateY(-8px) scale(1.03); border-color: var(--tint); box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55), 0 0 0 1px var(--tint), 0 0 30px color-mix(in srgb, var(--tint) 35%, transparent); filter: none; }
 #heroPick .card:hover::before { opacity: 0.45; }
@@ -262,6 +262,7 @@ canvas { display: block; }
 #heroPick .card[data-hero="ember"] { --tint: #ff7043; }
 #heroPick .card[data-hero="willow"] { --tint: #8bc34a; }
 #heroPick .card[data-hero="meilin"] { --tint: #80deea; }
+#heroPick .card[data-hero="adrien"] { --tint: #ffd54f; }
 
 /* ---------- Paused ---------- */
 #paused {

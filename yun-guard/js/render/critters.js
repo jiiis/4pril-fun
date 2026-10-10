@@ -53,11 +53,11 @@ const DRAW = {
     ctx.translate(0, hop);
     ellipse(ctx, -2, -3, 4, 2, "#eeeeee");                         // back foot
     ellipse(ctx, 5, -2, 3, 1.8, "#eeeeee");                        // front foot
-    ellipse(ctx, 0, -6, 7, 5, "#f5f5f5", "#bdbdbd", 1);            // body
-    circle(ctx, -7, -6, 2.2, "#ffffff", "#bdbdbd", 1);             // tail
-    circle(ctx, 7, -10, 4.5, "#f5f5f5", "#bdbdbd", 1);             // head
-    ellipse(ctx, 5, -18, 1.6, 5, "#f5f5f5", "#bdbdbd", 1);         // ears
-    ellipse(ctx, 8.5, -18, 1.6, 5, "#f5f5f5", "#bdbdbd", 1);
+    ellipse(ctx, 0, -6, 7, 5, "#f5f5f5");                           // body
+    circle(ctx, -7, -6, 2.2, "#ffffff");                            // tail
+    circle(ctx, 7, -10, 4.5, "#f5f5f5");                            // head
+    ellipse(ctx, 5, -18, 1.6, 5, "#f5f5f5");                        // ears
+    ellipse(ctx, 8.5, -18, 1.6, 5, "#f5f5f5");
     ellipse(ctx, 5, -18, 0.7, 3.2, "#f8bbd0");
     ellipse(ctx, 8.5, -18, 0.7, 3.2, "#f8bbd0");
     circle(ctx, 9, -11, 0.9, "#212121");                           // eye
@@ -147,10 +147,10 @@ const DRAW = {
     const peck = moving ? 0 : Math.max(0, Math.sin(phase * 1.5)) * 3;
     line(ctx, -2, -4, -2 + sw, 0, "#f57f17", 1.5);                    // legs
     line(ctx, 2, -4, 2 - sw, 0, "#f57f17", 1.5);
-    ellipse(ctx, 0, -8, 6, 4.5, "#fafafa", "#bdbdbd", 1);             // body
+    ellipse(ctx, 0, -8, 6, 4.5, "#fafafa");                            // body
     for (const [tx, ty] of [[-7, -11], [-8, -9], [-7, -7]]) line(ctx, -5, -9, tx, ty, "#e0e0e0", 1.5);   // tail feathers
     ellipse(ctx, 1, -8, 3, 2, "#eeeeee");                             // wing
-    circle(ctx, 6, -12 + peck, 3, "#fafafa", "#bdbdbd", 1);           // head
+    circle(ctx, 6, -12 + peck, 3, "#fafafa");                          // head
     poly(ctx, [[4.5, -14.5 + peck], [5.5, -17 + peck], [6.5, -15 + peck], [7.5, -17 + peck], [8, -14.5 + peck]], "#e53935");   // comb
     poly(ctx, [[8.5, -12 + peck], [11.5, -11 + peck], [8.5, -10.5 + peck]], "#fb8c00");               // beak
     circle(ctx, 8.5, -9.5 + peck, 1, "#e53935");                      // wattle
