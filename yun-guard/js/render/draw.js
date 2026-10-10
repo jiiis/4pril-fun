@@ -1,7 +1,7 @@
 import { ctx, circle, ellipse, rect, line, poly } from "./gfx.js";
 import { state } from "../state.js";
 import { map } from "../map.js";
-import { SPOT_RADIUS, H } from "../config.js";
+import { SPOT_RADIUS, H, TOWERS } from "../config.js";
 import { towerRange, abilityDef } from "../towers.js";
 import { buildBackground, drawSign, CASTLE_STYLES, gatePillars, lairStakes, drawDecoItem, drawCastleAt, drawGateStructure, gateAnchorY, drawLairStructure, lairAnchorY, lairParts } from "./background.js";
 import { drawTower, flag } from "./towers.js";
@@ -159,6 +159,16 @@ export function draw() {
   // Build spots: stone pads set into the grass
   map.spots.forEach((s, i) => drawSpot(s, i, state.towers.some((t) => t.spot === i), state.hover === i));
 
+  // A ghost of the tower being considered in the build menu, with the range it would have
+  if (state.preview && state.selected !== null && !state.towers.some((t) => t.spot === state.selected) && TOWERS[state.preview]) {
+    const s = map.spots[state.selected], ghost = { spot: state.selected, type: state.preview, x: s.x, y: s.y, def: TOWERS[state.preview], level: 1, cd: 0, soldiers: [], angle: -Math.PI / 2, anim: 0, recoil: 0, shooter: 0 };
+    const r = towerRange(ghost), pulse = 0.5 + 0.5 * Math.sin(state.time * 4);
+    circle(ctx, s.x, s.y, r, "rgba(255,255,255,0.1)", `rgba(255,255,255,${0.45 + pulse * 0.25})`, 1.5);
+    ctx.save(); ctx.globalAlpha = 0.45 + pulse * 0.1;
+    const ds = depthScale(s.y); ctx.translate(s.x, s.y); ctx.scale(ds, ds); ctx.translate(-s.x, -s.y);
+    drawTower(ghost);
+    ctx.restore();
+  }
   // Range preview for the selected tower, or for the barracks whose flag is being moved
   const focus = state.rallyFor || (state.selected !== null && state.towers.find((t) => t.spot === state.selected));
   if (focus) {

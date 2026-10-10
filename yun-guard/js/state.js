@@ -22,6 +22,7 @@ export const state = {
   hero: null,        // Lady April, the first hero (Max follows her)
   dog: null,         // Lady April's German Shepherd (see hero.js)
   eagle: null,       // Princess Avril's eagle (see hero.js)
+  preview: null,     // tower type being considered in the build menu (hover, or first tap on a phone)
   spawnQueue: [],
   spawnTimer: 0,
   countdown: null,   // seconds until next wave auto-starts (null = waiting for player)

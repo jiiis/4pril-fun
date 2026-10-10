@@ -94,6 +94,7 @@ export function openMenu(spotIndex) {
   const menu = $("menu");
   menu.innerHTML = html;
   menu.style.display = "block";
+  state.preview = null;
   placeMenu();
 }
 // The menu floats over the page in screen pixels (so it never scales with the board), next to its spot
@@ -112,6 +113,7 @@ export function placeMenu() {
 
 export function closeMenu() {
   state.selected = null;
+  state.preview = null;
   $("menu").style.display = "none";
 }
 
@@ -124,6 +126,12 @@ function handleMenuClick(ev) {
 
   if (action === "build") {
     const def = TOWERS[btn.dataset.type];
+    if (view.mobile && state.preview !== btn.dataset.type) {        // phones have no hover: the first tap shows the ghost, the second builds
+      state.preview = btn.dataset.type;
+      for (const t of $("menu").querySelectorAll(".tile")) t.classList.toggle("armed", t === btn);
+      $("menu").querySelector(".hint").textContent = "Tap again to build";
+      return;
+    }
     if (state.gold >= def.cost) {
       state.gold -= def.cost;
       state.towers.push(createTower(spot, btn.dataset.type));
@@ -158,7 +166,7 @@ function handleMenuClick(ev) {
 // Scale the whole board to fill the browser window.
 // The board always fills the screen: shown at its natural size, or scaled up (never down) when the window is
 // larger than it. Whatever sticks out past the screen is reached by dragging (see touch.js).
-export const view = { k: 1, panX: 0, panY: 0, mobile: false };
+export const view = { k: 1, fit: 1, panX: 0, panY: 0, mobile: false };
 const MAX_ZOOM = 2, MIN_ZOOM = 0.6;                              // small screens may shrink the board to see more of it; pads stay tappable
 const hudH = () => 0;                                           // the HUD floats over the board, so the whole window is for the map
 export function fitToWindow() {
@@ -166,12 +174,12 @@ export function fitToWindow() {
   document.documentElement.style.setProperty("--hud", `${hudH()}px`);
   // The board is scaled to the window's height (never below natural size, never more than 2×); the width
   // follows proportionally, so a wide screen gets quiet borders at the sides and a narrow one pans sideways.
-  view.k = clamp((window.innerHeight - hudH()) / H, MIN_ZOOM, MAX_ZOOM);
+  view.k = view.fit = clamp((window.innerHeight - hudH()) / H, MIN_ZOOM, MAX_ZOOM);
   applyView();
 }
 // Zoom so the board point under the screen position (sx, sy) stays put: pinch on a phone, ctrl+wheel on a trackpad
 export function zoomTo(k, sx, sy) {
-  k = clamp(k, MIN_ZOOM, MAX_ZOOM);
+  k = clamp(k, Math.max(MIN_ZOOM, view.fit * 0.8), Math.min(MAX_ZOOM, view.fit * 1.8));   // only a little out, a fair bit in, from the natural fit
   const cx = window.innerWidth / 2, cy = (window.innerHeight - hudH()) / 2;
   const ux = (sx - cx - view.panX) / view.k, uy = (sy - cy - view.panY) / view.k;   // board offset (from its centre) under the finger
   view.panX = sx - cx - ux * k; view.panY = sy - cy - uy * k; view.k = k;
@@ -191,6 +199,9 @@ export function initUi() {
   applyIcons();
   setWaveButton("start");
   $("menu").addEventListener("click", handleMenuClick);
+  // Hovering a tower option shows a ghost of it on the spot, with its range
+  $("menu").addEventListener("mouseover", (ev) => { const b = ev.target.closest(".tile[data-action=build]"); if (b) state.preview = b.dataset.type; });
+  $("menu").addEventListener("mouseleave", () => { if (!view.mobile) state.preview = null; });
   $("menu").addEventListener("mouseover", (ev) => {                 // hovering a tile shows what that tower does
     const tile = ev.target.closest(".tile"), hint = $("menu").querySelector(".hint");
     if (tile && hint) hint.textContent = tile.dataset.desc;
