@@ -789,14 +789,32 @@ function drawPagoda(c, x, y) {
 }
 
 export function drawSign(c, x, y, face = { dc: 1, dr: 0 }) {
+  const r = rng(Math.floor(x * 31 + y * 17));                                  // this post's own wear, the same every frame
   shadow(c, x, y + 12, 8, 3);
+  const lean = (r() - 0.5) * 0.12;                                             // the post leans a little
+  c.save(); c.translate(x, y + 12); c.rotate(lean); c.translate(-x, -y - 12);
   rect(c, x - 2, y - 20, 4, 32, "#5d4037");
+  line(c, x - 1, y - 14, x - 1, y + 2 + r() * 6, "rgba(40,25,18,0.5)", 0.8);  // a split running down the grain
+  for (let i = 0; i < 3; i++) circle(c, x + (r() - 0.5) * 3, y - 16 + r() * 26, 0.9, "rgba(255,255,255,0.18)");   // weathered flecks
+  circle(c, x, y + 9, 2.2, "rgba(90,140,60,0.5)"); circle(c, x + 2, y + 10, 1.4, "rgba(110,160,70,0.5)");         // moss at the foot
   const flip = face.dc < 0 ? -1 : 1;                                         // the board points the way the road goes
   const bx = (px) => x + (px + 3) * flip - 3;
-  poly(c, [[bx(-18), y - 24], [bx(12), y - 24], [bx(20), y - 17], [bx(12), y - 10], [bx(-18), y - 10]], "#8d6e63", "rgba(60,36,28,0.6)", 0.9);
-  line(c, bx(-12), y - 17, bx(8), y - 17, "#3e2723", 2);
-  if (face.dr === 0) poly(c, [[bx(4), y - 21], [bx(10), y - 17], [bx(4), y - 13]], "#3e2723");
-  else poly(c, [[x - 3, y - 17 + face.dr * 4], [x - 7, y - 17 - face.dr * 2], [x + 1, y - 17 - face.dr * 2]], "#3e2723");   // arrow up or down
+  const tilt = (r() - 0.5) * 0.14, cx = bx(-3), cy = y - 17;                // the board hangs a touch crooked on one rusty nail
+  c.translate(cx, cy); c.rotate(tilt); c.translate(-cx, -cy);
+  const chip = r() < 0.6;                                                    // a corner has broken off
+  const board = [[bx(-18), y - 24], [bx(12), y - 24], [bx(20), y - 17], [bx(12), y - 10], [bx(-18), y - 10]];
+  if (chip) board[0] = [bx(-15), y - 24], board.splice(1, 0, [bx(-18), y - 21]);
+  const grain = c.createLinearGradient(0, y - 24, 0, y - 10); grain.addColorStop(0, "#8d6e63"); grain.addColorStop(0.5, "#7e6155"); grain.addColorStop(1, "#8a6a5a");
+  poly(c, board, grain, "rgba(60,36,28,0.6)", 0.9);
+  for (let i = 0; i < 3; i++) line(c, bx(-16), y - 22 + i * 4.5 + r() * 2, bx(10 + r() * 6), y - 22 + i * 4.5 + (r() - 0.5) * 2, "rgba(60,36,28,0.25)", 0.7);   // wood grain
+  ellipse(c, bx(-8 + r() * 14), y - 20 + r() * 7, 3 + r() * 3, 1.5 + r(), "rgba(40,25,15,0.12)");                 // a dark water stain
+  if (r() < 0.5) line(c, bx(-6 + r() * 10), y - 24, bx(-8 + r() * 10), y - 17 - r() * 5, "rgba(40,25,18,0.45)", 0.8);   // a crack from the top edge
+  circle(c, bx(-3), y - 22, 0.9, "#4e342e"); circle(c, bx(-3), y - 12, 0.9, "#4e342e");                           // nails
+  line(c, bx(-3), y - 21, bx(-3), y - 18 - r() * 2, "rgba(140,70,30,0.45)", 1);                                     // rust running from the nail
+  line(c, bx(-12), y - 17, bx(8), y - 17, "rgba(62,39,35,0.85)", 2);
+  if (face.dr === 0) poly(c, [[bx(4), y - 21], [bx(10), y - 17], [bx(4), y - 13]], "rgba(62,39,35,0.85)");
+  else poly(c, [[x - 3, y - 17 + face.dr * 4], [x - 7, y - 17 - face.dr * 2], [x + 1, y - 17 - face.dr * 2]], "rgba(62,39,35,0.85)");   // arrow up or down
+  c.restore();
   // (the red flag on top is animated, drawn each frame in draw.js)
 }
 
