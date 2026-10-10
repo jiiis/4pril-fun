@@ -240,6 +240,7 @@ canvas { display: block; }
   box-shadow: 0 0 24px color-mix(in srgb, var(--tint) 30%, transparent);
 }
 #heroPick .card .portrait .ico { width: 36px; height: 36px; }
+#heroPick .card kbd { position: absolute; top: 10px; right: 10px; padding: 1px 6px; border-radius: 5px; font: 600 11px/1.4 ui-monospace, Menlo, monospace; color: rgba(255, 255, 255, 0.55); background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.16); }
 #heroPick .card strong { font-size: 18px; margin-top: 4px; }
 #heroPick .card em { font-style: normal; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; padding: 3px 10px; border-radius: 999px; color: var(--tint); background: color-mix(in srgb, var(--tint) 14%, transparent); }
 #heroPick .card small { color: var(--muted); font-size: 12px; font-weight: 400; line-height: 1.45; margin-top: 4px; }

@@ -14,15 +14,15 @@ export function buildBackground() {
 
   // Grass base
   const g = c.createLinearGradient(0, Y0, 0, H);
-  g.addColorStop(0, "#6fae3e");
-  g.addColorStop(1, "#4f8a2c");
+  g.addColorStop(0, "#7bbb47");
+  g.addColorStop(1, "#5a9a34");
   c.fillStyle = g;
   c.fillRect(0, Y0, W, HH);
 
   // Rolling hills: lit from the top-left, shaded toward the bottom-right, with a soft shadow at their foot
   for (let i = 0; i < 14; i++) {
     const hx = rand() * W, hy = Y0 + rand() * HH, rx = 70 + rand() * 110, ry = rx * (0.45 + rand() * 0.2);
-    ellipse(c, hx + rx * 0.12, hy + ry * 0.35, rx * 1.02, ry * 0.9, "rgba(20,60,15,0.18)");          // shadow at the foot of the hill
+    ellipse(c, hx + rx * 0.12, hy + ry * 0.35, rx * 1.02, ry * 0.9, "rgba(20,60,15,0.11)");          // shadow at the foot of the hill
     const hg = c.createRadialGradient(hx - rx * 0.35, hy - ry * 0.45, 4, hx, hy, rx);
     hg.addColorStop(0, "rgba(170,225,110,0.55)");
     hg.addColorStop(0.6, "rgba(120,185,70,0.25)");
@@ -32,7 +32,7 @@ export function buildBackground() {
   }
   // Sunlit patches
   for (let i = 0; i < 60; i++) {
-    ellipse(c, rand() * W, Y0 + rand() * HH, 40 + rand() * 80, 20 + rand() * 40, `rgba(255,255,160,${0.04 + rand() * 0.06})`);
+    ellipse(c, rand() * W, Y0 + rand() * HH, 40 + rand() * 80, 20 + rand() * 40, rand() < 0.35 ? `rgba(225,175,80,${0.05 + rand() * 0.07})` : `rgba(255,255,160,${0.04 + rand() * 0.06})`);   // sun, and patches of straw-dry grass
   }
 
   // Thousands of tiny grass blades
@@ -194,7 +194,7 @@ function blob(c, pts, fill) {                                           // close
 function drawPond(c, p) {
   const rand = rng(p.seed);
   blob(c, pondOutline(p, 1, 7), "rgba(60,90,35,0.55)");                // damp bank
-  blob(c, pondOutline(p, 1, 3), "#5c4a33");                             // mud edge
+  blob(c, pondOutline(p, 1, 2), "rgba(92,74,51,0.75)");                 // mud edge, thin and soft
   blob(c, pondOutline(p, 1, 0), "#2f6a93");                             // deep water
   const g = c.createRadialGradient(p.x - p.rx * 0.2, p.y - p.ry * 0.3, 1, p.x, p.y, p.rx);
   g.addColorStop(0, "rgba(140,200,235,0.6)"); g.addColorStop(0.6, "rgba(74,147,196,0.5)"); g.addColorStop(1, "rgba(47,106,147,0)");
@@ -202,8 +202,8 @@ function drawPond(c, p) {
   for (let i = 0; i < 3; i++) {                                         // lily pads, one with a flower
     const a = rand() * Math.PI * 2, r = rand() * 0.55;
     const lx = p.x + Math.cos(a) * p.rx * r, ly = p.y + Math.sin(a) * p.ry * r, lr = 4.5 + rand() * 3.5;
-    circle(c, lx, ly, lr, "#5faa4a", "#3c7a2a", 0.8);
-    line(c, lx, ly, lx + lr, ly - lr * 0.4, "#3c7a2a", 1);
+    ellipse(c, lx, ly, lr, lr * 0.62, "#5faa4a", "rgba(50,110,40,0.5)", 0.7);                         // foreshortened like everything on the ground
+    line(c, lx, ly, lx + lr, ly - lr * 0.25, "#3c7a2a", 1);
     if (i === 0) { for (let k = 0; k < 5; k++) { const fa = k * 1.26; ellipse(c, lx + Math.cos(fa) * 1.8, ly - 1 + Math.sin(fa) * 1.2, 1.6, 0.9, "#f8bbd0"); } circle(c, lx, ly - 1, 0.9, "#ffeb3b"); }
   }
   for (let i = 0; i < 5; i++) {                                         // reeds around the edge
@@ -278,7 +278,7 @@ function drawRiver(c, r, rand, pass) {
       }
       if (w > 22 && rand() < 0.1) {                                   // lily pads only on the wide pools
         const o = (rand() - 0.5) * w * 0.7;
-        circle(c, x + n.x * o, y + n.y * o, 4 + rand() * 3, "#5faa4a", "#3c7a2a", 0.8);
+        { const lr = 4 + rand() * 3; ellipse(c, x + n.x * o, y + n.y * o, lr, lr * 0.62, "#5faa4a", "rgba(50,110,40,0.5)", 0.7); }
       }
       if (w < 18 && rand() < 0.12) {                                  // white water in the narrow runs
         const o = (rand() - 0.5) * w * 0.6;
@@ -299,7 +299,7 @@ function drawBridge(c, b) {
     const px = b.x + dx * t, py = b.y + dy * t;
     let best = null, bd = Infinity;
     for (const s of roadSamples) { const d = (s.x - px) ** 2 + (s.y - py) ** 2; if (d < bd) { bd = d; best = s; } }
-    return (best ? best.w : ROAD_WIDTH) / 2 + 3;
+    return (best ? best.w : ROAD_WIDTH) / 2 + 8;   // past the earthen bank, so no road peeks out
   };
   const steps = Math.max(4, Math.round(b.span / 6)), top = [], bot = [];
   for (let i = 0; i <= steps; i++) { const t = -half - 3 + (i / steps) * (b.span + 6); const hw = halfAt(t); top.push([t, -hw]); bot.push([t, hw]); }
@@ -322,10 +322,30 @@ export function drawDecoItem(c, d) {
   castShadow(c, d.x, d.y, d.type === "tree" ? 16 * s : d.type === "flower" || d.type === "mushroom" ? 0 : 9 * s, d.type === "tree" ? 22 * s : 6);
   DRAW_DECO[d.type](c, d.x, d.y, s, d.variant || 0, rng(d.seed || 1));
 }
+// Age marks on a wall region: a hairline crack or two, a damp stain, a few chipped flecks and moss at the foot
+function wearOut(c, r, regions) {
+  for (const [x0, y0, w, h] of regions) {
+    for (let n = 0; n < 1 + Math.floor(r() * 2); n++) {                                 // cracks
+      let cx = x0 + w * (0.15 + r() * 0.7), cy = r() < 0.5 ? y0 : y0 + h;
+      const dir = cy === y0 ? 1 : -1, len = h * (0.25 + r() * 0.3);
+      c.strokeStyle = "rgba(0,0,0,0.28)"; c.lineWidth = 0.8; c.lineCap = "round"; c.beginPath(); c.moveTo(cx, cy);
+      for (let s = 0; s < 4; s++) { cx += (r() - 0.5) * 4; cy += dir * len / 4; c.lineTo(cx, cy); }
+      c.stroke();
+    }
+    for (let n = 0; n < 2; n++) ellipse(c, x0 + w * (0.2 + r() * 0.6), y0 + h * (0.3 + r() * 0.6), w * (0.08 + r() * 0.12), h * (0.1 + r() * 0.15), "rgba(30,20,10,0.08)");   // damp stains
+    for (let n = 0; n < 4; n++) circle(c, x0 + w * r(), y0 + h * r(), 0.7 + r() * 0.6, "rgba(255,255,255,0.22)");                                                         // chipped flecks
+    if (h > 12) for (let n = 0; n < 2; n++) ellipse(c, x0 + w * (0.1 + r() * 0.8), y0 + h - 1.5 - r() * 2, 2.5 + r() * 3, 1.2 + r() * 1.2, "rgba(90,140,60,0.4)");       // moss at the foot
+  }
+}
 export function drawCastleAt(c, k) {
   castShadow(c, k.x, k.y, 50 * k.scale, 90 * k.scale);
   c.save(); c.translate(k.x, k.y); c.scale(k.scale, k.scale);
   drawCastle(c, 0, 0, k.style);
+  const r = rng(Math.floor(k.x * 13 + k.y * 7));
+  const S = CASTLE_STYLES[k.style] || CASTLE_STYLES[0];
+  if (S.pagoda) wearOut(c, r, [[-38, -34, 76, 20], [-28, -60, 56, 10], [-56, -3, 112, 6], [-46, -10, 92, 6]]);
+  else if (S.palace) wearOut(c, r, [[-44, -36, 88, 40], [-18, -60, 36, 26]]);
+  else wearOut(c, r, [[-44, -36, 88, 40], [-16, -70, 32, 36], [-52, -64, 24, 68], [28, -64, 24, 68]]);
   c.restore();
 }
 
@@ -350,19 +370,41 @@ const DRAW_DECO = {
         const w = (14 - i * 3) * s, ty = y - 6 * s - i * 9 * s;
         // Not a perfect triangle: the tip leans a little, the skirts droop unevenly, and a branch pokes out
         const lean = (r() - 0.5) * 3 * s, lDrop = r() * 2.5 * s, rDrop = r() * 2.5 * s, lw = w * (0.85 + r() * 0.3), rw = w * (0.85 + r() * 0.3);
-        poly(c, [[x - lw, ty + lDrop], [x - lw * 0.55, ty - 4 * s - r() * 2 * s], [x + lean, ty - 13 * s], [x + rw * 0.55, ty - 4 * s - r() * 2 * s], [x + rw, ty + rDrop]], g1, "#0d3d12", 0.8);
+        poly(c, [[x - lw, ty + lDrop], [x - lw * 0.55, ty - 4 * s - r() * 2 * s], [x + lean, ty - 13 * s], [x + rw * 0.55, ty - 4 * s - r() * 2 * s], [x + rw, ty + rDrop]], g1, "rgba(13,61,18,0.45)", 0.7);
         poly(c, [[x - lw, ty + lDrop], [x + lean, ty - 13 * s], [x - lw * 0.2, ty]], "rgba(255,255,255,0.1)");
         if (r() < 0.35) line(c, x + (r() < 0.5 ? -1 : 1) * lw * 0.9, ty - 1 * s, x + (r() < 0.5 ? -1 : 1) * (lw + 3 * s), ty + 1 * s, "#0d3d12", 1.2);   // a stray branch
       }
       if (r() < 0.3) for (let i = 0; i < 3; i++) circle(c, x + (r() - 0.5) * 10 * s, y - 12 * s - r() * 14 * s, 1.1 * s, "#8d6e63");   // cones
-    } else if (v === 3) {                                                    // cherry: dark trunk, a cloud of pink blossom
+    } else if (v === 3) {                                                    // cherry: dark trunk, a cloud of blossom in its own shade of pink
       rect(c, x - 2.5 * s, y - 10 * s, 5 * s, 14 * s, "#4e342e");
       line(c, x - 1 * s, y - 9 * s, x - 6 * s, y - 15 * s, "#4e342e", 2 * s); line(c, x + 1 * s, y - 10 * s, x + 6 * s, y - 15 * s, "#4e342e", 2 * s);
+      const hue = 330 + (r() - 0.5) * 30, sat = 55 + r() * 35, lit = 68 + r() * 12;                       // from peach-pink to magenta, pale to vivid
+      const pink = (dl, ds = 0) => `hsl(${hue},${sat + ds}%,${lit + dl}%)`;
       const blobs = 5 + Math.floor(r() * 3);
-      for (let i = 0; i < blobs; i++) { const a = r() * Math.PI * 2, d = r() * 8 * s; circle(c, x + Math.cos(a) * d, y - 18 * s + Math.sin(a) * d * 0.7, (6 + r() * 4) * s, r() < 0.5 ? "#f48fb1" : "#f8bbd0"); }
-      circle(c, x + (r() - 0.5) * 4 * s, y - 22 * s, (7 + r() * 3) * s, "#fce4ec");
-      for (let i = 0; i < 5; i++) circle(c, x + (r() - 0.5) * 20 * s, y - 16 * s + (r() - 0.5) * 12 * s, 1.1 * s, "#ec407a");   // deeper blossoms
-      for (let i = 0; i < 3; i++) circle(c, x + (r() - 0.5) * 26 * s, y - 2 * s + r() * 3, 1 * s, "#f8bbd0");                    // fallen petals
+      for (let i = 0; i < blobs; i++) { const a = r() * Math.PI * 2, d = r() * 8 * s; circle(c, x + Math.cos(a) * d, y - 18 * s + Math.sin(a) * d * 0.7, (6 + r() * 4) * s, pink(r() < 0.5 ? -6 : 2)); }
+      circle(c, x + (r() - 0.5) * 4 * s, y - 22 * s, (7 + r() * 3) * s, pink(12, -15));
+      for (let i = 0; i < 5; i++) circle(c, x + (r() - 0.5) * 20 * s, y - 16 * s + (r() - 0.5) * 12 * s, 1.1 * s, pink(-20, 10));   // deeper blossoms
+      for (let i = 0; i < 3; i++) circle(c, x + (r() - 0.5) * 26 * s, y - 2 * s + r() * 3, 1 * s, pink(4));                        // fallen petals
+    } else if (v === 4) {                                                    // autumn: a canopy turned gold, orange or red, leaves on the ground
+      const trunk = ["#5d4037", "#4e342e", "#6d4c41"][Math.floor(r() * 3)];
+      rect(c, x - 3 * s, y - 10 * s, 6 * s, 14 * s, trunk);
+      line(c, x + 1 * s, y - 8 * s, x + 5 * s, y - 14 * s, trunk, 2.5 * s);
+      const pal = [["#e65100", "#ff8f00", "#ffb300"], ["#f9a825", "#fdd835", "#fff176"], ["#bf360c", "#d84315", "#ff7043"], ["#ef6c00", "#f9a825", "#c62828"]][Math.floor(r() * 4)];
+      const blobs = 4 + Math.floor(r() * 3), thin = r() < 0.35;             // some have already dropped half their leaves
+      for (let i = 0; i < blobs; i++) { const a = r() * Math.PI * 2, d = r() * 7 * s; circle(c, x + Math.cos(a) * d, y - 17 * s + Math.sin(a) * d * 0.7, (thin ? 5 : 7 + r() * 5) * s, pal[Math.floor(r() * 2)]); }
+      circle(c, x + (r() - 0.5) * 4 * s, y - 21 * s, (thin ? 5 : 7 + r() * 3) * s, pal[1 + Math.floor(r() * 2)]);
+      if (thin) for (let i = 0; i < 3; i++) line(c, x, y - 14 * s, x + (r() - 0.5) * 16 * s, y - 24 * s - r() * 4 * s, trunk, 1.2 * s);   // bare twigs poking through
+      for (let i = 0; i < 6; i++) circle(c, x + (r() - 0.5) * 30 * s, y - 1 * s + r() * 4, 1.1 * s, pal[Math.floor(r() * 3)]);        // fallen leaves
+    } else if (v === 5) {                                                    // bare: a leafless tree, just trunk and branching twigs
+      const trunk = ["#5d4037", "#4e342e", "#6d4c41"][Math.floor(r() * 3)];
+      rect(c, x - 2.5 * s, y - 12 * s, 5 * s, 16 * s, trunk);
+      const branch = (bx, by, ang, len, wd, depth) => {
+        const ex = bx + Math.cos(ang) * len, ey = by + Math.sin(ang) * len;
+        line(c, bx, by, ex, ey, trunk, wd);
+        if (depth > 0) { branch(ex, ey, ang - 0.35 - r() * 0.4, len * 0.68, wd * 0.65, depth - 1); branch(ex, ey, ang + 0.35 + r() * 0.4, len * 0.68, wd * 0.65, depth - 1); }
+      };
+      branch(x, y - 11 * s, -Math.PI / 2 - 0.5, 9 * s, 2.2 * s, 2); branch(x, y - 11 * s, -Math.PI / 2 + 0.45, 9 * s, 2.2 * s, 2); branch(x, y - 12 * s, -Math.PI / 2 + (r() - 0.5) * 0.3, 10 * s, 2 * s, 2);
+      for (let i = 0; i < 4; i++) circle(c, x + (r() - 0.5) * 26 * s, y - 1 * s + r() * 4, 1 * s, r() < 0.5 ? "#bf360c" : "#f9a825");   // the last fallen leaves
     } else {                                                                 // birch: pale trunk with bands, airy light canopy
       rect(c, x - 2.5 * s, y - 14 * s, 5 * s, 18 * s, "#eceff1", "#9e9e9e", 0.6);
       for (let i = 0; i < 4; i++) line(c, x - 2.5 * s, y - 12 * s + i * 4 * s + r() * 2, x + 2.5 * s, y - 11 * s + i * 4 * s, "#424242", 1);
@@ -371,12 +413,22 @@ const DRAW_DECO = {
       circle(c, x - 2 * s, y - 26 * s, 3.5 * s, "rgba(255,255,255,0.2)");
     }
   },
+  leaves(c, x, y, s, v, r) {                                                 // a drift of fallen leaves lying flat on the grass
+    const pal = [["#e65100", "#ff8f00", "#bf360c", "#ffb300"], ["#f9a825", "#fdd835", "#ef6c00", "#c0652a"], ["#c62828", "#d84315", "#ff7043", "#f9a825"]][v];
+    const n = 7 + Math.floor(r() * 6);
+    for (let i = 0; i < n; i++) {
+      const a = r() * Math.PI * 2, d = r() * 14 * s, lx = x + Math.cos(a) * d, ly = y + Math.sin(a) * d * 0.5;
+      c.save(); c.translate(lx, ly); c.rotate(r() * Math.PI);
+      ellipse(c, 0, 0, 1.9 * s, 1.1 * s, pal[Math.floor(r() * pal.length)]);
+      c.restore();
+    }
+  },
   rock(c, x, y, s, v, r) {
     shadow(c, x, y + 5 * s, 12 * s, 4 * s);
     const greys = [["#8d8d8d", "#5f5f5f", "#aaaaaa"], ["#9e9789", "#6b655a", "#bdb5a6"], ["#7d8a92", "#4f5a61", "#9fadb5"]][v];
     const n = 5 + Math.floor(r() * 3), pts = [];
     for (let i = 0; i < n; i++) { const a = (i / n) * Math.PI * 2, rad = (6 + r() * 6) * s; pts.push([x + Math.cos(a) * rad, y + Math.sin(a) * rad * 0.65]); }
-    poly(c, pts, greys[0], greys[1], 1.2);
+    poly(c, pts, greys[0], greys[1], 0.7);
     poly(c, pts.slice(0, Math.ceil(n / 2)).map(([px, py]) => [x + (px - x) * 0.55, y - 3 * s + (py - y) * 0.45]), greys[2]);   // lit top facet
     if (r() < 0.5) line(c, x - 3 * s, y + 1 * s, x + 2 * s, y - 3 * s, greys[1], 1);                                           // crack
     if (r() < 0.5) { circle(c, x + (r() - 0.5) * 8 * s, y + 2 * s, 2.2 * s, "#5b8f33"); circle(c, x + (r() - 0.5) * 8 * s, y - 2 * s, 1.5 * s, "#6ea83f"); }   // moss
@@ -384,7 +436,8 @@ const DRAW_DECO = {
   },
   bush(c, x, y, s, v, r) {
     shadow(c, x, y + 6 * s, 12 * s, 4 * s);
-    const greens = [["#33691e", "#558b2f"], ["#2e7d32", "#43a047"], ["#4e6b1f", "#6b8e23"]][v];
+    const greens = r() < 0.22 ? [["#8d4a1e", "#c0652a"], ["#a0521f", "#d98c3a"], ["#7a3e1a", "#b8641f"]][v]      // some bushes have turned russet
+      : [["#33691e", "#558b2f"], ["#2e7d32", "#43a047"], ["#4e6b1f", "#6b8e23"]][v];
     const n = 2 + Math.floor(r() * 3);
     for (let i = 0; i < n; i++) circle(c, x + (i - (n - 1) / 2) * 6 * s + (r() - 0.5) * 3, y + (r() - 0.5) * 3, (6 + r() * 3) * s, greens[0]);
     circle(c, x + (r() - 0.5) * 4, y - 5 * s, (6 + r() * 3) * s, greens[1]);
@@ -419,9 +472,9 @@ const DRAW_DECO = {
   },
   stump(c, x, y, s, v, r) {
     shadow(c, x, y + 5 * s, 10 * s, 4 * s);
-    rect(c, x - 7 * s, y - 6 * s, 14 * s, 10 * s, "#6d4c41", "#3e2723", 1);
+    rect(c, x - 7 * s, y - 6 * s, 14 * s, 10 * s, "#6d4c41", "rgba(62,39,35,0.6)", 0.7);
     for (let i = 0; i < 4; i++) line(c, x - 7 * s + i * 4 * s + 1, y - 5 * s, x - 7 * s + i * 4 * s + 1, y + 3 * s, "#5d4037", 1);   // bark
-    ellipse(c, x, y - 6 * s, 7 * s, 3.2 * s, "#d7b899", "#3e2723", 1);                                                            // cut face
+    ellipse(c, x, y - 6 * s, 7 * s, 3.2 * s, "#d7b899", "rgba(62,39,35,0.6)", 0.7);                                                            // cut face
     for (let i = 1; i <= 3; i++) { c.strokeStyle = "#a1887f"; c.lineWidth = 0.7; c.beginPath(); c.ellipse(x, y - 6 * s, 7 * s * i / 4, 3.2 * s * i / 4, 0, 0, Math.PI * 2); c.stroke(); }   // rings
     if (r() < 0.5) { circle(c, x + 6 * s, y + 1 * s, 2 * s, "#5b8f33"); }                                                       // moss
     if (r() < 0.4) { ellipse(c, x - 6 * s, y - 2 * s, 3 * s, 1.8 * s, "#d84315", "#4e342e", 0.6); }                              // a bracket fungus
@@ -491,10 +544,10 @@ export function drawGateStructure(c, g) {
     castShadow(c, p.x, p.y + 4, 9, 30);
     const grad = c.createLinearGradient(p.x - 9, 0, p.x + 9, 0);
     grad.addColorStop(0, "#b8b4ac"); grad.addColorStop(0.6, "#8f8b84"); grad.addColorStop(1, "#5a5650");
-    poly(c, [[p.x - 8, p.y - 34], [p.x + 8, p.y - 34], [p.x + 10.5, p.y + 6], [p.x - 10.5, p.y + 6]], grad, "#3a3733", 1.2);   // tapered: a touch wider at the foot
+    poly(c, [[p.x - 8, p.y - 34], [p.x + 8, p.y - 34], [p.x + 10.5, p.y + 6], [p.x - 10.5, p.y + 6]], grad, "rgba(58,55,51,0.7)", 0.9);   // tapered: a touch wider at the foot
     for (let yy = p.y - 28; yy < p.y + 4; yy += 8) { const hw = 8 + ((yy - (p.y - 34)) / 40) * 2.5; line(c, p.x - hw, yy, p.x + hw, yy, "rgba(40,36,32,0.35)", 1); }
-    rect(c, p.x - 11.5, p.y + 4, 23, 4, "#7a766e", "#3a3733", 1);                                        // plinth
-    for (const xx of [p.x - 8, p.x - 2, p.x + 4]) rect(c, xx, p.y - 40, 4, 7, "#a8a49c", "#3a3733", 1);   // three slim merlons, flush with the pillar top
+    rect(c, p.x - 11.5, p.y + 4, 23, 4, "#7a766e", "rgba(58,55,51,0.7)", 0.7);                                        // plinth
+    for (const xx of [p.x - 8, p.x - 2, p.x + 4]) rect(c, xx, p.y - 40, 4, 7, "#a8a49c", "rgba(58,55,51,0.7)", 0.7);   // three slim merlons, flush with the pillar top
     rect(c, p.x - 1.5, p.y - 46, 3, 8, "#4e342e");                                                       // torch bracket
   }
 }
@@ -692,7 +745,7 @@ export function drawSign(c, x, y, face = { dc: 1, dr: 0 }) {
   rect(c, x - 2, y - 20, 4, 32, "#5d4037");
   const flip = face.dc < 0 ? -1 : 1;                                         // the board points the way the road goes
   const bx = (px) => x + (px + 3) * flip - 3;
-  poly(c, [[bx(-18), y - 24], [bx(12), y - 24], [bx(20), y - 17], [bx(12), y - 10], [bx(-18), y - 10]], "#8d6e63", "#4e342e");
+  poly(c, [[bx(-18), y - 24], [bx(12), y - 24], [bx(20), y - 17], [bx(12), y - 10], [bx(-18), y - 10]], "#8d6e63", "rgba(60,36,28,0.6)", 0.9);
   line(c, bx(-12), y - 17, bx(8), y - 17, "#3e2723", 2);
   if (face.dr === 0) poly(c, [[bx(4), y - 21], [bx(10), y - 17], [bx(4), y - 13]], "#3e2723");
   else poly(c, [[x - 3, y - 17 + face.dr * 4], [x - 7, y - 17 - face.dr * 2], [x + 1, y - 17 - face.dr * 2]], "#3e2723");   // arrow up or down
@@ -704,7 +757,7 @@ export function drawSign(c, x, y, face = { dc: 1, dr: 0 }) {
 // Style 1: a warm sandstone palace with square towers, terracotta tiled roofs and a green banner.
 // Both have a gatehouse, battlements, arrow slits and a portcullis. Lit from the left, shaded on the right.
 export const CASTLE_STYLES = [
-  { light: "#b0aca4", dark: "#6e6a63", keepLight: "#a8a49c", keepDark: "#66625b", gateLight: "#9e9a92", gateDark: "#605c56", towerLight: "#b8b4ac", towerMid: "#8f8b84", towerDark: "#5a5650", roof: "#3f4a56", roofEdge: "#1f262d", roofShine: "rgba(140,160,180,0.35)", mortar: "rgba(40,36,32,0.35)", outline: "#3a3733", banner: "#1565c0", square: false },
+  { light: "#b0aca4", dark: "#6e6a63", keepLight: "#a8a49c", keepDark: "#66625b", gateLight: "#9e9a92", gateDark: "#605c56", towerLight: "#b8b4ac", towerMid: "#8f8b84", towerDark: "#5a5650", roof: "#3f4a56", roofEdge: "#1f262d", roofShine: "rgba(140,160,180,0.35)", mortar: "rgba(40,36,32,0.35)", outline: "rgba(40,38,35,0.65)", banner: "#1565c0", square: false },
   { banner: "#2e7d32", palace: true },                                  // white desert palace with turquoise domes: drawn by drawPalace
   { banner: "#e53935", pagoda: true },                                 // Chinese palace: drawn by drawPagoda
 ];
@@ -715,7 +768,7 @@ function drawCastle(c, x, y, styleIndex = 0) {
   const stone = (x0, y0, w, h, light = S.light, dark = S.dark) => {
     const g = c.createLinearGradient(x0, 0, x0 + w, 0);
     g.addColorStop(0, light); g.addColorStop(1, dark);
-    rect(c, x0, y0, w, h, g, S.outline, 1.2);
+    rect(c, x0, y0, w, h, g, S.outline, 0.8);
   };
   const courses = (x0, y0, w, h, step = 7) => {               // stone block courses
     c.strokeStyle = S.mortar; c.lineWidth = 1;
@@ -775,9 +828,9 @@ function drawCastle(c, x, y, styleIndex = 0) {
   for (const tx of [x - 40, x + 40]) {
     const g = c.createLinearGradient(tx - 12, 0, tx + 12, 0);
     g.addColorStop(0, S.towerLight); g.addColorStop(0.55, S.towerMid); g.addColorStop(1, S.towerDark);
-    rect(c, tx - 12, y - 64, 24, 68, g, S.outline, 1.2);
+    rect(c, tx - 12, y - 64, 24, 68, g, S.outline, 0.8);
     courses(tx - 12, y - 64, 24, 68);
-    if (S.square) { rect(c, tx - 14, y - 66, 28, 4, S.towerLight, S.outline, 1); roof(tx, y - 66, 16, 20); }   // ledge and pyramid roof
+    if (S.square) { rect(c, tx - 14, y - 66, 28, 4, S.towerLight, S.outline, 0.7); roof(tx, y - 66, 16, 20); }   // ledge and pyramid roof
     else { battlements(tx - 12, y - 64, 24, S.towerLight, S.towerDark); roof(tx, y - 70, 15, 26); }
     slit(tx, y - 54); slit(tx, y - 34);
     // A pennant on each corner tower

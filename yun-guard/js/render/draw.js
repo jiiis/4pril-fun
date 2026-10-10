@@ -94,11 +94,12 @@ function drawSpot(s, i, occupied, hovered) {
   if (occupied) return;
   const { x, y } = s, R = SPOT_RADIUS;
   ctx.save();
+  const breath = Math.sin(state.time * 1.6 + i * 1.3);                     // each pad breathes gently at its own moment
   const ds = depthScale(y); ctx.translate(x, y); ctx.scale(ds, ds); ctx.translate(-x, -y);
-  ctx.globalAlpha = hovered ? 1 : 0.6;
+  ctx.globalAlpha = hovered ? 1 : 0.6 + breath * 0.12;
   // Seen from the front and above: the pad is a foreshortened disc with a visible front edge
   ctx.translate(x, y); ctx.scale(1, SPOT_SQUASH); ctx.translate(-x, -y);
-  ctx.globalAlpha *= 0.5; circle(ctx, x, y + 3, R + 1, "#2e4a1c"); ctx.globalAlpha = hovered ? 1 : 0.6;
+  ctx.globalAlpha *= 0.5; circle(ctx, x, y + 3, R + 1, "#2e4a1c"); ctx.globalAlpha = hovered ? 1 : 0.6 + breath * 0.12;
   circle(ctx, x, y + 3, R, "#6f7a62");                                // the disc's front edge, showing below the top face
   const g = ctx.createRadialGradient(x - R * 0.3, y - R * 0.4, 2, x, y, R + 1);
   g.addColorStop(0, hovered ? "#d6d0c6" : "#b6b8a6");                  // greener, duller stone when idle
@@ -133,6 +134,23 @@ function drawSpot(s, i, occupied, hovered) {
 export function draw() {
   if (!background) background = buildBackground();
   ctx.drawImage(background, 0, 0);
+  // Arrows worn into the dirt at the map edges: soft filled wedges, no outlines. A gentle wave
+  // runs along the three of them so each swells, brightens and nudges forward in turn.
+  const wave = (k) => { const p = ((state.time * 0.55 - k * 0.22) % 1 + 1) % 1; return Math.pow(Math.sin(p * Math.PI), 3); };
+  const chevron = (cx, cy, ax, ay, glow) => {
+    const px = -ay, py = ax;
+    poly(ctx, [[cx + ax * 6, cy + ay * 6], [cx - ax * 5 + px * 11, cy - ay * 5 + py * 11], [cx - ax * 1, cy - ay * 1], [cx - ax * 5 - px * 11, cy - ay * 5 - py * 11]], `rgba(60,38,18,${0.26 + glow * 0.28})`);   // a worn groove, brightening in turn
+  };
+  for (const g of map.exits) for (let k = 0; k < 3; k++) {                 // beyond the gate, on the way out
+    const glow = wave(k);
+    const off = (g.out.y < 0 ? 84 : 36) + k * 16;                        // a gate on the top edge towers over the road behind it
+    chevron(g.x + g.out.x * off, g.y + g.out.y * off, g.out.x, g.out.y, glow);
+  }
+  for (const e of map.entries) for (let k = 0; k < 3; k++) {               // before the lair, on the way in
+    const glow = wave(k);
+    chevron(e.rx - e.inn.x * (30 + k * 16), e.ry - e.inn.y * (30 + k * 16), e.inn.x, e.inn.y, glow);
+  }
+
   drawSnowCover(ctx);                                        // settled snow lies on the ground
   drawWater();
   // Fallen monsters lie on the road under everything else
@@ -147,23 +165,6 @@ export function draw() {
     const r = towerRange(focus);
     circle(ctx, focus.x, focus.y, r, "rgba(255,255,255,0.12)", "rgba(255,255,255,0.6)", 2);
     if (focus.rally) drawRallyFlag(focus.rally, !!state.rallyFor);
-  }
-
-  // Chevrons on the road at the map edges, pulsing in the direction the monsters travel
-  const chevron = (cx, cy, ax, ay, glow) => {
-    const px = -ay, py = ax;
-    ctx.strokeStyle = `rgba(70,45,20,${0.25 + glow * 0.45})`; ctx.lineWidth = 3; ctx.lineCap = "round"; ctx.lineJoin = "round";
-    ctx.beginPath(); ctx.moveTo(cx - ax * 5 + px * 10, cy - ay * 5 + py * 10); ctx.lineTo(cx + ax * 5, cy + ay * 5); ctx.lineTo(cx - ax * 5 - px * 10, cy - ay * 5 - py * 10); ctx.stroke();
-    if (glow > 0.6) { ctx.strokeStyle = `rgba(255,236,170,${(glow - 0.6) * 0.9})`; ctx.lineWidth = 1.2; ctx.stroke(); }   // a pale shimmer rolls along
-  };
-  for (const g of map.exits) for (let k = 0; k < 3; k++) {                 // beyond the gate, on the way out
-    const glow = 0.5 + 0.5 * Math.sin(state.time * 3 - k * 1.1);
-    const off = (g.out.y < 0 ? 84 : 36) + k * 16;                        // a gate on the top edge towers over the road behind it
-    chevron(g.x + g.out.x * off, g.y + g.out.y * off, g.out.x, g.out.y, glow);
-  }
-  for (const e of map.entries) for (let k = 0; k < 3; k++) {               // before the lair, on the way in
-    const glow = 0.5 + 0.5 * Math.sin(state.time * 3 - k * 1.1);
-    chevron(e.rx - e.inn.x * (30 + k * 16), e.ry - e.inn.y * (30 + k * 16), e.inn.x, e.inn.y, glow);
   }
 
   // Droppings left by the animals, fading away

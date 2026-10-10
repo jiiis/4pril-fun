@@ -29,8 +29,9 @@ function makeHero(def, kind, spawn, dir) {
 // One hero per game: "april", "avril", "ember" or "willow". Each brings her own companion.
 export function initHero(kind = "april") {
   const def = HERO_KINDS[kind] || HERO_KINDS.april;
-  const p = closestPointOnPath(map.path, map.castle);
-  const spawn = { x: clamp(p.x - 40, 30, W - 30), y: p.y };
+  // She starts on the road just inside the first gate, facing the way the monsters come
+  const g = map.exits[0];
+  const spawn = { x: clamp(g.x - g.out.x * 80, 30, W - 30), y: clamp(g.y - g.out.y * 80, 30, H - 30) };
   const hero = makeHero(def, kind, spawn, -1);
   state.heroes = [hero];
   state.hero = hero;

@@ -110,8 +110,7 @@ function drawApril(h, a) {
   ctx.fillStyle = "#f9a825"; ctx.beginPath(); ctx.arc(0, -18.5 - breathe, 5.2, Math.PI * 1.05, Math.PI * 1.95); ctx.fill();
   line(ctx, -5, -19.5 - breathe, 5, -19.5 - breathe, "#eceff1", 1.5);
   circle(ctx, 0, -20.5 - breathe, 1, "#42a5f5");
-  circle(ctx, 1.8, -17.5 - breathe, 0.9, "#212121");
-  line(ctx, 1, -14.5 - breathe, 3, -14.5 - breathe, "#c62828", 1);
+  ctx.globalAlpha = 0.08; ellipse(ctx, 0, -15.5 - breathe, 4.2, 2.2, "#000"); ctx.globalAlpha = 1;   // soft shade under the chin
   const armSwing = -sw * 0.8;
   line(ctx, -5, -9, -9 + armSwing, -3, "#cfd8dc", 3);
   poly(ctx, [[-13 + armSwing, -8], [-5 + armSwing, -8], [-5 + armSwing, -1], [-9 + armSwing, 3], [-13 + armSwing, -1]], "#1565c0", "#ffd54f", 1.5);
@@ -179,10 +178,7 @@ function drawAvril(h, a) {
   poly(ctx, [[-4.5, fy - 3], [-2.5, fy - 6], [0, fy - 4.5], [2.5, fy - 7.5], [4.5, fy - 3]], "#ffd54f", "#f9a825", 0.8);
   circle(ctx, 2.5, fy - 6.5, 1.2, "#f06292", "#ad1457", 0.4);
   circle(ctx, -2.5, fy - 5.2, 0.6, "#ffffff"); circle(ctx, 0, fy - 3.8, 0.6, "#ffffff");
-  if (T % 6 < 0.18) line(ctx, 1.2, fy + 0.4, 2.8, fy + 0.4, "#3e2723", 1);
-  else { circle(ctx, 2, fy + 0.4, 0.95, "#3e2723"); circle(ctx, 2.3, fy + 0.1, 0.3, "#ffffff"); line(ctx, 2.9, fy - 0.3, 3.6, fy - 0.9, "#3e2723", 0.8); }
-  ctx.globalAlpha = 0.4; circle(ctx, 3.4, fy + 2.2, 1.1, "#f48fb1"); ctx.globalAlpha = 1;
-  line(ctx, 1.4, fy + 3.2, 3, fy + 3.2, "#c2185b", 0.9);
+  ctx.globalAlpha = 0.08; ellipse(ctx, 0, fy + 2.5, 4.2, 2.2, "#000"); ctx.globalAlpha = 1;          // soft shade under the chin
   const sp = (T * 0.7) % 1;
   if (sp < 0.5) { ctx.globalAlpha = Math.sin(sp * Math.PI * 2) * 0.8; const sx = -6 + Math.sin(T * 3) * 6, sy = -6 - sp * 16; line(ctx, sx - 2, sy, sx + 2, sy, "#fff", 1); line(ctx, sx, sy - 2, sx, sy + 2, "#fff", 1); ctx.globalAlpha = 1; }
   const armSwing = -sw * 0.8;
@@ -238,10 +234,7 @@ function drawEmber(h, a) {
   const fy = -18 - breathe;
   circle(ctx, 0, fy, 5, "#ffe0b2");
   ctx.fillStyle = "#bf360c"; ctx.beginPath(); ctx.arc(0, fy - 0.5, 5.2, Math.PI * 1.03, Math.PI * 1.97); ctx.fill();
-  if (T % 7 < 0.18) line(ctx, 1.2, fy + 0.4, 2.8, fy + 0.4, "#3e2723", 1);
-  else { circle(ctx, 2, fy + 0.4, 0.95, "#3e2723"); circle(ctx, 2.3, fy + 0.1, 0.3, "#ffffff"); }
-  for (const [frx, fry] of [[1.2, fy + 1.8], [2.9, fy + 2.4], [3.6, fy + 1.2]]) circle(ctx, frx, fry, 0.35, "#d7905a");   // freckles
-  line(ctx, 1.4, fy + 3.2, 3, fy + 3, "#c62828", 0.9);                                                                   // grin
+  ctx.globalAlpha = 0.08; ellipse(ctx, 0, fy + 2.5, 4.2, 2.2, "#000"); ctx.globalAlpha = 1;          // soft shade under the chin
   // Wide-brimmed pointed hat, tilted, with a flame badge and a glowing band
   ctx.save(); ctx.translate(0, fy - 3.5); ctx.rotate(-0.12);
   ellipse(ctx, 0, 0, 9, 2.6, "#7f0000", "#4a0000", 0.8);
@@ -297,9 +290,7 @@ function drawWillow(h, a) {
   ctx.fillStyle = "#5d4037"; ctx.beginPath(); ctx.arc(0, fy - 0.5, 5.2, Math.PI * 1.03, Math.PI * 1.97); ctx.fill();
   for (const lx of [-4, -1.5, 1, 3.5]) poly(ctx, [[lx, fy - 4], [lx + 1.6, fy - 6.5], [lx + 2.6, fy - 4]], "#7cb342", "#33691e", 0.5);   // circlet leaves
   circle(ctx, -3.5, fy - 3.5, 1.1, "#f48fb1"); circle(ctx, -3.5, fy - 3.5, 0.5, "#ffeb3b");                           // flower
-  if (T % 6.5 < 0.18) line(ctx, 1.2, fy + 0.4, 2.8, fy + 0.4, "#3e2723", 1);
-  else { circle(ctx, 2, fy + 0.4, 0.95, "#2e5a1e"); circle(ctx, 2.3, fy + 0.1, 0.3, "#ffffff"); }
-  line(ctx, 1.4, fy + 3.2, 3, fy + 3, "#a1552a", 0.9);
+  ctx.globalAlpha = 0.08; ellipse(ctx, 0, fy + 2.5, 4.2, 2.2, "#000"); ctx.globalAlpha = 1;          // soft shade under the chin
   // Gnarled staff with a glowing leaf; slammed down when she casts, swung when she fights
   const armSwing = -sw * 0.8;
   const tilt = casting ? 0.35 - h.cast * 0.5 : h.swing > 0 ? -0.9 : 0.05;
@@ -380,12 +371,9 @@ function drawMeiLin(h, a) {
   line(ctx, -3, fy - 7.4, 3.8, fy - 9.2, "#f5f7f8", 1.1);
   circle(ctx, 3.9, fy - 9.3, 0.9, "#b2ebf2", "#4dd0e1", 0.5);
   for (let i = 0; i < 2; i++) { const bx = 2.2 + i * 1.2, by = fy - 7.6 + i * 1.8 + Math.sin(T * 4 + i) * 0.4; line(ctx, 1.8 + i * 1.2, fy - 8.2, bx, by, "#eceff1", 0.5); circle(ctx, bx, by, 0.6, "#80deea"); }
-  // Features: one small dark eye with a glint and a tiny lash, a soft blush, a small rosy mouth, a tiny blue huadian dot
-  if (T % 7 < 0.16) line(ctx, 1.2, fy + 0.4, 2.8, fy + 0.4, "#263238", 1);
-  else { circle(ctx, 2, fy + 0.4, 0.95, "#263238"); circle(ctx, 2.3, fy + 0.1, 0.3, "#ffffff"); line(ctx, 2.9, fy - 0.3, 3.7, fy - 0.9, "#263238", 0.8); }
-  circle(ctx, 0.6, fy - 1.9, 0.55, "#4dd0e1");                                                                          // huadian (花钿)
-  ctx.globalAlpha = 0.4; circle(ctx, 3.4, fy + 2.2, 1.1, "#f48fb1"); ctx.globalAlpha = 1;
-  line(ctx, 1.4, fy + 3.2, 3, fy + 3.2, "#c2185b", 0.9);
+  // A clean, featureless face like the other legends; only the tiny blue huadian (花钿) ornament on the brow
+  circle(ctx, 0.6, fy - 1.9, 0.55, "#4dd0e1");
+  ctx.globalAlpha = 0.08; ellipse(ctx, 0, fy + 3, 3.8, 2.2, "#000"); ctx.globalAlpha = 1;             // soft shade under the chin
   // Jian (剑): a slender straight double-edged Chinese sword with a silver blade, a dark wrapped grip,
   // a flared guard and an ice-blue tassel at the pommel. Held upright; thrusts forward on a strike.
   const armSwing = -sw * 0.8;
