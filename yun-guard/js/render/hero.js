@@ -364,31 +364,30 @@ function drawMeiLin(h, a) {
   line(ctx, -8.5, -8 - breathe, -4, -7 - breathe, "#ffffff", 1); line(ctx, 4, -7 - breathe, 8.5, -8 - breathe, "#ffffff", 1);   // bright sleeve edges
   // Hair: long, jet black and glossy, swept into a high ponytail that streams behind her
   const hs = Math.sin(h.phase - 0.5) * 2 * run + Math.sin(T * 1.8) * 0.6;
-  poly(ctx, [[-2, -25], [-8 - wind * 0.6, -21 + hs], [-14 - wind, -13 + hs * 1.5], [-18 - wind * 1.3, -2 + hs * 2], [-13 - wind * 0.8, -4 + hs], [-7 - wind * 0.4, -10 + hs], [-3, -14]], "#1b1b1b", "#000", 0.8);
-  line(ctx, -5, -22, -12 - wind, -11 + hs * 1.4, "#607d8b", 1.1);                                                    // glossy highlight
-  line(ctx, -7, -20, -15 - wind, -6 + hs * 1.6, "#455a64", 0.6);
+  poly(ctx, [[-2, -24], [-7 - wind * 0.5, -21 + hs], [-11 - wind * 0.8, -16 + hs * 1.3], [-13 - wind, -10 + hs * 1.6], [-10 - wind * 0.6, -10 + hs], [-6 - wind * 0.3, -13.5 + hs], [-3, -15]], "#1b1b1b");
+  line(ctx, -5, -21.5, -10.5 - wind * 0.8, -13 + hs * 1.3, "#607d8b", 1);                                             // glossy highlight
   const fy = -18 - breathe;
   // Thin side locks (鬓发) framing the face, swaying gently
   const lk = Math.sin(T * 2.2) * 0.5;
-  poly(ctx, [[-4.6, fy - 1], [-5.2 + lk, fy + 5], [-4.2 + lk, fy + 5.5], [-3.9, fy + 0.5]], "#1b1b1b");
-  poly(ctx, [[4.6, fy - 0.5], [5 - lk, fy + 4.5], [4.1 - lk, fy + 5], [3.9, fy + 0.5]], "#1b1b1b");
+  poly(ctx, [[-3, fy - 1], [-3.4 + lk, fy + 3.1], [-2.7 + lk, fy + 3.5], [-2.5, fy + 0.5]], "#1b1b1b");
+  poly(ctx, [[3, fy - 0.5], [3.2 - lk, fy + 2.9], [2.6 - lk, fy + 3.2], [2.5, fy + 0.5]], "#1b1b1b");
   // Back of the head is covered in hair: a dark mass behind and slightly left of the face, running down into the ponytail
-  ellipse(ctx, -1.3, fy - 0.2, 5.1, 6.1, "#1b1b1b");
-  poly(ctx, [[-6.2, fy - 1], [-6, fy + 4], [-4.2, fy + 5.5], [-3.9, fy + 1]], "#1b1b1b");
+  ellipse(ctx, -0.9, fy - 0.2, 3.4, 4, "#1b1b1b");
+  poly(ctx, [[-4, fy - 1], [-3.8, fy + 2.6], [-2.7, fy + 3.5], [-2.5, fy + 1]], "#1b1b1b");
   // Face: fair porcelain skin, simple and clean like the other heroes
-  ellipse(ctx, 0, fy + 0.2, 4.6, 5.6, "#ffeadb");                                                                     // oval face
-  ctx.fillStyle = "#1b1b1b"; ctx.beginPath(); ctx.ellipse(0, fy - 0.4, 4.8, 5.8, 0, Math.PI * 1.03, Math.PI * 1.97); ctx.fill(); // hairline
-  line(ctx, -4.6, fy - 1.6, -1.2, fy - 4.3, "#546e7a", 1);                                                            // a glossy sweep in the fringe
-  ellipse(ctx, -1, fy - 6.8, 3.2, 2.3, "#1b1b1b");                                                                     // high ponytail knot
-  circle(ctx, -1.6, fy - 7.3, 0.8, "#455a64");
-  rect(ctx, -2.5, fy - 5.6, 3, 1.1, "#eceff1");                                                                         // silver hair tie
+  ellipse(ctx, 0, fy + 0.2, 3, 3.7, "#ffeadb");                                                                       // small oval face
+  ctx.fillStyle = "#1b1b1b"; ctx.beginPath(); ctx.ellipse(0, fy - 0.4, 3.2, 3.9, 0, Math.PI * 1.03, Math.PI * 1.97); ctx.fill(); // hairline
+  line(ctx, -3, fy - 1.1, -0.8, fy - 2.8, "#546e7a", 0.8);                                                            // a glossy sweep in the fringe
+  ellipse(ctx, -0.7, fy - 4.6, 2.2, 1.6, "#1b1b1b");                                                                   // high ponytail knot
+  circle(ctx, -1.1, fy - 5, 0.55, "#455a64");
+  rect(ctx, -1.8, fy - 3.8, 2.1, 0.8, "#eceff1");                                                                       // silver hair tie
   // Small silver hairpin with two dangling blue beads
-  line(ctx, -3, fy - 7.4, 3.8, fy - 9.2, "#f5f7f8", 1.1);
-  circle(ctx, 3.9, fy - 9.3, 0.9, "#b2ebf2", "#4dd0e1", 0.5);
-  for (let i = 0; i < 2; i++) { const bx = 2.2 + i * 1.2, by = fy - 7.6 + i * 1.8 + Math.sin(T * 4 + i) * 0.4; line(ctx, 1.8 + i * 1.2, fy - 8.2, bx, by, "#eceff1", 0.5); circle(ctx, bx, by, 0.6, "#80deea"); }
+  line(ctx, -2, fy - 5, 2.6, fy - 6.3, "#f5f7f8", 0.8);
+  circle(ctx, 2.7, fy - 6.4, 0.65, "#b2ebf2", "#4dd0e1", 0.5);
+  for (let i = 0; i < 2; i++) { const bx = 1.5 + i * 0.9, by = fy - 5.2 + i * 1.3 + Math.sin(T * 4 + i) * 0.4; line(ctx, 1.2 + i * 0.9, fy - 5.6, bx, by, "#eceff1", 0.5); circle(ctx, bx, by, 0.45, "#80deea"); }
   // A clean, featureless face like the other legends; only the tiny blue huadian (花钿) ornament on the brow
-  circle(ctx, 0.6, fy - 1.9, 0.55, "#4dd0e1");
-  ctx.globalAlpha = 0.08; ellipse(ctx, 0, fy + 3, 3.8, 2.2, "#000"); ctx.globalAlpha = 1;             // soft shade under the chin
+  circle(ctx, 0.35, fy - 1.2, 0.4, "#4dd0e1");
+  ctx.globalAlpha = 0.08; ellipse(ctx, 0, fy + 2, 2.5, 1.5, "#000"); ctx.globalAlpha = 1;             // soft shade under the chin
   // Jian (剑): a slender straight double-edged Chinese sword with a silver blade, a dark wrapped grip,
   // a flared guard and an ice-blue tassel at the pommel. Held upright; thrusts forward on a strike.
   const armSwing = -sw * 0.8;
@@ -401,7 +400,7 @@ function drawMeiLin(h, a) {
   line(ctx, 6, 1.5, 6, -6, "#263238", 2.4);                               // wrapped grip
   for (let i = 0; i < 4; i++) line(ctx, 5, 0.5 - i * 1.8, 7, -0.5 - i * 1.8, "#546e7a", 0.6);   // cord wrapping
   circle(ctx, 6, 2.2, 1.3, "#eceff1", "#90a4ae", 0.5);                    // pommel
-  for (let i = 0; i < 3; i++) line(ctx, 6, 3, 6 + (i - 1) * 1.6 + Math.sin(T * 6 + i) * 1.2, 8 + Math.sin(T * 5 + i) * 1, "#80deea", 1.3);   // sword tassel (剑穗)
+  for (let i = 0; i < 3; i++) line(ctx, 6, 3, 6 + (i - 1) * 1.6 + Math.sin(T * 6 + i) * 1.2, 8 + Math.sin(T * 5 + i) * 1, "#cfd8dc", 1.3);   // silver sword tassel (剑穗)
   poly(ctx, [[2.5, -6], [9.5, -6], [8, -8.2], [4, -8.2]], "#eceff1", "#90a4ae", 0.6);                   // flared guard
   const blade = ctx.createLinearGradient(4.5, 0, 7.5, 0);
   blade.addColorStop(0, "#b0bec5"); blade.addColorStop(0.5, "#ffffff"); blade.addColorStop(1, "#90a4ae");
@@ -493,7 +492,7 @@ function drawLoong(g) {
     const wob = Math.sin(T * 6 - i * 0.7) * 2.5 * k;
     const legIdx = legAt.indexOf(i);
     if (legIdx >= 0) { loongLeg(p.x, p.y + wob, r, g.dir, T * 7 + legIdx * 2.1 + Math.PI, true); legs.push([p.x, p.y + wob, r, legIdx]); }   // far-side leg behind the body
-    circle(ctx, p.x, p.y + wob, r, i % 2 ? "#2e7d32" : "#43a047", "#1b5e20", 0.8);
+    circle(ctx, p.x, p.y + wob, r, i % 2 ? "#2e7d32" : "#43a047", "rgba(20,70,25,0.3)", 0.6);
     circle(ctx, p.x, p.y + wob + r * 0.35, r * 0.55, "#ffd54f");                                                      // gold belly scales
     if (i % 3 === 0 && i < pts.length - 2) line(ctx, p.x, p.y + wob - r, p.x - 2, p.y + wob - r - 5 - Math.sin(T * 8 + i) * 1.5, "#e53935", 1.6);   // dorsal fin spikes
   }
@@ -506,8 +505,8 @@ function drawLoong(g) {
   ctx.translate(hx, hy);
   ctx.scale(dir, 1);
   for (let i = 0; i < 5; i++) line(ctx, -4, -4 + i * 1.5, -11 - Math.sin(T * 5 + i) * 2, -10 + i * 2.5, "#ffb300", 1.6);   // flowing golden mane
-  ellipse(ctx, 0, 0, 7.5, 5.5, "#43a047", "#1b5e20", 1);                                                              // head
-  ellipse(ctx, 7, 1.5, 4.5, 3, "#66bb6a", "#1b5e20", 0.8);                                                             // snout
+  ellipse(ctx, 0, 0, 7.5, 5.5, "#43a047", "rgba(20,70,25,0.3)", 0.6);                                                 // head
+  ellipse(ctx, 7, 1.5, 4.5, 3, "#66bb6a", "rgba(20,70,25,0.3)", 0.6);                                                 // snout
   for (const ax of [-2, 1.5]) { line(ctx, ax, -5, ax - 2, -12, "#d7ccc8", 2); line(ctx, ax - 1.2, -9, ax - 4, -12, "#d7ccc8", 1.4); }   // antlers
   circle(ctx, 2, -1.5, 1.6, "#fff"); circle(ctx, 2.5, -1.5, 0.9, "#b71c1c");                                           // fierce eye
   line(ctx, 0, -3.5, 4, -4.2, "#1b5e20", 1.2);                                                                           // brow

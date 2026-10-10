@@ -175,7 +175,14 @@ export function draw() {
   const wave = (k) => { const p = ((state.time * 0.55 - k * 0.22) % 1 + 1) % 1; return Math.pow(Math.sin(p * Math.PI), 3); };
   const chevron = (cx, cy, ax, ay, glow) => {
     const px = -ay, py = ax;
-    poly(ctx, [[cx + ax * 6, cy + ay * 6], [cx - ax * 5 + px * 11, cy - ay * 5 + py * 11], [cx - ax * 1, cy - ay * 1], [cx - ax * 5 - px * 11, cy - ay * 5 - py * 11]], `rgba(60,38,18,${0.26 + glow * 0.28})`);   // a worn groove, brightening in turn
+    // A chubby rounded chevron, like a little footprint of an arrow pressed into the dirt
+    ctx.strokeStyle = `rgba(60,38,18,${0.26 + glow * 0.28})`; ctx.lineWidth = 5.5; ctx.lineCap = "round"; ctx.lineJoin = "round";
+    ctx.beginPath();
+    ctx.moveTo(cx - ax * 4 + px * 8, cy - ay * 4 + py * 8);
+    ctx.lineTo(cx + ax * 4, cy + ay * 4);
+    ctx.lineTo(cx - ax * 4 - px * 8, cy - ay * 4 - py * 8);
+    ctx.stroke();
+    ctx.strokeStyle = `rgba(255,236,170,${glow * 0.3})`; ctx.lineWidth = 2; ctx.stroke();   // a soft light down the middle as it brightens
   };
   for (const g of map.exits) for (let k = 0; k < 3; k++) {                 // beyond the gate, on the way out
     const glow = wave(k);
@@ -417,7 +424,7 @@ export function draw() {
       ctx.moveTo(fx - r, fy); ctx.lineTo(fx + r, fy); ctx.moveTo(fx, fy - r); ctx.lineTo(fx, fy + r); ctx.stroke();
       for (const side of [-1, 1]) {
         const sway = Math.sin(state.time * 1.4 + i + side) * 1.6 * k.scale, lx = k.x + side * 45 * k.scale + sway, ly = k.y - 23 * k.scale;
-        line(ctx, k.x + side * 45 * k.scale, ly - 8 * k.scale, lx, ly - 4 * k.scale, "#5a1a16", 1);
+        line(ctx, k.x + side * 45 * k.scale, ly - 8 * k.scale, lx, ly - 4 * k.scale, "rgba(90,26,22,0.3)", 0.5);   // a barely-there string
         ctx.globalAlpha = 0.28; circle(ctx, lx, ly, 9 * k.scale, "rgba(255,120,60,0.6)"); ctx.globalAlpha = 1;
         ellipse(ctx, lx, ly, 2.6 * k.scale, 3.4 * k.scale, "#c84a3f", "#7a2420", 0.8);
         rect(ctx, lx - 1.3 * k.scale, ly - 4.4 * k.scale, 2.6 * k.scale, 1, "#e9c55a"); rect(ctx, lx - 1.3 * k.scale, ly + 3.4 * k.scale, 2.6 * k.scale, 1, "#e9c55a");

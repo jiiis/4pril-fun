@@ -41,7 +41,7 @@ export function initHero(kind = "april") {
   if (kind === "avril" || kind === "ember" || kind === "meilin") {
     // A flying companion that circles above her
     const fdef = { avril: EAGLE, ember: DRAGON, meilin: LOONG }[kind];
-    state.eagle = { def: fdef, x: hero.x, y: hero.y - (kind === "avril" ? 58 : 34), angle: 0, cd: 0, dive: null, phase: 0, dir: 1, owner: hero, breath: 0, trail: [], sweep: null };
+    state.eagle = { def: fdef, x: hero.x, y: hero.y - (kind === "avril" ? 58 : kind === "meilin" ? 116 : 34), angle: 0, cd: 0, dive: null, phase: 0, dir: 1, owner: hero, breath: 0, trail: [], sweep: null };
   } else {
     // A four-legged companion that fights at her side
     const pdef = kind === "willow" ? BEAR : kind === "adrien" ? LION : DOG;
@@ -370,7 +370,7 @@ function updateFlyer(dt) {
   const g = state.eagle;
   if (!g) return;
   const F = g.def, owner = g.owner, home = owner.hp > 0 ? owner : owner.spawn;
-  const hover = F.kind === "eagle" ? 58 : 34;               // the eagle soars higher than the little dragon
+  const hover = F.kind === "eagle" ? 58 : F.kind === "loong" ? 116 : 34;   // the eagle and the loong ride high; the little dragon stays low
   g.phase += dt * 9;
   if (g.cd > 0) g.cd -= dt;
   if (g.breath > 0) g.breath -= dt;
