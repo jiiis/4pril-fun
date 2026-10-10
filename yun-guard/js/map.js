@@ -78,7 +78,7 @@ export function generateMap(seed) {
     }
     return g;
   });
-  const two = exits.length > 1, fullScale = two ? 0.9 : 1.05;
+  const two = exits.length > 1, fullScale = two ? 0.95 : 1.05;
   // How much grass is around a castle of size sc at (x, y)? The least distance from its walls to any road.
   const roomAround = (x, y, sc) => {
     const hw = 52 * sc, top = y - 96 * sc, bot = y + 12 * sc;
@@ -98,7 +98,7 @@ export function generateMap(seed) {
     const c = center(edgeCell(ex.edge, ex.pos));
     const other = exits.find((o) => o !== ex && o.edge === ex.edge);
     const options = [];
-    for (const sc of [fullScale, 0.88, 0.78, 0.68, 0.58]) {
+    for (const sc of [fullScale, fullScale * 0.92, fullScale * 0.85]) {      // never shrink a home below ~85% of full size
       const yLo = 146 * sc + 10, yHi = H - 26 * sc - 12, xLo = 56 * sc + 12, xHi = W - 56 * sc - 12;   // tallest design (the temple's banner) and widest terrace stay off the edges
       if (ex.edge === "right" || ex.edge === "left") {
         const x = ex.edge === "right" ? xHi : xLo;
