@@ -26,6 +26,7 @@ export const state = {
   dog: null,         // Lady April's German Shepherd (see hero.js)
   eagle: null,       // Princess Avril's eagle (see hero.js)
   preview: null,     // tower type being considered in the build menu (hover, or first tap on a phone)
+  previewUpgrade: false,   // hovering Upgrade (or a level-4 ability): show the range the tower would gain
   spawnQueue: [],
   spawnTimer: 0,
   countdown: null,   // seconds until next wave auto-starts (null = waiting for player)

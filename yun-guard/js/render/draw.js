@@ -216,6 +216,15 @@ export function draw() {
   if (focus) {
     const r = towerRange(focus);
     circle(ctx, focus.x, focus.y, r, "rgba(255,255,255,0.12)", "rgba(255,255,255,0.6)", 2);
+    if (state.previewUpgrade && !state.rallyFor && focus.level < 4) {    // the reach it would gain: a dashed gold ring, with the gained band lightly filled
+      const r2 = towerRange({ ...focus, level: focus.level + 1 }), pulse = 0.5 + 0.5 * Math.sin(state.time * 4);
+      ctx.save();
+      ctx.beginPath(); ctx.arc(focus.x, focus.y, r2, 0, Math.PI * 2); ctx.arc(focus.x, focus.y, r, 0, Math.PI * 2, true);
+      ctx.fillStyle = `rgba(255,213,79,${0.08 + pulse * 0.06})`; ctx.fill("evenodd");
+      ctx.setLineDash([8, 6]); ctx.lineDashOffset = -state.time * 20;
+      circle(ctx, focus.x, focus.y, r2, null, `rgba(255,213,79,${0.6 + pulse * 0.3})`, 2);
+      ctx.restore();
+    }
     if (focus.rally) drawRallyFlag(focus.rally, !!state.rallyFor);
   }
 

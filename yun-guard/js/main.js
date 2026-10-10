@@ -120,7 +120,7 @@ resetBtn.addEventListener("click", () => {
   if (!resetArmed) { resetArmed = setTimeout(disarmReset, 3500); resetBtn.classList.add("armed"); resetLbl.textContent = "Tap again to erase progress"; return; }
   disarmReset();
   clearProgress();
-  startLevel({ level: 1, hero: "pick" });
+  startLevel({ level: 1, seed: 1 + Math.floor(Math.random() * 999999), hero: "pick" });   // a fresh start on a fresh map
 });
 // Level picker on the legend screen: arrows or type a number, and the chosen level loads
 const lvInput = document.getElementById("lvInput");

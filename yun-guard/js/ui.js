@@ -133,6 +133,7 @@ export function placeMenu() {
 export function closeMenu() {
   state.selected = null;
   state.preview = null;
+  state.previewUpgrade = false;
   $("menu").style.display = "none";
 }
 
@@ -243,7 +244,9 @@ export function initUi() {
   $("menu").addEventListener("click", handleMenuClick);
   // Hovering a tower option shows a ghost of it on the spot, with its range
   $("menu").addEventListener("mouseover", (ev) => { const b = ev.target.closest(".tile[data-action=build]"); if (b) state.preview = b.dataset.type; });
-  $("menu").addEventListener("mouseleave", () => { if (!view.mobile) state.preview = null; });
+  $("menu").addEventListener("mouseleave", () => { if (!view.mobile) state.preview = null; state.previewUpgrade = false; });
+  // Hovering Upgrade (or a level-4 ability) shows the range the tower would have afterwards
+  $("menu").addEventListener("mouseover", (ev) => { state.previewUpgrade = !!ev.target.closest("[data-action=upgrade], .tile[data-action=ability]"); });
   $("menu").addEventListener("mouseover", (ev) => {                 // hovering a tile shows what that tower does
     const tile = ev.target.closest(".tile"), hint = $("menu").querySelector(".hint");
     if (tile && hint) hint.textContent = tile.dataset.desc;
