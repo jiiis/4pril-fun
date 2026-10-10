@@ -155,7 +155,8 @@ export function draw() {
   };
   for (const g of map.exits) for (let k = 0; k < 3; k++) {                 // beyond the gate, on the way out
     const glow = 0.5 + 0.5 * Math.sin(state.time * 3 - k * 1.1);
-    chevron(g.x + g.out.x * (36 + k * 16), g.y + g.out.y * (36 + k * 16), g.out.x, g.out.y, glow);
+    const off = (g.out.y < 0 ? 84 : 36) + k * 16;                        // a gate on the top edge towers over the road behind it
+    chevron(g.x + g.out.x * off, g.y + g.out.y * off, g.out.x, g.out.y, glow);
   }
   for (const e of map.entries) for (let k = 0; k < 3; k++) {               // before the lair, on the way in
     const glow = 0.5 + 0.5 * Math.sin(state.time * 3 - k * 1.1);

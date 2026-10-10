@@ -176,7 +176,7 @@ function makeRivers(rand) {
           const t = k / steps, wob = Math.sin(k * freq + ph) * amp * Math.sin(t * Math.PI) + (rand() - 0.5) * 20 * Math.sin(t * Math.PI);
           pts.push({ x: start.x + (join.x - start.x) * t - ny * wob, y: start.y + (join.y - start.y) * t + nx * wob });
         }
-        pts.push({ x: join.x + bnx * join.w * 0.5, y: join.y + bny * join.w * 0.5 });   // end right on the river's near bank; a mouth patch blends the two
+        pts.push({ x: join.x + bnx * join.w * 0.2, y: join.y + bny * join.w * 0.2 });   // end just inside the river: its water covers the overlap, banks meet in a clean Y
         smoothPoints(pts, 2);
         const trib = finishRiver(pts, rand, { base: river.base * (0.7 + rand() * 0.15), taper: true, parent: river, joinAt: join });
         if (trib) { river.tributary = trib; break; }
@@ -216,7 +216,6 @@ function finishRiver(pts, rand, { base, taper = false, parent = null, joinAt = n
   pts.forEach((p) => { p.w = Math.max(taper ? 22 : 26, Math.min(80, p.w)); });
   if (taper) { const n = pts.length; pts[n - 1].w *= 1.3; pts[n - 2].w *= 1.15; }   // the mouth widens a little where it meets the river
   const river = { points: pts, width: Math.max(...pts.map((p) => p.w)), base, parent };   // width = the widest point (used for clearances)
-  if (parent) river.mouth = { x: pts[pts.length - 1].x, y: pts[pts.length - 1].y, r: pts[pts.length - 1].w * 0.55 };   // where it meets its river
   // Wherever the water so much as touches the road there must be a bridge. Walk along the river,
   // note every stretch that comes within reach of the road, and reject rivers that run alongside
   // the road at a shallow angle (they would need an endless bridge).

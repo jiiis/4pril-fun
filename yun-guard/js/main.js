@@ -43,6 +43,7 @@ function startSolo() {
   sfx("select");
 }
 document.getElementById("noLegend").addEventListener("click", startSolo);
+window.addEventListener("keydown", (ev) => { if (ev.code === "KeyN" && !ev.metaKey && !ev.ctrlKey && heroPick.style.display !== "none") startSolo(); });
 if (preset === "none") startSolo();
 document.getElementById("next").disabled = true;          // until a legend is chosen
 document.getElementById("pause").disabled = true;

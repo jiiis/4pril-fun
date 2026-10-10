@@ -235,16 +235,12 @@ function drawRiver(c, r, rand, pass) {
     c.closePath();
     c.fill();
   };
-  const mo = r.mouth;
   if (pass === 0) {
     band(1, "rgba(60,90,35,0.55)", 7);                                // damp bank
-    if (mo) circle(c, mo.x, mo.y, mo.r + 7, "rgba(60,90,35,0.55)");   // a round mouth so the banks of the two rivers flow together
     band(1, "#5c4a33", 3);                                            // mud edge
-    if (mo) circle(c, mo.x, mo.y, mo.r + 3, "#5c4a33");
     return;
   }
   band(1, "#2f6a93");                                                 // deep water
-  if (mo) circle(c, mo.x, mo.y, mo.r, "#2f6a93");
   // The shallows lighten toward the middle in soft, wavering layers rather than hard stripes
   const ph = rand() * 6;
   band((i) => 0.86 + Math.sin(i * 0.7 + ph) * 0.05, "rgba(74,147,196,0.35)", 0, 1);

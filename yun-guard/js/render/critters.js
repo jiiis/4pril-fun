@@ -28,11 +28,11 @@ export function drawWaterBird(kind, x, y, dir, t) {
   ctx.translate(x, y + Math.sin(t * 2) * 0.6);
   ctx.scale(dir, 1);
   {
-    ellipse(ctx, 0, -1.5, 6.5, 3, "#8d6e63", "#5d4037", 1);               // duck body
+    ellipse(ctx, 0, -1.5, 6.5, 3, "#8d6e63", "#75594c", 0.7);               // duck body
     ellipse(ctx, 0.5, -2, 4, 1.8, "#a1887f");
     poly(ctx, [[-6, -3], [-9.5, -5], [-6, -1]], "#5d4037");                // tail
     line(ctx, 4.5, -3, 5.5, -7, "#2e7d32", 2.6);                            // neck
-    circle(ctx, 6, -8.5, 2.8, "#2e7d32", "#1b5e20", 0.8);                   // green head
+    circle(ctx, 6, -8.5, 2.8, "#2e7d32", "#256a2a", 0.6);                   // green head
     line(ctx, 4.5, -6, 7.5, -6, "#fafafa", 1);                              // collar
     poly(ctx, [[8.3, -8.5], [11.8, -7.7], [8.3, -6.9]], "#fdd835");         // bill
     circle(ctx, 7, -9.2, 0.7, "#212121");
@@ -127,11 +127,11 @@ const DRAW = {
     const sw = moving ? Math.sin(phase) * 2 : 0, wag = Math.sin(phase * 2) * 1.5;
     line(ctx, -1, -4, -1 + sw, 0, "#fb8c00", 1.5); line(ctx, 2, -4, 2 - sw, 0, "#fb8c00", 1.5);   // legs
     poly(ctx, [[-2 + sw, 0], [-4 + sw, 0.5], [0 + sw, 0.5]], "#fb8c00"); poly(ctx, [[1 - sw, 0], [-1 - sw, 0.5], [3 - sw, 0.5]], "#fb8c00");   // webbed feet
-    ellipse(ctx, 0, -7, 7, 4.5, "#8d6e63", "#5d4037", 1);          // body
+    ellipse(ctx, 0, -7, 7, 4.5, "#8d6e63", "#75594c", 0.7);          // body
     ellipse(ctx, 1, -7.5, 4.5, 2.5, "#a1887f");                    // folded wing
     poly(ctx, [[-6, -9], [-10, -11 + wag], [-7, -6]], "#5d4037");  // tail
     line(ctx, 5, -9, 6.5, -13, "#2e7d32", 3);                      // neck
-    circle(ctx, 7, -14.5, 3.2, "#2e7d32", "#1b5e20", 1);           // green head
+    circle(ctx, 7, -14.5, 3.2, "#2e7d32", "#256a2a", 0.6);           // green head
     line(ctx, 5.5, -11.5, 8.5, -11.5, "#fafafa", 1.2);              // white collar
     poly(ctx, [[9.5, -14.5], [13.5, -13.5], [9.5, -12.5]], "#fdd835"); // bill
     circle(ctx, 8, -15.3, 0.8, "#212121");                          // eye
