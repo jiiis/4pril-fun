@@ -42,10 +42,10 @@ export function endGame(won) {
   $("pause").disabled = true;
   setWaveButton("over");
   const L = state.level, last = L >= MAX_LEVEL;
-  const carried = won && !last ? saveCarry(L + 1, state.gold) : 0;          // 75% of the gold left travels to the next level
+  const carry = won && !last ? saveCarry(L + 1, state.gold, state.lives) : null;   // 75% of the gold left + 10 per villager, capped, travels on
   $("overlayTitle").textContent = won ? (last ? "Kingdom saved!" : `Level ${L} complete!`) : "Game Over";
   $("overlayText").textContent = won
-    ? (last ? `You held every one of the ${MAX_LEVEL} levels. Legendary!` : `All ${state.totalWaves} waves beaten. ${carried} gold (75% of what's left) goes with you to level ${L + 1}.`)
+    ? (last ? `You held every one of the ${MAX_LEVEL} levels. Legendary!` : `All ${state.totalWaves} waves beaten. ${carry.gold} gold goes with you to level ${L + 1}: ${carry.fromGold} from your purse and ${carry.fromLives} for the ${state.lives} villagers you kept safe${carry.capped ? " (capped at 600)" : ""}.`)
     : `The monsters broke through on wave ${state.wave} of level ${L}. Try a different tower mix!`;
   $("overlay").style.display = "flex";
   sfx(won ? "victory" : "gameOver");

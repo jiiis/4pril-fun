@@ -10,11 +10,13 @@ export function savedLevel() {
 export function saveLevel(n) { try { localStorage.setItem(KEY, String(n)); } catch (e) { /* private mode: fine */ } }
 
 // Gold carried over: on finishing a level, 75% of what's left travels to the next one (remembered on this device)
-const CARRY_KEY = "yunguard.carry", CARRY_SHARE = 0.75;
-export function saveCarry(forLevel, goldLeft) {
-  const gold = Math.round(goldLeft * CARRY_SHARE);
+// plus 10 gold for every villager still standing. The whole inheritance is capped at 600.
+const CARRY_KEY = "yunguard.carry", CARRY_SHARE = 0.75, VILLAGER_BONUS = 10, CARRY_MAX = 600;
+export function saveCarry(forLevel, goldLeft, livesLeft = 0) {
+  const fromGold = Math.round(goldLeft * CARRY_SHARE), fromLives = livesLeft * VILLAGER_BONUS;
+  const gold = Math.min(CARRY_MAX, fromGold + fromLives);
   try { localStorage.setItem(CARRY_KEY, JSON.stringify({ level: forLevel, gold })); } catch (e) { /* fine */ }
-  return gold;
+  return { gold, fromGold, fromLives, capped: fromGold + fromLives > CARRY_MAX };
 }
 export function carryFor(level) {                                   // the bonus waiting for this level, if any
   try { const c = JSON.parse(localStorage.getItem(CARRY_KEY) || "null"); return c && c.level === level ? Math.max(0, Math.floor(c.gold)) : 0; } catch (e) { return 0; }
