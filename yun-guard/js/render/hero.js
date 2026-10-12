@@ -1,6 +1,7 @@
 import { ctx, rect, circle, ellipse, poly, line, shadow } from "./gfx.js";
 import { state } from "../state.js";
 import { xpToNext } from "../hero.js";
+import { addLight } from "./lights.js";
 
 const ACCENT = { april: "#9fa8da", avril: "#f48fb1", ember: "#ffab91", willow: "#aed581", meilin: "#b2ebf2", adrien: "#ffe082" };
 const RING = { april: "rgba(159,168,218,0.28)", avril: "rgba(244,143,177,0.25)", ember: "rgba(255,171,145,0.25)", willow: "rgba(174,213,129,0.25)", meilin: "rgba(178,235,242,0.28)", adrien: "rgba(255,224,130,0.28)" };
@@ -270,6 +271,7 @@ function drawEmber(h, a) {
   const glow = ctx.createRadialGradient(8, -22, 1, 8, -22, fl * 2.2);
   glow.addColorStop(0, "rgba(255,255,255,0.95)"); glow.addColorStop(0.35, "rgba(255,193,7,0.9)"); glow.addColorStop(1, "rgba(255,87,34,0)");
   circle(ctx, 8, -22, fl * 2.2, glow);
+  addLight(ctx, 8, -22, 30 + (casting ? 10 : 0), "flame");
   poly(ctx, [[8 - fl * 0.6, -20], [8 + fl * 0.6, -20], [8 + Math.sin(T * 11) * 1.5, -20 - fl * 1.8]], "#ff9800");
   poly(ctx, [[8 - fl * 0.3, -20], [8 + fl * 0.3, -20], [8 + Math.sin(T * 11) * 1, -20 - fl * 1.1]], "#ffeb3b");
   ctx.restore();
@@ -589,6 +591,7 @@ function drawDragon(g) {
     poly(ctx, [[tx - 2.6, ty + 1], [tx - 3.2 + lean, ty - 3 * fl], [tx - 1.5 + lean * 1.6, ty - 7 * fl], [tx + 0.4 + lean, ty - 3 * fl], [tx + 1.4, ty + 1]], "#ff7043");
     poly(ctx, [[tx - 1.4, ty + 0.5], [tx - 1.6 + lean, ty - 2 * fl], [tx - 0.9 + lean * 1.2, ty - 4.2 * fl], [tx + 0.2 + lean, ty - 2 * fl], [tx + 0.6, ty + 0.5]], "#ffeb3b");
     ctx.globalAlpha = 1;
+    addLight(ctx, tx - 0.8, ty - 2.5, 14, "flame");
   }
   ellipse(ctx, 0, 1, 7, 5, "#e53935", OUT, 0.8);                          // round body
   ellipse(ctx, 1, 2.5, 4, 3, "#ffe0b2");                                        // cream belly
@@ -601,6 +604,7 @@ function drawDragon(g) {
   if (g.breath > 0) {                                                           // a puff of flame from the mouth
     const k = g.breath / 0.3;
     ctx.globalAlpha = k;
+    addLight(ctx, 19, 0, 16 * k, "flame");
     poly(ctx, [[13, 0], [22 + (1 - k) * 6, -4], [26 + (1 - k) * 8, 0.5], [22 + (1 - k) * 6, 4]], "#ff9800");
     poly(ctx, [[13, 0], [19 + (1 - k) * 4, -2], [22 + (1 - k) * 5, 0.5], [19 + (1 - k) * 4, 2.5]], "#ffeb3b");
     ctx.globalAlpha = 1;

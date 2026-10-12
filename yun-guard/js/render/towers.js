@@ -1,6 +1,7 @@
 import { ctx, rect, circle, ellipse, poly, line, shadow } from "./gfx.js";
 import { TOWERS } from "../config.js";
 import { state } from "../state.js";
+import { addLight } from "./lights.js";
 import { archerHeight, mageHeight, teslaHeight, archerSlots, visLevel, abilityDef } from "../towers.js";
 
 // Each tower is drawn with simple shapes and looks different at every level.
@@ -290,6 +291,7 @@ function drawWizard(px, py, dir, anim, lv, idle, seed) {
   glow.addColorStop(1, "rgba(186,104,200,0)");
   circle(ctx, 10 + drift, oy, r, glow);
   circle(ctx, 10 + drift, oy, 2.8, "#f3e5f5");
+  addLight(ctx, 10 + drift, oy, 30 + lv * 6, "magic");
   ctx.restore();
 }
 
@@ -329,6 +331,7 @@ function drawTesla(t, x, y, lv) {
   const orb = ctx.createRadialGradient(x - r * 0.3, oy - r * 0.3, 1, x, oy, r);
   orb.addColorStop(0, "#ffffff"); orb.addColorStop(0.4, "#81d4fa"); orb.addColorStop(1, "#0277bd");
   circle(ctx, x, oy, r, orb, "#01579b", 1);
+  addLight(ctx, x, oy, 34 + lv * 6 + charged * 16, "arc");
   // Arcs crawling over the orb, wilder right after a shot
   const arcs = 2 + lv + Math.round(charged * 3);
   for (let i = 0; i < arcs; i++) {

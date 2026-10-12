@@ -11,6 +11,7 @@ import { drawSoldier } from "./soldiers.js";
 import { drawCritter, drawWaterBird } from "./critters.js";
 import { drawHero, drawDog, drawEagle } from "./hero.js";
 import { drawWeather, drawSnowCover } from "../weather.js";
+import { addLight, beginLights } from "./lights.js";
 
 let background = null;   // built on the first frame, after the map has been generated
 // Resolution: the canvas keeps its 1440×840 world size on screen, but its pixel buffer follows the
@@ -169,6 +170,7 @@ function drawSpot(s, i, occupied, hovered) {
 
 export function draw() {
   fitResolution();
+  beginLights();
   ctx.drawImage(background, 0, 0, W, H);
   // Arrows worn into the dirt at the map edges: soft filled wedges, no outlines. A gentle wave
   // runs along the three of them so each swells, brightens and nudges forward in turn.
@@ -253,6 +255,7 @@ export function draw() {
   for (const f of state.fires) {
     const k = Math.min(1, f.life / 0.8), T = state.time * 9 + f.seed;
     ctx.globalAlpha = 0.45 * k; circle(ctx, f.x, f.y + 2, f.r, "rgba(255,112,67,0.6)"); ctx.globalAlpha = 1;
+    addLight(ctx, f.x, f.y, (f.r + 18) * k, "flame");                                         // burning ground
     for (let i = 0; i < 9; i++) {
       const a = f.seed + i * 0.7, rr = f.r * (0.2 + ((i * 0.37) % 0.75)), fx = f.x + Math.cos(a) * rr, fy = f.y + Math.sin(a) * rr * 0.5;
       const h = (6 + 4 * Math.sin(T + i * 1.3)) * k;
@@ -286,6 +289,7 @@ export function draw() {
       glow.addColorStop(0, "rgba(255,255,255,0.95)"); glow.addColorStop(0.35, "rgba(255,193,7,0.9)"); glow.addColorStop(0.7, "rgba(255,87,34,0.6)"); glow.addColorStop(1, "rgba(255,87,34,0)");
       circle(ctx, s.x, s.y, r * 1.8, glow);
       circle(ctx, s.x, s.y, r * 0.5, "#fff8e1");
+      addLight(ctx, s.x, s.y, 26, "flame");                                                      // a fireball in flight
     } else if (s.def.type === "magic") {
       s.trail.forEach((p, i) => {                            // fading trail behind the bolt
         ctx.globalAlpha = ((i + 1) / s.trail.length) * 0.5;
@@ -380,7 +384,7 @@ export function draw() {
   // Lairs: the skulls' eyes glow and green mist seeps out of the entrance
   map.entries.forEach((e, i) => {
     const T = state.time + i * 1.7;
-    for (const s of lairStakes(e)) { const gl = 0.5 + Math.sin(T * 3 + s.x) * 0.4; circle(ctx, s.x - 2.2, s.y - 36, 1.4, `rgba(118,255,3,${gl})`); circle(ctx, s.x + 2.2, s.y - 36, 1.4, `rgba(118,255,3,${gl})`); }
+    for (const s of lairStakes(e)) { const gl = 0.5 + Math.sin(T * 3 + s.x) * 0.4; circle(ctx, s.x - 2.2, s.y - 36, 1.4, `rgba(118,255,3,${gl})`); circle(ctx, s.x + 2.2, s.y - 36, 1.4, `rgba(118,255,3,${gl})`); addLight(ctx, s.x, s.y - 36, 7 + gl * 4, "green"); }
     for (let k = 0; k < 5; k++) {
       const p = (T * 0.25 + k / 5) % 1, spread = Math.sin(T * 0.7 + k * 2.3) * 22;
       const mx = e.rx + e.inn.x * p * 70 - e.inn.y * spread, my = e.ry + e.inn.y * p * 70 + e.inn.x * spread - p * 6;
@@ -396,18 +400,20 @@ export function draw() {
       const tw = 0.5 + 0.5 * Math.sin(state.time * 2.2 + i + 2);
       const tips = [{ x: a.x, y: a.y - 39 - 7 * 2.25 }, { x: b.x, y: b.y - 39 - 7 * 2.25 }];
       if (Math.abs(a.y - b.y) < 1) tips.push({ x: (a.x + b.x) / 2, y: a.y - 36 - 22 - 6 * 2.25 });
-      for (const f of tips) { ctx.globalAlpha = 0.12 + tw * 0.18; circle(ctx, f.x, f.y, 4 + tw * 3, "rgba(255,225,130,0.7)"); ctx.globalAlpha = 0.3 + tw * 0.5; circle(ctx, f.x - 0.4, f.y - 0.4, 0.8, "#fffbe6"); ctx.globalAlpha = 1; }
+      for (const f of tips) { ctx.globalAlpha = 0.12 + tw * 0.18; circle(ctx, f.x, f.y, 4 + tw * 3, "rgba(255,225,130,0.7)"); ctx.globalAlpha = 0.3 + tw * 0.5; circle(ctx, f.x - 0.4, f.y - 0.4, 0.8, "#fffbe6"); ctx.globalAlpha = 1; addLight(ctx, f.x, f.y, 9, "gold"); }
+      for (const p of [a, b]) addLight(ctx, p.x, p.y - 17, 9, "lantern");   // the little arched windows
       return;
     }
     if (g.style === 1) {                                                    // paifang: red lanterns swing from the posts with a warm glow
       // The gold finials on the roofs catch the sun with a soft pulsing glow
       const tw = 0.5 + 0.5 * Math.sin(state.time * 2.2 + i + 1);
       const finials = Math.abs(a.y - b.y) < 1 ? [{ x: (a.x + b.x) / 2, y: a.y - 66 }] : [{ x: a.x, y: a.y - 58 }, { x: b.x, y: b.y - 58 }];
-      for (const f of finials) { ctx.globalAlpha = 0.12 + tw * 0.18; circle(ctx, f.x, f.y, 4 + tw * 3, "rgba(255,225,130,0.7)"); ctx.globalAlpha = 0.3 + tw * 0.5; circle(ctx, f.x - 0.5, f.y - 0.5, 0.9, "#fffbe6"); ctx.globalAlpha = 1; }
+      for (const f of finials) { ctx.globalAlpha = 0.12 + tw * 0.18; circle(ctx, f.x, f.y, 4 + tw * 3, "rgba(255,225,130,0.7)"); ctx.globalAlpha = 0.3 + tw * 0.5; circle(ctx, f.x - 0.5, f.y - 0.5, 0.9, "#fffbe6"); ctx.globalAlpha = 1; addLight(ctx, f.x, f.y, 9, "gold"); }
       for (const p of [a, b]) {
         const sway = Math.sin(state.time * 1.6 + p.x) * 2.5, lx = p.x + 7 + sway, ly = p.y - 36;
         line(ctx, p.x + 5, p.y - 42, lx, ly - 6, "#5d0000", 1);
         ctx.globalAlpha = 0.3; circle(ctx, lx, ly, 13, "rgba(255,120,60,0.6)"); ctx.globalAlpha = 1;
+        addLight(ctx, lx, ly, 30, "lantern");
         ellipse(ctx, lx, ly, 4, 5.5, "#c84a3f", "#7a2420", 0.8);
         line(ctx, lx - 3, ly - 2, lx + 3, ly - 2, "rgba(255,255,255,0.25)", 1); line(ctx, lx - 3, ly + 2, lx + 3, ly + 2, "rgba(0,0,0,0.25)", 1);
         rect(ctx, lx - 2, ly - 7, 4, 1.6, "#ffd54f"); rect(ctx, lx - 2, ly + 5.4, 4, 1.6, "#ffd54f");
@@ -424,6 +430,7 @@ export function draw() {
       poly(ctx, [[p.x - 3, p.y - 46], [p.x + 3, p.y - 46], [p.x + fl, p.y - 56 - fl2]], "#ff9800");
       poly(ctx, [[p.x - 1.5, p.y - 46], [p.x + 1.5, p.y - 46], [p.x + fl * 0.6, p.y - 52 - fl2]], "#ffeb3b");
       ctx.globalAlpha = 0.25; circle(ctx, p.x, p.y - 50, 14, "rgba(255,180,60,0.6)"); ctx.globalAlpha = 1;
+      addLight(ctx, p.x + fl * 0.5, p.y - 51, 36, "flame");
     }
   });
   map.castles.forEach((k, i) => {
@@ -434,10 +441,12 @@ export function draw() {
       const r = (2 + tw * 3.5) * k.scale;
       ctx.strokeStyle = `rgba(255,250,220,${0.25 + tw * 0.45})`; ctx.lineWidth = 1; ctx.beginPath();
       ctx.moveTo(fx - r, fy); ctx.lineTo(fx + r, fy); ctx.moveTo(fx, fy - r); ctx.lineTo(fx, fy + r); ctx.stroke();
+      addLight(ctx, fx, fy, 12 * k.scale, "gold");
       for (const side of [-1, 1]) {
         const sway = Math.sin(state.time * 1.4 + i + side) * 1.6 * k.scale, lx = k.x + side * 45 * k.scale + sway, ly = k.y - 23 * k.scale;
         line(ctx, k.x + side * 45 * k.scale, ly - 8 * k.scale, lx, ly - 4 * k.scale, "rgba(90,26,22,0.3)", 0.5);   // a barely-there string
         ctx.globalAlpha = 0.28; circle(ctx, lx, ly, 9 * k.scale, "rgba(255,120,60,0.6)"); ctx.globalAlpha = 1;
+        addLight(ctx, lx, ly, 26 * k.scale, "lantern");
         ellipse(ctx, lx, ly, 2.6 * k.scale, 3.4 * k.scale, "#c84a3f", "#7a2420", 0.8);
         rect(ctx, lx - 1.3 * k.scale, ly - 4.4 * k.scale, 2.6 * k.scale, 1, "#e9c55a"); rect(ctx, lx - 1.3 * k.scale, ly + 3.4 * k.scale, 2.6 * k.scale, 1, "#e9c55a");
       }
@@ -446,7 +455,13 @@ export function draw() {
     if (k.style === 1) {                                                    // the palace flies no flag: the crescent glints and the fountain plays
       const sc = k.scale, tw = 0.5 + 0.5 * Math.sin(state.time * 2.2 + i + 3);
       const cx = k.x, cy = k.y - (60 + 20 * 2.25 + 5) * sc;
-      ctx.globalAlpha = 0.1 + tw * 0.16; circle(ctx, cx, cy, (6 + tw * 3) * sc, "rgba(255,225,130,0.7)"); ctx.globalAlpha = 0.3 + tw * 0.5; circle(ctx, cx - 3.5 * sc, cy + 1 * sc, 0.8, "#fffbe6"); ctx.globalAlpha = 1;
+      // The gold crescent burns bright: a strong halo, a four-point star glint, and a white-hot tip
+      const halo = ctx.createRadialGradient(cx, cy, 1, cx, cy, (14 + tw * 4) * sc);
+      halo.addColorStop(0, "rgba(255,245,200,0.75)"); halo.addColorStop(0.35, "rgba(255,220,120,0.45)"); halo.addColorStop(1, "rgba(255,200,90,0)");
+      circle(ctx, cx, cy, (14 + tw * 4) * sc, halo);
+      ctx.globalAlpha = 0.7 + tw * 0.3; circle(ctx, cx - 3.5 * sc, cy + 1 * sc, 1.2, "#fffbe6"); ctx.globalAlpha = 1;
+      addLight(ctx, cx, cy, 22 * sc, "gold");
+      for (const tx of [k.x - 40 * sc, k.x + 40 * sc]) addLight(ctx, tx, k.y - 66.5 * sc, 11 * sc, "lantern");   // minaret windows
       const fx = k.x, fy = k.y + 17 * sc;
       for (let j = 0; j < 6; j++) {                                         // water droplets arcing out of the spout
         const p = (state.time * 0.9 + j / 6) % 1, side = j % 2 ? 1 : -1, dx = side * p * 7 * sc, dy = -(Math.sin(p * Math.PI) * 10 + 2) * sc;
@@ -457,6 +472,9 @@ export function draw() {
       return;
     }
     flag(k.x, k.y - 92 * k.scale, 22 * k.scale, CASTLE_STYLES[k.style].banner, 1 + i);
+    const sc = k.scale;
+    addLight(ctx, k.x, k.y - 46.5 * sc, 16 * sc, "lantern");                                                 // keep window
+    addLight(ctx, k.x - 33.5 * sc, k.y - 17 * sc, 14 * sc, "lantern"); addLight(ctx, k.x + 33.5 * sc, k.y - 17 * sc, 14 * sc, "lantern");   // wall windows
   });
 
   // Scorch marks from cannonballs slowly fade away
