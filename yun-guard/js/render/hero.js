@@ -322,11 +322,12 @@ function drawWillow(h, a) {
   const glow = ctx.createRadialGradient(7, -24, 1, 7, -24, g * 2.5);
   glow.addColorStop(0, "rgba(220,255,180,0.95)"); glow.addColorStop(0.4, "rgba(139,195,74,0.8)"); glow.addColorStop(1, "rgba(139,195,74,0)");
   circle(ctx, 7, -24, g * 2.5, glow);
+  addLight(ctx, 7, -24, 24, "green");
   poly(ctx, [[7, -21], [10, -26], [7, -30], [4, -26]], "#aed581", "#558b2f", 0.8);                                     // the living leaf
   ctx.restore();
   line(ctx, -4, -9, -7 + armSwing, -2, "#ffe0b2", 2.5);
   // Fireflies drifting around her
-  for (let i = 0; i < 3; i++) { const k = (T * 0.5 + i / 3) % 1; ctx.globalAlpha = Math.sin(k * Math.PI) * 0.8; circle(ctx, -8 + Math.sin(T * 1.7 + i * 2) * 10, -4 - k * 16, 1, "#ccff90"); }
+  for (let i = 0; i < 3; i++) { const k = (T * 0.5 + i / 3) % 1; ctx.globalAlpha = Math.sin(k * Math.PI) * 0.8; const fx = -8 + Math.sin(T * 1.7 + i * 2) * 10, fy = -4 - k * 16; circle(ctx, fx, fy, 1, "#ccff90"); addLight(ctx, fx, fy, 4 * Math.sin(k * Math.PI), "green"); }
   ctx.globalAlpha = 1;
 }
 
@@ -519,6 +520,7 @@ function drawLoong(g) {
   const pg = ctx.createRadialGradient(15, -4, 1, 15, -4, 7);
   pg.addColorStop(0, "rgba(255,255,255,0.95)"); pg.addColorStop(0.5, "rgba(255,224,130,0.7)"); pg.addColorStop(1, "rgba(255,224,130,0)");
   circle(ctx, 15, -4, 7, pg); circle(ctx, 15, -4, 2.2, "#fff8e1", "#ffb300", 0.6);
+  addLight(ctx, 15, -4, 16, "gold");
   ctx.restore();
   // Little wisps of cloud trailing the body
   for (let i = 2; i < pts.length; i += 5) { ctx.globalAlpha = 0.35; circle(ctx, pts[i].x + Math.sin(T * 2 + i) * 3, pts[i].y + 6, 3 + (i % 3), "#e3f2fd"); }

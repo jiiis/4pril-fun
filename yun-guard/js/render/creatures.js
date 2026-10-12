@@ -28,6 +28,7 @@ const circle = (c, x, y, r, fill, stroke, lw = 1.5) => circle0(c, x, y, r, fill,
 const ellipse = (c, x, y, rx, ry, fill, stroke, lw = 1.5) => ellipse0(c, x, y, rx, ry, fill, soft(stroke), lw * 0.7);
 const poly = (c, pts, fill, stroke, lw = 2) => poly0(c, pts, fill, soft(stroke), lw * 0.7);
 import { state } from "../state.js";
+import { addLight } from "./lights.js";
 
 // Monsters are drawn with shapes and animated by their walking "phase".
 // Each drawing faces right; we flip the canvas when a monster walks left.
@@ -184,6 +185,7 @@ function drawFlames(e) {
     poly(ctx, [[fx - s * 0.1, base], [fx + s * 0.1, base], [fx + Math.sin(t * 1.3 + i) * 2, base - hgt]], "#ff9800");
     poly(ctx, [[fx - s * 0.05, base], [fx + s * 0.05, base], [fx + Math.sin(t * 1.3 + i) * 1.5, base - hgt * 0.6]], "#ffeb3b");
   }
+  addLight(ctx, e.x, e.y - s * 0.1, s * 1.1, "flame");
   ctx.globalAlpha = 0.3;
   circle(ctx, e.x + Math.sin(t * 0.5) * 3, e.y - s * 0.7 - (t % 10) * 1.5, 3 + (t % 10) * 0.4, "#9e9e9e");
   ctx.globalAlpha = 1;
@@ -333,7 +335,7 @@ const CREATURES = {
     circle(ctx, 0, -11, 6, "#eeeeee", "#9e9e9e", 1);                 // skull
     poly(ctx, [[-6, -12], [6, -12], [5, -17], [0, -19], [-5, -17]], "#78909c", "#37474f", 1);   // rusted helm
     rect(ctx, -6, -13, 12, 1.5, "#546e7a");
-    for (const ex of [-2.3, 2.3]) { circle(ctx, ex, -11, 1.8, "#212121"); circle(ctx, ex, -11, 0.7, "#76ff03"); }   // eerie green eye-glow
+    for (const ex of [-2.3, 2.3]) { circle(ctx, ex, -11, 1.8, "#212121"); circle(ctx, ex, -11, 0.7, "#76ff03"); addLight(ctx, ex, -11, 4, "green"); }   // eerie green eye-glow
     poly(ctx, [[-0.8, -8.5], [0.8, -8.5], [0, -7]], "#424242");       // nose hole
     line(ctx, -3, -6, 3, -6, "#9e9e9e", 1); for (const tx of [-2, -0.7, 0.7, 2]) line(ctx, tx, -6, tx, -4.8, "#9e9e9e", 0.8);   // teeth
   },
@@ -383,6 +385,7 @@ const CREATURES = {
     poly(ctx, [[-6, 4], [2, 3], [4, 11], [-5, 10]], "#8d8d8d", "#37474f", 0.8);
     line(ctx, -4, -6, -7, 0, glow, 1.5); line(ctx, 4, -3, 2, 3, glow, 1.5); line(ctx, -2, 5, 1, 10, glow, 1.2);   // glowing cracks
     circle(ctx, 0, 1, 3.5, glow); circle(ctx, 0, 1, 1.8, "#ffeb3b");                           // core
+    addLight(ctx, 0, 1, 14 + pulse * 4, "flame");
     body(-15, -6, 6, 6, "#9e9e9e", "#616161", "#37474f");             // boulder shoulders
     body(15, -6, 6, 6, "#9e9e9e", "#616161", "#37474f");
     line(ctx, -15, -2, -20 + sw * 0.5, 12, "#757575", 6);              // arms
@@ -392,6 +395,7 @@ const CREATURES = {
     body(0, -17, 8, 7, "#9e9e9e", "#616161", "#37474f");               // head
     rect(ctx, -6, -19, 12, 2.5, "#616161");                            // heavy brow
     circle(ctx, -3, -16, 1.8, glow); circle(ctx, 3, -16, 1.8, glow);    // glowing eyes
+    addLight(ctx, -3, -16, 5, "flame"); addLight(ctx, 3, -16, 5, "flame");
     line(ctx, -3, -12, 3, -12, "#424242", 1.5);
     for (const [mx, my] of [[-9, -9], [8, 5], [-6, 10]]) { circle(ctx, mx, my, 2, "#558b2f"); circle(ctx, mx + 1, my - 1, 1.2, "#7cb342"); }   // moss
   },
