@@ -69,6 +69,8 @@ export function initTouch() {
   let mouse = null, mouseDragged = false;
   window.addEventListener("mousedown", (ev) => {
     if (ev.button !== 0 || ev.target.closest("button, #menu, #overlay, #heroPick")) return;
+    ev.preventDefault();                                         // a drag pans the board; it must not start a text selection
+    if (document.activeElement instanceof HTMLElement && document.activeElement !== document.body) document.activeElement.blur();   // (preventDefault would otherwise keep the focus where it was)
     mouse = { x: ev.clientX, y: ev.clientY, sx: ev.clientX, sy: ev.clientY }; mouseDragged = false;
   });
   window.addEventListener("mousemove", (ev) => {
