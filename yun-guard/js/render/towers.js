@@ -159,8 +159,7 @@ function drawArcher(t, x, y, lv) {
   }
   if (lv === 3) {
     for (const px of [-19, 19]) line(ctx, x + px, y - h - 6, x + px, y - h - 44, "#5d4037", 3);
-    const fl = Math.sin(state.time * 4 + x) * 1.5;                           // canopy edges flutter
-    poly(ctx, [[x - 25, y - h - 42 + fl], [x, y - h - 58], [x + 25, y - h - 42 - fl]], "#c62828", "#7f0000");
+    poly(ctx, [[x - 25, y - h - 42], [x, y - h - 58], [x + 25, y - h - 42]], "#c62828", "#7f0000");   // a steady canopy
     for (let i = 1; i < 4; i++) line(ctx, x - 25 + i * 6, y - h - 42 - i * 4, x + 25 - i * 6, y - h - 42 - i * 4, "rgba(0,0,0,0.15)", 1);
     rect(ctx, x - 5, y - h - 13, 10, 7, "#5d4037", "#3e2723", 1);
     rect(ctx, x + 13, y - h - 14, 8, 6, "#424242", "#212121", 1);           // brazier
