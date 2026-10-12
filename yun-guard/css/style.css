@@ -373,6 +373,8 @@ canvas { display: block; }
   #heroPick .card strong { font-size: 22px; }
   #heroPick .card small { font-size: 14px; }
   #heroPick h1 { font-size: 56px; }
+  #heroPick .card kbd { top: 14px; right: 14px; padding: 3px 9px; border-radius: 7px; font-size: 15px; }
+  #heroPick .ghost kbd { padding: 3px 9px; border-radius: 7px; font-size: 15px; }
 }
 #heroPick .levelPick #lvPrev .ico, #heroPick .levelPick #lvNext .ico { width: 18px; height: 18px; }
 .stat.seed { text-decoration: none; cursor: pointer; }
