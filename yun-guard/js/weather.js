@@ -62,6 +62,9 @@ export function drawWeather(ctx) {
   const w = state.weather;
   if (!w || !w.type || w.intensity <= 0) return;
   const k = w.intensity;
+  // A light overcast over the whole land while the weather lasts: cool and dim in rain, pale and flat in snow
+  ctx.fillStyle = w.type === "rain" ? `rgba(40,52,74,${0.11 * k})` : `rgba(170,180,200,${0.09 * k})`;
+  ctx.fillRect(0, 0, W, H);
   if (w.type === "rain") {
     // Splash rings where drops hit the ground
     ctx.strokeStyle = "#e3f2fd"; ctx.lineWidth = 1; ctx.fillStyle = "#e3f2fd";

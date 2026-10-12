@@ -326,15 +326,16 @@ export function drawDecoItem(c, d) {
 // Age marks on a wall region: a hairline crack or two, a damp stain, a few chipped flecks and moss at the foot
 function wearOut(c, r, regions) {
   for (const [x0, y0, w, h] of regions) {
-    for (let n = 0; n < 1 + Math.floor(r() * 2); n++) {                                 // cracks
+    for (let n = 0; n < 2 + Math.floor(r() * 2); n++) {                                 // cracks
       let cx = x0 + w * (0.15 + r() * 0.7), cy = r() < 0.5 ? y0 : y0 + h;
       const dir = cy === y0 ? 1 : -1, len = h * (0.25 + r() * 0.3);
       c.strokeStyle = "rgba(0,0,0,0.28)"; c.lineWidth = 0.8; c.lineCap = "round"; c.beginPath(); c.moveTo(cx, cy);
       for (let s = 0; s < 4; s++) { cx += (r() - 0.5) * 4; cy += dir * len / 4; c.lineTo(cx, cy); }
       c.stroke();
     }
-    for (let n = 0; n < 2; n++) ellipse(c, x0 + w * (0.2 + r() * 0.6), y0 + h * (0.3 + r() * 0.6), w * (0.08 + r() * 0.12), h * (0.1 + r() * 0.15), "rgba(30,20,10,0.08)");   // damp stains
-    for (let n = 0; n < 4; n++) circle(c, x0 + w * r(), y0 + h * r(), 0.7 + r() * 0.6, "rgba(255,255,255,0.22)");                                                         // chipped flecks
+    for (let n = 0; n < 3; n++) ellipse(c, x0 + w * (0.2 + r() * 0.6), y0 + h * (0.3 + r() * 0.6), w * (0.08 + r() * 0.14), h * (0.1 + r() * 0.18), "rgba(30,20,10,0.09)");   // damp stains
+    for (let n = 0; n < 2; n++) ellipse(c, x0 + w * (0.1 + r() * 0.8), y0 + h * (0.55 + r() * 0.4), 1.5 + r() * 2.5, 4 + r() * 6, "rgba(40,30,20,0.07)");                 // rain streaks
+    for (let n = 0; n < 6; n++) circle(c, x0 + w * r(), y0 + h * r(), 0.7 + r() * 0.6, "rgba(255,255,255,0.22)");                                                         // chipped flecks
     if (h > 12) for (let n = 0; n < 2; n++) ellipse(c, x0 + w * (0.1 + r() * 0.8), y0 + h - 1.5 - r() * 2, 2.5 + r() * 3, 1.2 + r() * 1.2, "rgba(90,140,60,0.4)");       // moss at the foot
   }
 }
@@ -368,7 +369,7 @@ const DRAW_DECO = {
       const trunk = ["#6d4c41", "#5d4037", "#795548"][Math.floor(r() * 3)];
       rect(c, x - 3 * s, y - 18 * s, 6 * s, 22 * s, trunk);                                             // runs up into the canopy
       line(c, x - 1 * s, y - 8 * s, x - 5 * s, y - 14 * s, trunk, 2.5 * s);
-      const tint = Math.floor(r() * 3), dark = ["#2e7d32", "#33691e", "#1b5e20"][tint], light = ["#43a047", "#558b2f", "#2e7d32"][tint];
+      const tint = Math.floor(r() * 3), dark = ["#397a3c", "#4a6b2a", "#2b5c2e"][tint], light = ["#56964f", "#6c8a42", "#3f7a43"][tint];
       circle(c, x, y - 15 * s, 8 * s, dark);                                                             // the crown always sits on the trunk
       const blobs = 4 + Math.floor(r() * 3);
       for (let i = 0; i < blobs; i++) { const a = r() * Math.PI * 2, d = r() * 7 * s; circle(c, x + Math.cos(a) * d, y - 17 * s + Math.sin(a) * d * 0.7, (7 + r() * 5) * s, dark); }
@@ -402,7 +403,7 @@ const DRAW_DECO = {
       const trunk = ["#5d4037", "#4e342e", "#6d4c41"][Math.floor(r() * 3)];
       rect(c, x - 3 * s, y - 18 * s, 6 * s, 22 * s, trunk);
       line(c, x + 1 * s, y - 8 * s, x + 5 * s, y - 14 * s, trunk, 2.5 * s);
-      const pal = [["#e65100", "#ff8f00", "#ffb300"], ["#f9a825", "#fdd835", "#fff176"], ["#bf360c", "#d84315", "#ff7043"], ["#ef6c00", "#f9a825", "#c62828"]][Math.floor(r() * 4)];
+      const pal = [["#cf6424", "#dd8f3c", "#deae4c"], ["#d1a235", "#dcbd55", "#e5d07e"], ["#ad4a22", "#c35f33", "#d6835a"], ["#d2742c", "#d1a235", "#ab3f3a"]][Math.floor(r() * 4)];
       const blobs = 4 + Math.floor(r() * 3), thin = r() < 0.35;             // some have already dropped half their leaves
       circle(c, x, y - 15 * s, (thin ? 5.5 : 8) * s, pal[0]);                                           // the crown always sits on the trunk
       for (let i = 0; i < blobs; i++) { const a = r() * Math.PI * 2, d = r() * 7 * s; circle(c, x + Math.cos(a) * d, y - 17 * s + Math.sin(a) * d * 0.7, (thin ? 5 : 7 + r() * 5) * s, pal[Math.floor(r() * 2)]); }
@@ -422,14 +423,14 @@ const DRAW_DECO = {
     } else {                                                                 // birch: pale trunk with bands, airy light canopy
       rect(c, x - 2.5 * s, y - 24 * s, 5 * s, 28 * s, "#eceff1", "#9e9e9e", 0.6);
       for (let i = 0; i < 4; i++) line(c, x - 2.5 * s, y - 12 * s + i * 4 * s + r() * 2, x + 2.5 * s, y - 11 * s + i * 4 * s, "#424242", 1);
-      circle(c, x, y - 21 * s, 6.5 * s, "#9ccc65");                                                      // the crown always sits on the trunk
+      circle(c, x, y - 21 * s, 6.5 * s, "#93b86a");                                                      // the crown always sits on the trunk
       const blobs = 5 + Math.floor(r() * 3);
-      for (let i = 0; i < blobs; i++) { const a = r() * Math.PI * 2, d = r() * 8 * s; circle(c, x + Math.cos(a) * d, y - 22 * s + Math.sin(a) * d * 0.8, (5 + r() * 4) * s, r() < 0.5 ? "#9ccc65" : "#aed581"); }
+      for (let i = 0; i < blobs; i++) { const a = r() * Math.PI * 2, d = r() * 8 * s; circle(c, x + Math.cos(a) * d, y - 22 * s + Math.sin(a) * d * 0.8, (5 + r() * 4) * s, r() < 0.5 ? "#93b86a" : "#a6c484"); }
       circle(c, x - 2 * s, y - 26 * s, 3.5 * s, "rgba(255,255,255,0.2)");
     }
   },
   leaves(c, x, y, s, v, r) {                                                 // a drift of fallen leaves lying flat on the grass
-    const pal = [["#e65100", "#ff8f00", "#bf360c", "#ffb300"], ["#f9a825", "#fdd835", "#ef6c00", "#c0652a"], ["#c62828", "#d84315", "#ff7043", "#f9a825"]][v];
+    const pal = [["#cf6424", "#dd8f3c", "#ad4a22", "#deae4c"], ["#d1a235", "#dcbd55", "#d2742c", "#b56a35"], ["#ab3f3a", "#c35f33", "#d6835a", "#d1a235"]][v];
     const n = 7 + Math.floor(r() * 6);
     for (let i = 0; i < n; i++) {
       const a = r() * Math.PI * 2, d = r() * 14 * s, lx = x + Math.cos(a) * d, ly = y + Math.sin(a) * d * 0.5;
@@ -704,11 +705,12 @@ function drawPalace(c, x, y) {
   c.arc(x + 2.6, cy0 - 1.2, 4.2, Math.PI * 1.6, Math.PI * 0.4, true);     // inner edge, curving back
   c.closePath(); c.fill(); c.strokeStyle = goldDark; c.lineWidth = 0.8; c.stroke();
   line(c, x, cy0 + 5, x, cy0 + 9, goldDark, 1.6);                           // its little stem
-  // A courtyard fountain before the door: an octagonal basin of blue tile
-  const fy = y + 17;
-  c.fillStyle = wall; c.beginPath(); for (let k = 0; k < 8; k++) { const a = k / 8 * Math.PI * 2 + Math.PI / 8; const px = x + Math.cos(a) * 12, py = fy + Math.sin(a) * 6; k ? c.lineTo(px, py) : c.moveTo(px, py); } c.closePath(); c.fill(); c.strokeStyle = edge; c.lineWidth = 1; c.stroke();
-  ellipse(c, x, fy, 9, 4.2, "#4a93c4", tealDark, 0.8);
-  circle(c, x, fy - 1, 2, wall, edge, 0.6);                                                      // central spout
+  // A courtyard fountain before the door: a round basin of blue tile, seen a little from above
+  const fy = y + 18;
+  ellipse(c, x, fy, 15, 9, wall, edge, 1);                                                       // stone rim (squashed like the build pads)
+  ellipse(c, x, fy, 12, 6.9, "#4a93c4", tealDark, 0.8);                                          // water
+  ellipse(c, x - 3, fy - 2, 4, 1.6, "rgba(255,255,255,0.35)");                                   // a glint on the water
+  circle(c, x, fy - 1.5, 2.4, wall, edge, 0.6);                                                  // central spout
   // Minarets
   for (const tx of [x - 40, x + 40]) {
     const tg = c.createLinearGradient(tx - 7, 0, tx + 7, 0); tg.addColorStop(0, "#f6ecd8"); tg.addColorStop(1, wallDark);

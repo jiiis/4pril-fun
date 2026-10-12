@@ -583,9 +583,24 @@ function scatterDeco(rand) {
         const a = rand() * Math.PI * 2, d = group.near + rand() * (group.far - group.near);
         const q = { x: p.x + Math.cos(a) * d, y: p.y + Math.sin(a) * d * 0.7 };
         if (q.x < 20 || q.x > W - 20 || q.y < 20 || q.y > H - 20 || !clear(q, { deco: group.gap })) continue;
-        out.push({ type, x: q.x, y: q.y, s: group.s(), variant: type === "tree" ? treeVariant() : Math.floor(rand() * 3), seed: Math.floor(rand() * 1e6) });
+        // Trees in a wood mostly match their neighbours (a birch grove, a pine stand); the odd different one slips in
+        const variant = type === "tree" ? (rand() < 0.72 ? item.variant : treeVariant()) : Math.floor(rand() * 3);
+        out.push({ type, x: q.x, y: q.y, s: group.s(), variant, seed: Math.floor(rand() * 1e6) });
         k++;
       }
+    }
+  }
+  // A little landscaping in front of each home: a few flowers, pebbles and a bush close to its walls
+  for (const k of map.castles) {
+    for (let n = 0, tries = 0; n < 4 && tries < 30; tries++) {
+      const a = rand() * Math.PI, d = (42 + rand() * 40) * k.scale;
+      const q = { x: k.x + Math.cos(a) * d, y: k.y + 16 * k.scale + Math.sin(a) * d * 0.45 };
+      if (q.x < 20 || q.x > W - 20 || q.y < 20 || q.y > H - 20 || !clear(q, { road: 28, spots: 30, castle: 0, entry: 40, deco: 16 })) continue;
+      const roll = rand();
+      const type = roll < 0.45 ? "flower" : roll < 0.7 ? "pebbles" : roll < 0.9 ? "bush" : "mushroom";
+      const size = type === "flower" ? 0.5 + rand() * 0.2 : type === "pebbles" ? 0.6 + rand() * 0.3 : type === "bush" ? 0.7 + rand() * 0.3 : 0.4 + rand() * 0.15;
+      out.push({ type, x: q.x, y: q.y, s: size, variant: Math.floor(rand() * 3), seed: Math.floor(rand() * 1e6) });
+      n++;
     }
   }
   return out;
