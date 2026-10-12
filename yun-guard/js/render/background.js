@@ -596,6 +596,7 @@ export function drawGateStructure(c, g) {
     rect(c, p.x - 11.5, p.y + 4, 23, 4, "#7a766e", "rgba(58,55,51,0.7)", 0.7);                                        // plinth
     for (const xx of [p.x - 8, p.x - 2, p.x + 4]) rect(c, xx, p.y - 40, 4, 7, "#a8a49c", "rgba(58,55,51,0.7)", 0.7);   // three slim merlons, flush with the pillar top
     rect(c, p.x - 1.5, p.y - 46, 3, 8, "#4e342e");                                                       // torch bracket
+    wearOut(c, rng(Math.floor(p.x * 13 + p.y * 7)), [[p.x - 8, p.y - 34, 16, 40]]);                      // old stone: cracks, stains, moss
   }
 }
 
@@ -624,6 +625,7 @@ function drawPaifang(c, g) {
     grad.addColorStop(0, "#c4544a"); grad.addColorStop(0.5, "#a8382f"); grad.addColorStop(1, "#7a2420");
     rect(c, p.x - 5, p.y - 40, 10, 38, grad, "rgba(90,26,22,0.55)", 0.7);   // red lacquered post
     rect(c, p.x - 6, p.y - 44, 12, 5, "#c9a227", "rgba(138,106,0,0.5)", 0.6);   // gold cap
+    wearOut(c, rng(Math.floor(p.x * 13 + p.y * 7)), [[p.x - 5, p.y - 40, 10, 38]]);   // the lacquer has seen a few winters
     if (!across) roof(p.x, p.y - 48, 9);                                  // a little roof on each post
   }
   if (across) {
@@ -671,6 +673,7 @@ function drawMoorishGate(c, g) {
     line(c, p.x - 7, p.y - 26, p.x + 7, p.y - 26, teal, 1.6); line(c, p.x - 7, p.y - 12, p.x + 7, p.y - 12, teal, 1.6);   // tile bands
     for (const yy of [-26, -12]) for (const dx of [-4, 0, 4]) rect(c, p.x + dx - 0.8, p.y + yy - 0.8, 1.6, 1.6, gold);
     c.fillStyle = "#3e2a1a"; c.beginPath(); c.moveTo(p.x - 2.5, p.y - 14); c.lineTo(p.x - 2.5, p.y - 20); c.arc(p.x, p.y - 20, 2.5, Math.PI, 0); c.lineTo(p.x + 2.5, p.y - 14); c.closePath(); c.fill();   // little arched window
+    wearOut(c, rng(Math.floor(p.x * 13 + p.y * 7)), [[p.x - 7, p.y - 36, 14, 40]]);   // sun-bleached, stained plaster
     rect(c, p.x - 8, p.y - 39, 16, 3, wall, edge, 1);                        // cap ledge
     dome(p.x, p.y - 39, 7);
   }
