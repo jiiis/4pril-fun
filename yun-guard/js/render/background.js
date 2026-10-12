@@ -420,6 +420,21 @@ const DRAW_DECO = {
       };
       branch(x, y - 11 * s, -Math.PI / 2 - 0.5, 9 * s, 2.2 * s, 2); branch(x, y - 11 * s, -Math.PI / 2 + 0.45, 9 * s, 2.2 * s, 2); branch(x, y - 12 * s, -Math.PI / 2 + (r() - 0.5) * 0.3, 10 * s, 2 * s, 2);
       for (let i = 0; i < 4; i++) circle(c, x + (r() - 0.5) * 26 * s, y - 1 * s + r() * 4, 1 * s, r() < 0.5 ? "#bf360c" : "#f9a825");   // the last fallen leaves
+    } else if (v === 6) {                                                    // dead oak: a stout, gnarled trunk, wide crooked limbs, a hollow, a few brown leaves still clinging
+      const bark = ["#4e342e", "#3e2723", "#5d4037"][Math.floor(r() * 3)];
+      poly(c, [[x - 4.5 * s, y + 4 * s], [x - 3 * s, y - 10 * s], [x + 3 * s, y - 10 * s], [x + 4.5 * s, y + 4 * s]], bark);   // trunk, wider at the foot
+      const limb = (bx, by, ang, len, wd, depth) => {
+        // Each limb bends as it goes, so the tree looks twisted rather than drawn with a ruler
+        let px = bx, py = by, a = ang; const steps = 3;
+        for (let i = 0; i < steps; i++) { const nx = px + Math.cos(a) * len / steps, ny = py + Math.sin(a) * len / steps; line(c, px, py, nx, ny, bark, wd * (1 - i * 0.2)); px = nx; py = ny; a += (r() - 0.5) * 0.7; }
+        if (depth > 0) { limb(px, py, a - 0.5 - r() * 0.5, len * 0.6, wd * 0.6, depth - 1); limb(px, py, a + 0.3 + r() * 0.6, len * 0.6, wd * 0.6, depth - 1); }
+        else if (r() < 0.4) circle(c, px, py, 1.2 * s, "#8d6e63");                                       // a clinging dead leaf
+      };
+      limb(x - 2 * s, y - 9 * s, -Math.PI / 2 - 1.1, 11 * s, 2.6 * s, 2);                               // a limb reaching out left...
+      limb(x + 2 * s, y - 9 * s, -Math.PI / 2 + 1.0, 10 * s, 2.4 * s, 2);                               // ...and right
+      limb(x, y - 10 * s, -Math.PI / 2 + (r() - 0.5) * 0.4, 9 * s, 2.2 * s, 1);                         // a shorter one up the middle
+      ellipse(c, x + 1 * s, y - 3 * s, 1.6 * s, 2.4 * s, "#1b0f0a");                                     // the hollow
+      for (let i = 0; i < 3; i++) circle(c, x + (r() - 0.5) * 24 * s, y - 1 * s + r() * 4, 1 * s, r() < 0.5 ? "#8d6e63" : "#a1887f");   // dry leaves on the ground
     } else {                                                                 // birch: pale trunk with bands, airy light canopy
       rect(c, x - 2.5 * s, y - 24 * s, 5 * s, 28 * s, "#eceff1", "#9e9e9e", 0.6);
       for (let i = 0; i < 4; i++) line(c, x - 2.5 * s, y - 12 * s + i * 4 * s + r() * 2, x + 2.5 * s, y - 11 * s + i * 4 * s, "#424242", 1);
