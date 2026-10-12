@@ -46,10 +46,12 @@ input, textarea { -webkit-user-select: text; user-select: text; }   /* pinned to
 .hud-left { top: 14px; left: 16px; gap: 18px; }          /* stats, top-left */
 .hud-topright { top: 16px; right: 16px; }                /* map number, top-right */
 .hud-right { bottom: 14px; right: 16px; gap: 12px; }     /* buttons, bottom-right */
-.hud-logo { bottom: 14px; left: 16px; gap: 10px; opacity: 0.9; align-items: flex-end !important; }   /* logo, bottom-left; words sit on the logo's baseline */
+.hud-logo { bottom: 14px; left: 16px; gap: 10px; opacity: 0.9; align-items: center !important; }   /* logo, bottom-left; the wordmark and game title are centred on it */
+.hud-logo .words { position: relative; display: flex; }                 /* holds just the wordmark, so the wordmark itself is centred on the logo */
 .hud-logo img { width: 64px; height: 64px; border-radius: 14px; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5); }
-.hud-logo .brand { font-family: Impact, "Arial Black", "Helvetica Neue", Arial, sans-serif; font-size: 24px; line-height: 1; padding-bottom: 9px; letter-spacing: 1px; color: #f1efe6; text-shadow: 0 2px 3px rgba(0, 0, 0, 0.9), 0 0 12px rgba(0, 0, 0, 0.6); }
+.hud-logo .brand { font-family: Impact, "Arial Black", "Helvetica Neue", Arial, sans-serif; font-size: 24px; line-height: 1; letter-spacing: 1px; color: #f1efe6; text-shadow: 0 2px 3px rgba(0, 0, 0, 0.9), 0 0 12px rgba(0, 0, 0, 0.6); }
 .hud-logo .brand em { font-style: normal; color: var(--accent); }
+.hud-logo .title { position: absolute; left: 0; top: 100%; margin-top: 6px; white-space: nowrap; font-size: 10px; line-height: 1; letter-spacing: 4px; padding-left: 1px; text-transform: uppercase; color: var(--accent); opacity: 0.9; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9), 0 0 10px rgba(0, 0, 0, 0.6); }
 .stat {
   display: flex;
   align-items: center;
@@ -200,7 +202,6 @@ canvas { display: block; }
   overflow: auto;
   justify-content: safe center;                                 /* centred when it fits, scrollable from the top when it doesn't */
 }
-#heroPick .eyebrow { margin: 0 0 18px; font-size: 14px; letter-spacing: 7px; text-transform: uppercase; color: var(--accent); opacity: 0.9; }
 #heroPick h1 { font-family: Cinzel, Outfit, "Avenir Next", Georgia, serif; font-size: 44px; margin: 0 0 40px; letter-spacing: 2px; font-weight: 500; background: linear-gradient(180deg, #ffffff, #c9ccd6); -webkit-background-clip: text; background-clip: text; color: transparent; }
 #heroPick .cards { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; max-width: 100%; }
 #heroPick .card {
@@ -316,7 +317,6 @@ canvas { display: block; }
 }
 @media (max-height: 540px) {
   #heroPick { justify-content: safe center; padding-top: 14px; }
-  #heroPick .eyebrow { display: none; }
   #heroPick h1 { font-size: 24px; margin-bottom: 12px; }
   #heroPick .cards { gap: 10px; }
   #heroPick .card { width: 132px; padding: 12px 10px 10px; gap: 4px; }
@@ -330,7 +330,6 @@ canvas { display: block; }
 }
 @media (max-width: 600px) {                                   /* phones held upright: two columns, no descriptions, clear of the HUD */
   #heroPick { padding-top: 112px; padding-bottom: 104px; }   /* clear of the HUD stats and the rotate hint above, the buttons below */
-  #heroPick .eyebrow { display: none; }
   #heroPick h1 { font-size: 23px; margin-bottom: 12px; letter-spacing: 1px; }
   #heroPick .cards { gap: 9px; }
   #heroPick .card { width: 142px; padding: 11px 10px 10px; gap: 5px; }
@@ -342,7 +341,7 @@ canvas { display: block; }
   #heroPick .levelPick { margin-bottom: 10px; }
   #heroPick .ghost { margin-top: 12px; }
 }
-@media (max-width: 600px) { .hud-logo .brand { display: none; } }   /* no room for the wordmark beside the buttons */
+@media (max-width: 600px) { .hud-logo .words { display: none; } }   /* no room for the wordmark beside the buttons */
 #rotate {                                                      /* portrait phones: a soft nudge at the top */
   position: fixed; top: 60px; left: 50%; transform: translateX(-50%);
   display: none; align-items: center; gap: 8px;
@@ -355,7 +354,8 @@ canvas { display: block; }
 @media (max-width: 1040px), (max-height: 540px) {               /* phones: a smaller logo in the corner */
   .hud-logo { bottom: 25px; left: 12px; gap: 8px; }                /* 40px logo centred on the button row (62px tall, 14px up) */
   .hud-logo img { width: 40px; height: 40px; border-radius: 10px; }
-  .hud-logo .brand { font-size: 16px; padding-bottom: 5px; }
+  .hud-logo .brand { font-size: 16px; }
+  .hud-logo .title { margin-top: 4px; font-size: 7px; letter-spacing: 3px; }
 }
 #menu .tile.armed { background: rgba(255, 255, 255, 0.14); border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }   /* phones: tapped once, tap again to build */
 #heroPick .levelPick { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 10px; margin: 0 0 14px; animation: cardIn 0.5s ease both; }
