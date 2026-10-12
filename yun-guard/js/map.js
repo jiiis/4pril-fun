@@ -557,7 +557,7 @@ function scatterDeco(rand) {
   let cherries = 0;
   const treeVariant = () => {
     const roll = rand();
-    let v = roll < 0.26 ? 0 : roll < 0.46 ? 1 : roll < 0.56 ? 2 : roll < 0.66 ? 3 : roll < 0.9 ? 4 : 5;
+    let v = roll < 0.26 ? 0 : roll < 0.46 ? 1 : roll < 0.56 ? 2 : roll < 0.66 ? 3 : roll < 0.9 ? 4 : roll < 0.95 ? 5 : 6;   // 5 and 6: two kinds of leafless tree
     if (v === 3 && ++cherries > 3) v = rand() < 0.5 ? 0 : 4;
     return v;
   };
@@ -571,7 +571,7 @@ function scatterDeco(rand) {
     const size = type === "flower" ? 0.5 + rand() * 0.25 : type === "pebbles" ? 0.7 + rand() * 0.5 : type === "mushroom" ? 0.42 + rand() * 0.2 : type === "stump" ? 0.6 + rand() * 0.2 : type === "tree" ? 1.0 + rand() * 0.4 : 0.8 + rand() * 0.5;   // small things stay small, trees stand tall
     const item = { type, x: p.x, y: p.y, s: size, variant: type === "tree" ? treeVariant() : Math.floor(rand() * 3), seed: Math.floor(rand() * 1e6) };
     out.push(item);
-    if (type === "tree" && (item.variant === 4 || item.variant === 5) && rand() < 0.7) {           // a drift of fallen leaves beside a turned or bare tree
+    if (type === "tree" && item.variant >= 4 && rand() < 0.7) {           // a drift of fallen leaves beside a turned or bare tree
       const a = rand() * Math.PI * 2, d = 18 + rand() * 16;
       out.push({ type: "leaves", x: p.x + Math.cos(a) * d, y: p.y + 6 + Math.abs(Math.sin(a)) * d * 0.5, s: 0.8 + rand() * 0.5, variant: Math.floor(rand() * 3), seed: Math.floor(rand() * 1e6) });
     }
