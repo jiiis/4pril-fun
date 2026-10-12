@@ -21,7 +21,10 @@ html, body {
   font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   color: var(--text);
 }
-body { position: fixed; inset: 0; }   /* pinned to the viewport so iOS can't scroll a blank strip into view */
+body { position: fixed; inset: 0; }
+/* A game, not a document: dragging or long-pressing never selects text (typing in the level box still works) */
+body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+input, textarea { -webkit-user-select: text; user-select: text; }   /* pinned to the viewport so iOS can't scroll a blank strip into view */
 
 /* The board is 1440×840 and always shown at its natural size; it is centred below the HUD and
    panned around by dragging (see ui.js and touch.js). */
