@@ -302,6 +302,7 @@ export function draw() {
       glow.addColorStop(1, "rgba(206,147,216,0)");
       circle(ctx, s.x, s.y, 10, glow);
       circle(ctx, s.x, s.y, 3, "#f3e5f5");
+      addLight(ctx, s.x, s.y, 16, "magic");
     } else {
       // Arrow: shaft, steel head and feather fletching, tilted along its flight
       const y = s.y - s.z, cx = Math.cos(a), cy = Math.sin(a);
@@ -309,6 +310,7 @@ export function draw() {
       if (s.poison) {                                        // venom-green tip with a dripping trail
         ctx.globalAlpha = 0.5; for (const p of s.trail) circle(ctx, p.x, p.y, 1.5, "#9ccc65"); ctx.globalAlpha = 1;
         circle(ctx, s.x + cx * 8, y + cy * 8, 2.2, "#7cb342");
+        addLight(ctx, s.x + cx * 8, y + cy * 8, 6, "green");
       }
       if (s.frost) {                                         // icy tip with a sparkling frost trail
         s.trail.forEach((p, i) => {
@@ -320,6 +322,7 @@ export function draw() {
         const glow = ctx.createRadialGradient(tipX, tipY, 1, tipX, tipY, 8);
         glow.addColorStop(0, "rgba(255,255,255,0.95)"); glow.addColorStop(0.5, "rgba(128,222,234,0.6)"); glow.addColorStop(1, "rgba(128,222,234,0)");
         circle(ctx, tipX, tipY, 8, glow);
+        addLight(ctx, tipX, tipY, 10, "arc");
       }
       if (s.fire) {                                          // burning tip with a flickering flame trail
         s.trail.forEach((p, i) => {
@@ -330,6 +333,7 @@ export function draw() {
         const glow = ctx.createRadialGradient(s.x + cx * 8, y + cy * 8, 1, s.x + cx * 8, y + cy * 8, 9);
         glow.addColorStop(0, "rgba(255,235,59,0.9)"); glow.addColorStop(0.5, "rgba(255,152,0,0.6)"); glow.addColorStop(1, "rgba(255,152,0,0)");
         circle(ctx, s.x + cx * 8, y + cy * 8, 9, glow);
+        addLight(ctx, s.x + cx * 8, y + cy * 8, 12, "flame");
       }
       line(ctx, s.x - cx * 8, y - cy * 8, s.x + cx * 6, y + cy * 6, "#8d6e63", 1.5);
       poly(ctx, [[s.x + cx * 9, y + cy * 9], [s.x + cx * 5 - cy * 2, y + cy * 5 + cx * 2], [s.x + cx * 5 + cy * 2, y + cy * 5 - cx * 2]], "#cfd8dc");
@@ -392,6 +396,7 @@ export function draw() {
       circle(ctx, mx, my, 10 + p * 16, "#8bc34a");
     }
     ctx.globalAlpha = 1;
+    addLight(ctx, e.rx + e.inn.x * 20, e.ry + e.inn.y * 20, 26, "green");                   // the mist itself glows faintly
   });
   // Exit gates: torches burn on the pillars and a chain with the castle's banner hangs across the road
   map.exits.forEach((g, i) => {
@@ -456,9 +461,9 @@ export function draw() {
       const sc = k.scale, tw = 0.5 + 0.5 * Math.sin(state.time * 2.2 + i + 3);
       const cx = k.x, cy = k.y - (60 + 20 * 2.25 + 5) * sc;
       // The gold crescent burns bright: a strong halo, a four-point star glint, and a white-hot tip
-      const halo = ctx.createRadialGradient(cx, cy, 1, cx, cy, (14 + tw * 4) * sc);
-      halo.addColorStop(0, "rgba(255,245,200,0.75)"); halo.addColorStop(0.35, "rgba(255,220,120,0.45)"); halo.addColorStop(1, "rgba(255,200,90,0)");
-      circle(ctx, cx, cy, (14 + tw * 4) * sc, halo);
+      const halo = ctx.createRadialGradient(cx, cy, 1, cx, cy, (12 + tw * 3) * sc);
+      halo.addColorStop(0, "rgba(255,245,200,0.55)"); halo.addColorStop(0.35, "rgba(255,220,120,0.3)"); halo.addColorStop(1, "rgba(255,200,90,0)");
+      circle(ctx, cx, cy, (12 + tw * 3) * sc, halo);
       ctx.globalAlpha = 0.7 + tw * 0.3; circle(ctx, cx - 3.5 * sc, cy + 1 * sc, 1.2, "#fffbe6"); ctx.globalAlpha = 1;
       addLight(ctx, cx, cy, 22 * sc, "gold");
       for (const tx of [k.x - 40 * sc, k.x + 40 * sc]) addLight(ctx, tx, k.y - 66.5 * sc, 11 * sc, "lantern");   // minaret windows
@@ -512,6 +517,7 @@ export function draw() {
       ctx.beginPath(); pts.forEach(([px, py], k) => (k ? ctx.lineTo(px, py) : ctx.moveTo(px, py))); ctx.stroke();
       ctx.globalAlpha = p; ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 1.8;
       ctx.beginPath(); pts.forEach(([px, py], k) => (k ? ctx.lineTo(px, py) : ctx.moveTo(px, py))); ctx.stroke();
+      for (const [px, py] of [pts[0], pts[3], pts[6]]) addLight(ctx, px, py, 26 * p, "arc");   // the bolt lights the ground along its path
     }
     ctx.globalAlpha = 1;
   }

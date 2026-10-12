@@ -40,6 +40,7 @@ function drawAbility(t, x, y) {
     case "poison":                                                                       // green vats bubbling at the foot, a sickly haze above
       for (const vx of [-14, 14]) { rect(ctx, x + vx - 4, y - 2, 8, 8, "#4e342e", "#3e2723", 1); ellipse(ctx, x + vx, y - 2, 4, 1.6, "#7cb342"); for (let i = 0; i < 2; i++) { const k = (((T * 0.7 + i / 2 + vx * 0.37) % 1) + 1) % 1; ctx.globalAlpha = 0.5 * (1 - k); circle(ctx, x + vx + Math.sin(T * 3 + i) * 2, y - 3 - k * 10, 1 + k * 2, "#aed581"); } }
       ctx.globalAlpha = 0.25 + Math.sin(T * 2) * 0.08; circle(ctx, x, topY + 10, 18, "#9ccc65"); ctx.globalAlpha = 1;
+      for (const vx of [-14, 14]) addLight(ctx, x + vx, y - 3, 8, "green");                 // the vats glow faintly
       break;
     case "storm":                                                                        // a dark storm cloud circling the spire, flickering
       for (let i = 0; i < 4; i++) { const a = T * 1.2 + i * 1.57; ctx.globalAlpha = 0.65; circle(ctx, x + Math.cos(a) * 16, topY + Math.sin(a) * 5, 6 + (i % 2) * 2, "#4a3f7a"); }
@@ -49,6 +50,7 @@ function drawAbility(t, x, y) {
     case "curse":                                                                        // skull totems on the walls with a violet glow
       for (const sx of [-14, 14]) { line(ctx, x + sx, y + 2, x + sx, y - 12, "#3e2723", 2); circle(ctx, x + sx, y - 15, 3.5, "#eeeeee", "#9e9e9e", 0.8); circle(ctx, x + sx - 1.2, y - 15.5, 0.9, `rgba(156,39,176,${0.6 + Math.sin(T * 4) * 0.4})`); circle(ctx, x + sx + 1.2, y - 15.5, 0.9, `rgba(156,39,176,${0.6 + Math.sin(T * 4) * 0.4})`); }
       ctx.globalAlpha = 0.18 + Math.sin(T * 2.5) * 0.06; circle(ctx, x, y - 20, 26, "#7b1fa2"); ctx.globalAlpha = 1;
+      for (const sx of [-14, 14]) addLight(ctx, x + sx, y - 15.5, 9, "magic");
       break;
     case "cluster":                                                                      // racks of extra shells beside the gun
       for (const sx of [-15, 15]) { rect(ctx, x + sx - 5, y + 2, 10, 5, "#5d4037", "#3e2723", 1); for (let i = 0; i < 3; i++) circle(ctx, x + sx - 3 + i * 3, y + 1, 1.7, "#263238", "#000", 0.5); }
@@ -58,6 +60,7 @@ function drawAbility(t, x, y) {
       break;
     case "paladin":                                                                      // a tall white-and-gold banner and a soft holy light
       ctx.globalAlpha = 0.16 + Math.sin(T * 1.5) * 0.05; circle(ctx, x, y - 14, 30, "#fff8e1"); ctx.globalAlpha = 1;
+      addLight(ctx, x, y - 14, 30, "gold");
       line(ctx, x + 16, y + 4, x + 16, y - 36, "#ffd54f", 2);
       poly(ctx, [[x + 17, y - 36], [x + 28, y - 33 + Math.sin(T * 5) * 2], [x + 17, y - 22]], "#ffffff", "#ffd54f", 1);
       line(ctx, x + 21, y - 33, x + 21, y - 26, "#ffd54f", 1.2); line(ctx, x + 19, y - 30.5, x + 23, y - 30.5, "#ffd54f", 1.2);
@@ -101,6 +104,7 @@ function fire(px, py, size, seed = 0) {
   const fl = Math.sin(T) * size * 0.25, fl2 = Math.sin(T * 1.7 + 1) * size * 0.2;
   poly(ctx, [[px - size * 0.5, py], [px + size * 0.5, py], [px + fl, py - size * 1.4 - fl2]], "#ff9800");
   poly(ctx, [[px - size * 0.25, py], [px + size * 0.25, py], [px + fl * 0.6, py - size * 0.9 - fl2]], "#ffeb3b");
+  addLight(ctx, px, py - size * 0.7, size * 6.5, "flame");
   const k = (((state.time * 0.6 + seed) % 1) + 1) % 1;
   ctx.globalAlpha = 0.25 * (1 - k);
   circle(ctx, px + Math.sin(state.time * 2 + seed) * 2, py - size * 1.6 - k * 14, 2 + k * 3, "#9e9e9e");
@@ -208,7 +212,7 @@ function drawArcherGirl(px, py, dir, anim, hair, dress, angle, fire = false, idl
   if (drawn) ctx.lineTo(1, 0); ctx.lineTo(ex, ey); ctx.stroke();
   if (drawn) {
     line(ctx, 1, 0, 15, 0, "#cfd8dc", 1.2);
-    if (fire) { circle(ctx, 16, 0, 3, "rgba(255,152,0,0.8)"); circle(ctx, 16, -0.5, 1.5, "#ffeb3b"); }
+    if (fire) { circle(ctx, 16, 0, 3, "rgba(255,152,0,0.8)"); circle(ctx, 16, -0.5, 1.5, "#ffeb3b"); addLight(ctx, 16, 0, 9, "flame"); }
   }
   ctx.restore();
   ctx.restore();
@@ -230,6 +234,7 @@ function drawMage(t, x, y, lv) {
     ctx.beginPath(); ctx.arc(x, wy, 3.5, Math.PI, 0); ctx.lineTo(x + 3.5, wy + 6); ctx.lineTo(x - 3.5, wy + 6); ctx.closePath(); ctx.fill();
     const glow = 0.6 + Math.sin(state.time * 4 + i * 2 + x) * 0.3;
     circle(ctx, x, wy + 1, 1.5 + glow * 0.6, lv === 1 ? `rgba(255,213,79,${glow})` : `rgba(186,104,200,${glow})`);
+    addLight(ctx, x, wy + 1, 11, lv === 1 ? "lantern" : "magic");
   }
   if (lv === 1) {
     rect(ctx, x - 16, y - h - 4, 32, 5, "#6d4c41", "#3e2723");
@@ -307,7 +312,7 @@ function drawTesla(t, x, y, lv) {
   // Plinth
   poly(ctx, [[x - 17, y + 8], [x + 17, y + 8], [x + 12, y - 4], [x - 12, y - 4]], lv === 3 ? "#546e7a" : "#78909c", "#37474f", 1.2);
   line(ctx, x - 14, y + 2, x + 14, y + 2, "#455a64", 1);
-  for (const px of [-8, 0, 8]) circle(ctx, x + px, y + 5, 1.2, `rgba(79,195,247,${hum})`);   // glowing studs
+  for (const px of [-8, 0, 8]) { circle(ctx, x + px, y + 5, 1.2, `rgba(79,195,247,${hum})`); addLight(ctx, x + px, y + 5, 5, "arc"); }   // glowing studs
   // Mast
   const mast = ctx.createLinearGradient(x - 5, 0, x + 5, 0);
   mast.addColorStop(0, "#90a4ae"); mast.addColorStop(0.5, "#37474f"); mast.addColorStop(1, "#263238");
@@ -416,6 +421,7 @@ function drawBarracks(t, x, y, lv) {
     ctx.beginPath(); ctx.arc(x, y, 5, Math.PI, 0); ctx.lineTo(x + 5, y + 10); ctx.lineTo(x - 5, y + 10); ctx.closePath(); ctx.fill();
     for (const px of [-24, 24]) { rect(ctx, x + px - 2, y - 6, 4, 16, "#8d6e63", "#4e342e", 1); poly(ctx, [[x + px - 2, y - 6], [x + px, y - 10], [x + px + 2, y - 6]], "#8d6e63"); }
     smokeColumn(x + 10, y - 26, x * 0.01);                                     // cooking fire smoke through the thatch
+    addLight(ctx, x, y + 4, 14, "lantern");                                     // and firelight through the door
     return;
   }
   if (lv === 3) {
