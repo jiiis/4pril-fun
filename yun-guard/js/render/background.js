@@ -3,6 +3,7 @@ import { rng, pointsAlongPath, closestPointOnPath, pointAtArc } from "../util.js
 import { map } from "../map.js";
 import { rect, circle, ellipse, poly, line, shadow } from "./gfx.js";
 import { addLight } from "./lights.js";
+import { state } from "../state.js";
 
 // The scenery never changes, so we draw it once onto a hidden canvas
 // and then just copy that picture every frame.
@@ -749,15 +750,48 @@ function wearOut(c, r, regions) {
     if (h > 12) for (let n = 0; n < 2; n++) ellipse(c, x0 + w * (0.1 + r() * 0.8), y0 + h - 1.5 - r() * 2, 2.5 + r() * 3, 1.2 + r() * 1.2, "rgba(90,140,60,0.4)");       // moss at the foot
   }
 }
+// Damage that piles up as monsters get through: each mark is its own self-contained item (its look is fixed by
+// its index), so wear only ever adds marks, and the ones already there never move.
+function battleWear(c, seed, regions, count) {
+  const area = regions.reduce((a, [, , w, h]) => a + w * h, 0);
+  for (let n = 0; n < count; n++) {
+    const r = rng(seed * 31 + n * 977 + 5);
+    let pick = r() * area, reg = regions[0];
+    for (const g of regions) { pick -= g[2] * g[3]; if (pick <= 0) { reg = g; break; } }
+    const [x0, y0, w, h] = reg, x = x0 + w * (0.06 + r() * 0.88), y = y0 + h * (0.06 + r() * 0.88);
+    const kind = n % 6;
+    if (kind === 0) {                                                                   // a deep crack
+      let cx = x, cy = y; c.strokeStyle = "rgba(0,0,0,0.42)"; c.lineWidth = 1 + r() * 0.6; c.lineCap = "round"; c.beginPath(); c.moveTo(cx, cy);
+      for (let i = 0; i < 5; i++) { cx += (r() - 0.5) * 5; cy += 2 + r() * 3; c.lineTo(cx, cy); }
+      c.stroke();
+    } else if (kind === 1) {                                                            // a scorch mark: soot with a dull glow at its heart
+      ellipse(c, x, y, 2.5 + r() * 3.5, 2 + r() * 3, "rgba(20,14,10,0.3)"); ellipse(c, x, y + 0.5, 1.6 + r() * 2, 1.2 + r() * 1.6, "rgba(60,30,14,0.3)");
+    } else if (kind === 2) {                                                            // a long dark streak down the wall
+      c.strokeStyle = `rgba(40,30,20,${0.12 + r() * 0.14})`; c.lineWidth = 1.2 + r() * 2; c.lineCap = "round"; c.beginPath(); c.moveTo(x, y); c.lineTo(x + (r() - 0.5) * 3, Math.min(y0 + h, y + 6 + r() * 14)); c.stroke();
+    } else if (kind === 3) {                                                            // plaster knocked off, dark stone beneath
+      const pw = 2.5 + r() * 6, ph = 2 + r() * 5, pts = []; for (let i = 0; i < 7; i++) { const a = (i / 7) * Math.PI * 2; pts.push([x + Math.cos(a) * pw * (0.6 + r() * 0.6), y + Math.sin(a) * ph * (0.6 + r() * 0.6)]); }
+      poly(c, pts, "rgba(70,56,44,0.58)", "rgba(30,22,16,0.4)", 0.5);
+    } else if (kind === 4) {                                                            // a damp stain with creeping green
+      ellipse(c, x, y, 3 + r() * 6, 2 + r() * 4, "rgba(30,20,10,0.12)"); if (r() < 0.6) ellipse(c, x + (r() - 0.5) * 4, y + 2, 1.5 + r() * 3, 1 + r() * 2, "rgba(80,125,50,0.35)");
+    } else {                                                                            // chipped stone: bright flecks and a dark gouge
+      for (let i = 0; i < 4; i++) circle(c, x + (r() - 0.5) * 6, y + (r() - 0.5) * 5, 0.6 + r() * 0.7, "rgba(255,255,255,0.28)");
+      line(c, x - 2, y, x + 2 + r() * 3, y + r() * 3, "rgba(30,20,12,0.45)", 1.2);
+    }
+  }
+}
 export function drawCastleAt(c, k) {
   castShadow(c, k.x, k.y, 50 * k.scale, 90 * k.scale);
   c.save(); c.translate(k.x, k.y); c.scale(k.scale, k.scale);
   drawCastle(c, 0, 0, k.style);
   const r = rng(Math.floor(k.x * 13 + k.y * 7));
   const S = CASTLE_STYLES[k.style] || CASTLE_STYLES[0];
-  if (S.pagoda) wearOut(c, r, [[-38, -34, 76, 20], [-28, -60, 56, 10], [-56, -3, 112, 6], [-46, -10, 92, 6]]);
-  else if (S.palace) wearOut(c, r, [[-44, -36, 88, 40], [-18, -60, 36, 26]]);
-  else wearOut(c, r, [[-44, -36, 88, 40], [-16, -70, 32, 36], [-52, -64, 24, 68], [28, -64, 24, 68]]);
+  const regions = S.pagoda ? [[-38, -34, 76, 20], [-28, -60, 56, 10], [-56, -3, 112, 6], [-46, -10, 92, 6]]
+    : S.palace ? [[-44, -36, 88, 40], [-18, -60, 36, 26]]
+    : [[-44, -36, 88, 40], [-16, -70, 32, 36], [-52, -64, 24, 68], [28, -64, 24, 68]];
+  wearOut(c, r, regions);                                                              // lightly weathered to begin with ...
+  const lost = state.diff ? 1 - state.lives / (state.diff.lives || 20) : 0;              // ... then worse with every monster that gets through
+  const count = Math.round(Math.max(0, Math.min(1, lost)) * 70);
+  if (count) battleWear(c, Math.floor(k.x * 13 + k.y * 7), regions, count);
   c.restore();
 }
 
