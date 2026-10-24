@@ -35,8 +35,9 @@ export function setWaveButton(mode, seconds) {
   b.disabled = mode === "busy" || mode === "over" || state.paused;
   b.title = mode === "start" ? "Start the first wave (N)" : mode === "ready" ? "Call the next wave now for bonus gold (N)" : mode === "busy" ? "Wave in progress" : "Game over";
   face.innerHTML = icon(mode === "start" ? "swords" : mode === "ready" ? "forward" : mode === "busy" ? "hourglass" : "x");
-  badge.classList.toggle("on", mode === "ready" && seconds !== undefined);
-  if (mode === "ready" && seconds !== undefined) badge.textContent = Math.ceil(Math.max(seconds, 0));
+  const showCount = mode === "ready" && seconds !== undefined && seconds <= 10;              // the number only appears for the last 10 seconds
+  badge.classList.toggle("on", showCount);
+  if (showCount) badge.textContent = Math.ceil(Math.max(seconds, 0));
 }
 
 export function endGame(won) {
