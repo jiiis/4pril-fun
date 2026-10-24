@@ -419,6 +419,14 @@ export function draw() {
     ctx.globalAlpha = 1;
     addLight(ctx, e.rx + e.inn.x * 20, e.ry + e.inn.y * 20, 26, "green");                   // the mist itself glows faintly
   });
+  // Bridges: a few rail-post tips glow faintly at night, each with its own slow flicker
+  const night = state.weather && state.weather.type === "night" ? state.weather.intensity : 0;
+  if (night > 0) for (const br of map.bridges) for (const l of br.lamps || []) {
+    const f = 0.75 + 0.25 * Math.sin(state.time * 2.3 + l.ph) * Math.sin(state.time * 0.9 + l.ph * 2);
+    ctx.globalAlpha = 0.22 * night * f; circle(ctx, l.x, l.y, 5, "rgba(255,190,110,0.7)");
+    ctx.globalAlpha = 0.75 * night * f; circle(ctx, l.x, l.y, 1.3, "#ffe2a8");
+    ctx.globalAlpha = 1; addLight(ctx, l.x, l.y, 13 * (0.6 + 0.4 * night * f), "lantern");
+  }
   // Exit gates: torches burn on the pillars and a chain with the castle's banner hangs across the road
   map.exits.forEach((g, i) => {
     const [a, b] = gatePillars(g), T = state.time * 9 + i;

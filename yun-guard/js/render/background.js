@@ -405,6 +405,7 @@ function drawBridge(c, b) {
     if (last && i === n && (((e.L[0] - last.L[0]) * q.tx + (e.L[1] - last.L[1]) * q.ty) < 3 || ((e.R[0] - last.R[0]) * q.tx + (e.R[1] - last.R[1]) * q.ty) < 3)) edges.pop();
     edges.push(e);
   }
+  const lampRand = rng(Math.floor(b.x * 5 + b.y * 11) + 77); b.lamps = [];
   const left = edges.map((e) => e.L), right = edges.map((e) => e.R);
   const deck = [...left, ...right.slice().reverse()];
   // One weathered plank between two cross-lines (each [left, right]): its own shade, uneven corners, grain,
@@ -466,6 +467,7 @@ function drawBridge(c, b) {
     side.forEach(([x, y], i) => (i ? c.lineTo(x, y + 1) : c.moveTo(x, y + 1))); c.stroke();
     for (let i = 0; i < side.length; i += 3) {                                              // upright posts: a short shaft with a cap
       const [x, y] = side[i];
+      if (lampRand() < 0.28) b.lamps.push({ x, y: y - RISE - 2.7, ph: lampRand() * 6.28 });   // a few post tips glow at night (drawn live, not baked in)
       line(c, x, y, x, y - RISE - 2, "#4e342e", 3.2);
       line(c, x - 0.6, y, x - 0.6, y - RISE - 2, "#6d4c41", 1.6);
       rect(c, x - 2.6, y - RISE - 4.2, 5.2, 3, "#8d6e63", "#3e2723", 0.7);
