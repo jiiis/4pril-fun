@@ -1,5 +1,5 @@
-import { W, H, ROAD_WIDTH } from "../config.js";
-import { rng, pointsAlongPath, closestPointOnPath } from "../util.js";
+import { W, H, ROAD_WIDTH, ROAD_EDGE } from "../config.js";
+import { rng, pointsAlongPath, closestPointOnPath, pointAtArc } from "../util.js";
 import { map } from "../map.js";
 import { rect, circle, ellipse, poly, line, shadow } from "./gfx.js";
 
@@ -91,6 +91,9 @@ function strokePath(c, width, color) {
 // short, round-capped strokes whose width wanders along the way, then the edges are roughed up
 // with earth lumps and grass creeping in, so there is no clean outline anywhere.
 let roadSamples = [];                                           // every road sample with its drawn width (bridges read these)
+const ROAD_BANK = 8;                                             // the earthen bank layer is this much wider than the surface
+const ROAD_RAGGED = 10;                                          // how far lumps of earth and grass can bulge past the bank
+const roadReach = (w) => w / 2 + ROAD_BANK / 2 + ROAD_RAGGED;    // from the centre line to the outermost bit of road at width w
 function drawRoad(c, rand, paths) {
   // Pre-compute the sample points and the wandering width of every route
   roadSamples = [];
@@ -98,7 +101,7 @@ function drawRoad(c, rand, paths) {
     const pts = pointsAlongPath(path, 4);
     pts.push({ ...path[path.length - 1], nx: 0, ny: 1 });
     const ph1 = rand() * 6, ph2 = rand() * 6;
-    let w = pts.map((_, i) => ROAD_WIDTH * (0.82 + 0.2 * Math.sin(i * 0.06 + ph1) + 0.1 * Math.sin(i * 0.19 + ph2)) + (rand() - 0.5) * 6);
+    let w = pts.map((_, i) => ROAD_WIDTH * (1 + 0.07 * Math.sin(i * 0.06 + ph1) + 0.03 * Math.sin(i * 0.19 + ph2)));   // gentle: within ±10%
     for (let pass = 0; pass < 3; pass++) w = w.map((v, i) => (w[Math.max(0, i - 1)] + v + w[Math.min(w.length - 1, i + 1)]) / 3);
     pts.forEach((p, i) => roadSamples.push({ x: p.x, y: p.y, w: w[i] }));
     return { path, pts, w };
@@ -106,9 +109,73 @@ function drawRoad(c, rand, paths) {
   // Is this point on the surface of one of the OTHER routes? (used to keep edge details off junctions)
   const onOtherRoad = (k, p) => roads.some((r, j) => j !== k && closestPointOnPath(r.path, p).d < ROAD_WIDTH / 2 - 2);
 
+  // Junctions: where a branch leaves or joins another route, the strokes meet in a sharp grass point
+  const junctions = [];
+  for (let k = 1; k < paths.length; k++) {
+    const br = paths[k], others = paths.filter((_, j) => j !== k);
+    const onOther = (q) => others.some((o) => closestPointOnPath(o, q).d < ROAD_WIDTH * 0.35);
+    for (const seq of [br, br.slice().reverse()]) {
+      let i = 0; while (i < seq.length && onOther(seq[i])) i++;
+      if (i === 0 || i >= seq.length) continue;
+      // How sharply the branch meets the other road decides how big a fillet it needs: an acute join already
+      // has a long thin wedge, so it gets a smaller rounding than a square one
+      const P = seq[i - 1], nx = seq[Math.min(i + 3, seq.length - 1)];
+      const other = others.map((o) => ({ o, d: closestPointOnPath(o, P).d })).sort((a, b) => a.d - b.d)[0].o;
+      let bi = 0, bd = Infinity; for (let j = 0; j < other.length; j++) { const d = Math.hypot(other[j].x - P.x, other[j].y - P.y); if (d < bd) { bd = d; bi = j; } }
+      const a = other[Math.max(0, bi - 3)], b = other[Math.min(other.length - 1, bi + 3)];
+      const l1 = Math.hypot(b.x - a.x, b.y - a.y) || 1, l2 = Math.hypot(nx.x - P.x, nx.y - P.y) || 1;
+      const cosA = Math.abs(((b.x - a.x) * (nx.x - P.x) + (b.y - a.y) * (nx.y - P.y)) / (l1 * l2));   // 1 = running alongside, 0 = square
+      junctions.push({ x: P.x, y: P.y, sigma: ROAD_WIDTH * (0.36 - 0.14 * cosA) });
+    }
+  }
+  // Around each junction the layer is redrawn as a mask (strokes, blurred, cut at a threshold): that rounds
+  // the corners where the roads meet, inside and out, and leaves straight stretches exactly as they were.
+  const res = c.getTransform().a, REG = Math.round(ROAD_WIDTH * 3.4), RP = Math.round(REG * res);
+  const strokes = document.createElement("canvas"), soft = document.createElement("canvas");
+  strokes.width = soft.width = RP; strokes.height = soft.height = RP;
+  const sc = strokes.getContext("2d"), fc = soft.getContext("2d");
+  // One blurred field per junction (from the base-width strokes); every layer cuts its own shape from it at a
+  // level matching its width, so bank, base and surface stay parallel round the corner. Gaussian blur of a
+  // straight edge falls off at 255 / (sigma * sqrt(2 pi)) alpha per pixel: that converts a width offset to a level.
+  const slopeOf = (J) => 255 / (J.sigma * 2.5066);
+  const fields = new Map();
+  const fieldFor = (J) => {
+    if (fields.has(J)) return fields.get(J);
+    const x0 = J.x - REG / 2, y0 = J.y - REG / 2;
+    sc.setTransform(res, 0, 0, res, -x0 * res, -y0 * res); sc.clearRect(x0, y0, REG, REG);
+    sc.strokeStyle = "#000"; sc.lineCap = "round"; sc.lineJoin = "round";
+    for (const { pts, w } of roads) for (let i = 0; i < pts.length - 1; i++) {
+      if (Math.abs(pts[i].x - J.x) > REG || Math.abs(pts[i].y - J.y) > REG) continue;
+      sc.lineWidth = Math.max(2, w[i]); sc.beginPath(); sc.moveTo(pts[i].x, pts[i].y); sc.lineTo(pts[i + 1].x, pts[i + 1].y); sc.stroke();
+    }
+    fc.setTransform(1, 0, 0, 1, 0, 0); fc.clearRect(0, 0, RP, RP);
+    fc.filter = `blur(${J.sigma * res}px)`; fc.drawImage(strokes, 0, 0); fc.filter = "none";
+    const field = fc.getImageData(0, 0, RP, RP);
+    fields.set(J, field);
+    return field;
+  };
+  const roundJunction = (J, color, scale, extra, dy) => {
+    const x0 = J.x - REG / 2, y0 = J.y - REG / 2;
+    const field = fieldFor(J), img = fc.createImageData(RP, RP), d = img.data, f = field.data;
+    const level = 128 - (extra / 2) * slopeOf(J);                                  // wider layer: lower level
+    for (let i = 0; i < d.length; i += 4) {
+      const a = Math.max(0, Math.min(255, (f[i + 3] - level) * 40 + 128));        // ~1.5px anti-aliased edge
+      d[i] = color[0]; d[i + 1] = color[1]; d[i + 2] = color[2]; d[i + 3] = a;
+    }
+    fc.setTransform(1, 0, 0, 1, 0, 0); fc.putImageData(img, 0, 0);
+    // Keep only what the rounding adds (the filled corner); everywhere else this layer's plain strokes already match
+    sc.setTransform(res, 0, 0, res, -x0 * res, -y0 * res); sc.clearRect(x0, y0, REG, REG);
+    sc.strokeStyle = "#000"; sc.lineCap = "round"; sc.lineJoin = "round";
+    for (const { pts, w } of roads) for (let i = 0; i < pts.length - 1; i++) {
+      if (Math.abs(pts[i].x - J.x) > REG || Math.abs(pts[i].y - J.y) > REG) continue;
+      sc.lineWidth = Math.max(2, w[i] * scale + extra); sc.beginPath(); sc.moveTo(pts[i].x, pts[i].y); sc.lineTo(pts[i + 1].x, pts[i + 1].y); sc.stroke();
+    }
+    fc.globalCompositeOperation = "destination-out"; fc.drawImage(strokes, 0, 0); fc.globalCompositeOperation = "source-over";
+    c.save(); c.setTransform(1, 0, 0, 1, 0, 0); c.drawImage(soft, Math.round(x0 * res), Math.round((y0 + dy) * res)); c.restore();
+  };
   // One layer = a chain of short strokes along EVERY route, so where routes meet the layers merge
   // into one surface with no bank line between them. scale/extra shape the layer, dy sinks it.
-  const layer = (color, scale, extra, dy = 0, skip = 0) => {
+  const layer = (color, scale, extra, dy = 0, skip = 0, rgb = null) => {
     c.strokeStyle = color; c.lineCap = "round"; c.lineJoin = "round";
     for (const { pts, w } of roads) {
       for (let i = 0; i < pts.length - 1; i++) {
@@ -117,26 +184,40 @@ function drawRoad(c, rand, paths) {
         c.beginPath(); c.moveTo(pts[i].x, pts[i].y + dy); c.lineTo(pts[i + 1].x, pts[i + 1].y + dy); c.stroke();
       }
     }
+    if (rgb) for (const J of junctions) roundJunction(J, rgb, scale, extra, dy);
   };
   layer("rgba(190,235,120,0.2)", 1, 10, 4, 0.45);                // faint, broken patches of lit grass along the lower lip
-  layer("#5d4037", 1, 8);                                        // earthen banks
-  layer("#7a5230", 1, 0);                                        // shaded base
-  layer("#a1703f", 1, -6, 5);                                    // surface, leaving a shadow band along the upper bank
-  layer("#b8864f", 1, -20, 6);                                   // worn centre
+  layer("#5d4037", 1, ROAD_BANK, 0, 0, [93, 64, 55]);            // earthen banks
+  layer("#7a5230", 1, 0, 0, 0, [122, 82, 48]);                   // shaded base
+  layer("#a1703f", 1, -6, 5, 0, [161, 112, 63]);                 // surface, leaving a shadow band along the upper bank
+  layer("#b8864f", 1, -20, 6, 0, [184, 134, 79]);                // worn centre
 
+  // Inside the rounded corner of a junction? (edge details follow the strokes, so they must stay out of the fillet)
+  const inFillet = (q) => {
+    for (const J of junctions) {
+      if (Math.abs(q.x - J.x) > REG / 2 - 2 || Math.abs(q.y - J.y) > REG / 2 - 2) continue;
+      const f = fields.get(J); if (!f) continue;
+      const px = Math.round((q.x - (J.x - REG / 2)) * res), py = Math.round((q.y - (J.y - REG / 2)) * res);
+      // Edge details sit just outside their own road's stroke, where the field reads a little under 128 on a
+      // plain stretch; well above 128 means the rounded surface has swallowed this spot
+      if (f.data[(py * RP + px) * 4 + 3] >= 128 + 4 * slopeOf(J)) return true;
+    }
+    return false;
+  };
+  const edgeOk = (k, q) => !onOtherRoad(k, q) && !inFillet(q);
   roads.forEach(({ pts, w }, k) => {
     // Rough the edges: lumps of earth bulging out, grass creeping in, so the outline is ragged
     for (let i = 0; i < pts.length; i += 2) {
       const p = pts[i], half = w[i] / 2;
       if (rand() < 0.45) {
-        const side = rand() < 0.5 ? 1 : -1, o = side * (half + 1 + rand() * 4);
+        const side = rand() < 0.5 ? 1 : -1, o = side * (half + 1 + rand() * (ROAD_RAGGED - 6));
         const q = { x: p.x + p.nx * o, y: p.y + p.ny * o };
-        if (!onOtherRoad(k, q)) ellipse(c, q.x, q.y, 3 + rand() * 5, 2 + rand() * 3, rand() < 0.5 ? "#5d4037" : "#7a5230");
+        if (edgeOk(k, q)) ellipse(c, q.x, q.y, 3 + rand() * 3, 2 + rand() * 3, rand() < 0.5 ? "#5d4037" : "#7a5230");
       }
       if (rand() < 0.4) {
         const side = rand() < 0.5 ? 1 : -1, o = side * (half + 2 - rand() * 6);
         const q = { x: p.x + p.nx * o, y: p.y + p.ny * o };
-        if (!onOtherRoad(k, q)) ellipse(c, q.x, q.y, 3 + rand() * 4, 2 + rand() * 2.5, rand() < 0.5 ? "#4f8a2c" : "#6fae3e");
+        if (edgeOk(k, q)) ellipse(c, q.x, q.y, 3 + rand() * 4, 2 + rand() * 2.5, rand() < 0.5 ? "#4f8a2c" : "#6fae3e");
       }
     }
     // Surface texture: dark blotches, pebbles, wheel-worn patches and grass tufts along the edges
@@ -157,7 +238,7 @@ function drawRoad(c, rand, paths) {
       if (rand() < 0.3) {
         const o = (rand() < 0.5 ? 1 : -1) * (half + 2 + rand() * 4);
         const q = { x: p.x + p.nx * o, y: p.y + p.ny * o };
-        if (!onOtherRoad(k, q)) for (let kk = -1; kk <= 1; kk++) line(c, q.x, q.y, q.x + kk * 3, q.y - 5 - rand() * 3, "#2f6b1f", 1.5);
+        if (edgeOk(k, q)) for (let kk = -1; kk <= 1; kk++) line(c, q.x, q.y, q.x + kk * 3, q.y - 5 - rand() * 3, "#2f6b1f", 1.5);
       }
     }
   });
@@ -291,29 +372,58 @@ function drawRiver(c, r, rand, pass) {
 
 // A wooden plank bridge carrying the road over a river
 function drawBridge(c, b) {
-  c.save();
-  c.translate(b.x, b.y);
-  c.rotate(b.angle);
-  const half = b.span / 2, dx = Math.cos(b.angle), dy = Math.sin(b.angle);
-  // The deck follows the road's own wandering width: sample the drawn road along the bridge
-  const halfAt = (t) => {
-    const px = b.x + dx * t, py = b.y + dy * t;
+  // The deck is a ribbon laid along the road's own centre line, a little wider than the road (its bank and
+  // ragged edge included), so its sides follow the road's edges round any bend
+  const r = rng(Math.floor(b.x * 7 + b.y * 13));
+  const widthAt = (p) => {
     let best = null, bd = Infinity;
-    for (const s of roadSamples) { const d = (s.x - px) ** 2 + (s.y - py) ** 2; if (d < bd) { bd = d; best = s; } }
-    return (best ? best.w : ROAD_WIDTH) / 2 + 8;   // past the earthen bank, so no road peeks out
+    for (const s of roadSamples) { const d = (s.x - p.x) ** 2 + (s.y - p.y) ** 2; if (d < bd) { bd = d; best = s; } }
+    return roadReach(best ? best.w : ROAD_WIDTH) + 2;
   };
-  const steps = Math.max(4, Math.round(b.span / 6)), top = [], bot = [];
-  for (let i = 0; i <= steps; i++) { const t = -half - 3 + (i / steps) * (b.span + 6); const hw = halfAt(t); top.push([t, -hw]); bot.push([t, hw]); }
-  const deck = [...top, ...bot.slice().reverse()];
-  c.globalAlpha = 0.25; poly(c, deck.map(([x, y]) => [x, y + 3]), "#000"); c.globalAlpha = 1;   // shadow onto the water
-  poly(c, deck, "#8d6e63", "#4e342e", 1.5);                                                 // deck
-  for (let i = 1; i < steps; i++) { const [x, y0] = top[i], y1 = bot[i][1]; line(c, x, y0 + 1, x, y1 - 1, "#6d4c41", 1.2); }   // planks
-  for (const side of [-1, 1]) {                                                             // rails and posts, hugging the deck edge
-    c.strokeStyle = "#5d4037"; c.lineWidth = 3; c.lineCap = "round"; c.beginPath();
-    (side < 0 ? top : bot).forEach(([x, y], i) => (i ? c.lineTo(x, y - side * 2) : c.moveTo(x, y - side * 2))); c.stroke();
-    for (let i = 0; i <= steps; i += 2) { const [x, y] = (side < 0 ? top : bot)[i]; rect(c, x - 2, y - side * 2 - 6, 4, 12, "#6d4c41", "#3e2723", 0.8); }
+  // Plank edges every ~7px along the road; on a bend the inner side bunches up, so an edge is only kept
+  // when both sides have moved forward (no plank ever crosses its neighbour)
+  const edges = [];
+  const n = Math.max(8, Math.round(b.span / 7));
+  for (let i = 0; i <= n; i++) {
+    // Left and right sides each run over their own stretch of road, so the ends come out slanted on a skew crossing
+    const t = i / n, qL = pointAtArc(b.path, b.s1L + (b.s2L - b.s1L) * t), qR = pointAtArc(b.path, b.s1R + (b.s2R - b.s1R) * t);
+    const q = pointAtArc(b.path, (b.s1L + (b.s2L - b.s1L) * t + b.s1R + (b.s2R - b.s1R) * t) / 2), hwL = widthAt(qL), hwR = widthAt(qR);
+    const e = { q, L: [qL.x + qL.nx * hwL, qL.y + qL.ny * hwL], R: [qR.x - qR.nx * hwR, qR.y - qR.ny * hwR] };
+    const last = edges[edges.length - 1];
+    if (last && i < n) {
+      const fwd = (a, bb) => (bb[0] - a[0]) * q.tx + (bb[1] - a[1]) * q.ty;
+      if (fwd(last.L, e.L) < 3 || fwd(last.R, e.R) < 3) continue;
+    }
+    if (last && i === n && (((e.L[0] - last.L[0]) * q.tx + (e.L[1] - last.L[1]) * q.ty) < 3 || ((e.R[0] - last.R[0]) * q.tx + (e.R[1] - last.R[1]) * q.ty) < 3)) edges.pop();
+    edges.push(e);
   }
-  c.restore();
+  const left = edges.map((e) => e.L), right = edges.map((e) => e.R);
+  const deck = [...left, ...right.slice().reverse()];
+  c.globalAlpha = 0.25; poly(c, deck.map(([x, y]) => [x, y + 3]), "#000"); c.globalAlpha = 1;   // shadow onto the water
+  poly(c, deck, "#8d6e63");                                                                 // base
+  // Planks: each one a quad between two edges, its own shade of weathered timber, a grain line or two, nails at the ends
+  const tones = ["#8d6e63", "#947668", "#86675c", "#9a7a6b", "#80625a", "#8f7064"];
+  for (let i = 0; i < edges.length - 1; i++) {
+    const a = edges[i], d = edges[i + 1];
+    poly(c, [a.L, d.L, d.R, a.R], tones[Math.floor(r() * tones.length)], "rgba(62,39,35,0.55)", 0.8);
+    const mix = (u, v, t) => [u[0] + (v[0] - u[0]) * t, u[1] + (v[1] - u[1]) * t];
+    for (let g = 0; g < 1 + Math.floor(r() * 2); g++) {                                      // grain: a faint streak along the plank
+      const t = 0.3 + r() * 0.4, s0 = 0.08 + r() * 0.25, s1 = 0.6 + r() * 0.3;
+      const p0 = mix(mix(a.L, d.L, t), mix(a.R, d.R, t), s0), p1 = mix(mix(a.L, d.L, t), mix(a.R, d.R, t), s1);
+      line(c, p0[0], p0[1], p1[0], p1[1], "rgba(62,39,35,0.22)", 0.8);
+    }
+    if (r() < 0.25) { const k = mix(mix(a.L, d.L, 0.5), mix(a.R, d.R, 0.5), 0.2 + r() * 0.6); circle(c, k[0], k[1], 1.1, "rgba(50,30,25,0.5)"); }   // a knot
+    for (const side of [0.08, 0.92]) { const k = mix(mix(a.L, d.L, 0.5), mix(a.R, d.R, 0.5), side); circle(c, k[0], k[1], 0.7, "rgba(40,30,28,0.7)"); }   // nails
+  }
+  poly(c, deck, null, "#4e342e", 1.5);                                                      // deck outline
+  for (const side of [left, right]) {                                                       // rails and posts along each edge
+    c.strokeStyle = "#5d4037"; c.lineWidth = 3; c.lineCap = "round"; c.beginPath();
+    side.forEach(([x, y], i) => (i ? c.lineTo(x, y) : c.moveTo(x, y))); c.stroke();
+    for (let i = 0; i < side.length; i += 3) {
+      const [x, y] = side[i], q = edges[i].q;
+      c.save(); c.translate(x, y); c.rotate(Math.atan2(q.ty, q.tx)); rect(c, -2, -6, 4, 12, "#6d4c41", "#3e2723", 0.8); c.restore();
+    }
+  }
 }
 
 // ---------- Scenery ----------
@@ -575,7 +685,7 @@ function drawLairTree(c, { x: tx, y: ty }) {
 
 // The exit gate: two stone pillars either side of the road where it leaves the map, with chevrons on the
 // road pointing out through it. The torches and banner on top are animated, drawn each frame in draw.js.
-export const GATE_SPAN = ROAD_WIDTH / 2 + 14;
+export const GATE_SPAN = ROAD_EDGE + 8;                                     // posts stand just off the bank
 export function gatePillars(g) {
   const px = -g.out.y, py = g.out.x;                                           // across the road
   return [{ x: g.x + px * GATE_SPAN, y: g.y + py * GATE_SPAN }, { x: g.x - px * GATE_SPAN, y: g.y - py * GATE_SPAN }];

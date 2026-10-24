@@ -1,4 +1,5 @@
 import { state } from "./state.js";
+import { ROAD_WIDTH } from "./config.js";
 import { map } from "./map.js";
 import { TOWERS, FIRE_ARROW } from "./config.js";
 import { startWave, spawnEnemy, spawnEnemyAt, waveFinished, canCallWave } from "./waves.js";
@@ -23,7 +24,7 @@ const RECOIL_TIME = 0.2;
 // where the monster is now, so the shot lands on a moving target.
 function predictPosition(e, T) {
   if (e.wasBlocked) return { x: e.x, y: e.y };
-  let remaining = e.def.speed * T, x = e.x, y = e.y, next = e.next;
+  let remaining = e.def.speed * (e.pace || 1) * T, x = e.x, y = e.y, next = e.next;
   while (remaining > 0 && next < e.path.length) {
     const p = e.path[next];
     const d = Math.hypot(p.x - x, p.y - y);
@@ -193,21 +194,37 @@ export function update(dt) {
     }
     e.wasBlocked = e.blocked;
     if (e.blocked) { e.blocked = false; e.phase += dt * 6; continue; }
+    // The monster follows the road's centre line (cx, cy) but walks somewhere across its width: its lane
+    // drifts now and then, so a crowd spreads out and wanders instead of marching in single file.
     const target = e.path[e.next];
-    const d = dist(e, target);
+    const c = { x: e.cx ?? e.x, y: e.cy ?? e.y };
+    const d = dist(c, target);
     const slowMul = (e.frost ? 1 - e.frost.slow : 1) * (e.poison ? 1 - e.poison.slow : 1) * (e.staticSlow > 0 ? 0.75 : 1);
-    const step = e.def.speed * slowMul * dt;
+    const step = e.def.speed * (e.pace || 1) * slowMul * dt;
+    let ux = 0, uy = 0;
     if (d <= step) {
-      e.x = target.x; e.y = target.y; e.next++;
+      c.x = target.x; c.y = target.y; e.next++;
       if (e.next >= e.path.length) e.reached = true;
+      const n = e.path[e.next]; if (n) { const l = dist(target, n) || 1; ux = (n.x - target.x) / l; uy = (n.y - target.y) / l; }
     } else {
-      const dx = target.x - e.x;
-      e.x += (dx / d) * step;
-      e.y += ((target.y - e.y) / d) * step;
-      if (Math.abs(dx) > 0.5) e.dir = Math.sign(dx);
+      ux = (target.x - c.x) / d; uy = (target.y - c.y) / d;
+      c.x += ux * step; c.y += uy * step;
     }
+    e.cx = c.x; e.cy = c.y;
+    if ((e.laneT -= dt) <= 0) { e.laneTo = (Math.random() * 2 - 1) * 0.85; e.laneT = 2 + Math.random() * 5; }   // pick a new spot across the road now and then
+    e.lane += (e.laneTo - e.lane) * Math.min(1, dt * 0.6);
+    // Near a bend the sideways direction blends toward the next segment's, so the offset swings round smoothly
+    let nx = -uy, ny = ux;
+    if (e.next < e.path.length - 1 && d < 36) {
+      const a = e.path[e.next], b = e.path[e.next + 1], l = dist(a, b) || 1, k = 1 - d / 36;
+      nx = nx * (1 - k) + (-(b.y - a.y) / l) * k; ny = ny * (1 - k) + ((b.x - a.x) / l) * k;
+    }
+    const reach = Math.max(0, ROAD_WIDTH / 2 - 8 - e.def.size * 0.25);   // keep the body on the road
+    const ox = e.cx + nx * e.lane * reach, oy = e.cy + ny * e.lane * reach;
+    if (Math.abs(ox - e.x) > 0.5) e.dir = Math.sign(ox - e.x);
+    e.x = ox; e.y = oy;
     e.travelled += step;
-    e.phase += dt * e.def.speed * slowMul / 8;
+    e.phase += dt * e.def.speed * (e.pace || 1) * slowMul / 8;
   }
   for (const e of state.enemies) {
     if (e.reached) {

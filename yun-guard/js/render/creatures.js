@@ -29,6 +29,7 @@ const ellipse = (c, x, y, rx, ry, fill, stroke, lw = 1.5) => ellipse0(c, x, y, r
 const poly = (c, pts, fill, stroke, lw = 2) => poly0(c, pts, fill, soft(stroke), lw * 0.7);
 import { state } from "../state.js";
 import { addLight } from "./lights.js";
+import { ENEMY_SCALE } from "../config.js";
 
 // Monsters are drawn with shapes and animated by their walking "phase".
 // Each drawing faces right; we flip the canvas when a monster walks left.
@@ -45,6 +46,7 @@ export function drawEnemy(e) {
   ctx.scale(e.dir, 1);
   if (!e.wasBlocked && !flying) dust(e.phase, e.def.size);   // little puffs of dust behind the feet while walking
   ctx.translate(0, bob);
+  ctx.scale(ENEMY_SCALE, ENEMY_SCALE);                                        // smaller monsters, same artwork
   const body = () => CREATURES[e.type](e.phase, e.wasBlocked);
   if (e.hitFlash > 0) drawTinted(e.def.size, "rgba(255,255,255,0.5)", body);
   else if (e.frost) drawTinted(e.def.size, "rgba(150,210,240,0.5)", body);   // chilled: a pale, bluish tint
@@ -80,6 +82,7 @@ export function drawCorpse(c) {
     ctx.scale(c.dir, 1);
     ctx.rotate(-Math.PI / 2);
     ctx.translate(-c.def.size * 0.2, 0);
+    ctx.scale(ENEMY_SCALE, ENEMY_SCALE);
     drawTinted(c.def.size, "rgba(70,60,60,0.55)", () => CREATURES[c.type](c.phase, true));   // drained and greyed
   } else {
     // Skeleton: a crooked spine, a random number of ribs, the skull to one side, loose bones scattered about

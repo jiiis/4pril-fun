@@ -47,7 +47,8 @@ export function mapOptionsFor(L) {
   L = clampLevel(L);
   return {
     spots: Math.min(20, 8 + Math.floor((L - 1) * 0.45)),              // 8 pads at level 1, 20 from level 28
-    secondRoute: L < 4 ? 0 : L < 10 ? 0.5 : 0.85,                     // one road to start with; a second one creeps in
+    secondRoute: L < 4 ? 0 : L < 10 ? 0.5 : L < 25 ? 0.85 : 1,        // one road to start with; a second one creeps in, then is the rule
+    thirdRoute: L < 30 ? 0 : Math.min(0.7, (L - 30) * 0.014),         // from level 30 a third branch grows ever more likely (70% at level 80+)
   };
 }
 

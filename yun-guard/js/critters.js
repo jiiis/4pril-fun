@@ -1,5 +1,6 @@
 import { state } from "./state.js";
-import { map } from "./map.js";
+import { map, roadDistance } from "./map.js";
+import { W, H, ROAD_EDGE } from "./config.js";
 import { dist } from "./util.js";
 import { addFloater, addBurst, addBlood, makeCorpse } from "./combat.js";
 import { sfx } from "./audio.js";
@@ -41,6 +42,9 @@ export function slayCritter(c) {
   sfx("die", 0.08); sfx("coin", 0.12);
 }
 
+// Animals keep off the road, with a margin between their range and the road's bank
+const offRoad = (p) => roadDistance(p) > ROAD_EDGE + 12;
+
 export function updateCritters(dt) {
   const hunters = state.heroes.filter((h) => h.hp > 0 && h.hunt);
   const huntedBy = (c) => hunters.find((h) => h.hunt === c);
@@ -66,10 +70,14 @@ export function updateCritters(dt) {
     c.hunted = !!hunter;
     // Being chased by a hero: run away (heroes are faster, but it's a chase)
     if (hunter && dist(c, hunter) < 90) {
-      const dx = c.x - hunter.x, dy = c.y - hunter.y, d = Math.hypot(dx, dy) || 1;
-      c.target = { x: Math.max(16, Math.min(944, c.x + (dx / d) * 40)), y: Math.max(20, Math.min(585, c.y + (dy / d) * 40)) };
-      c.dir = dx >= 0 ? 1 : -1;
-      c.fleeing = true;
+      // Run away, but never onto the road: try straight away first, then angles off to either side
+      const dx = c.x - hunter.x, dy = c.y - hunter.y, d = Math.hypot(dx, dy) || 1, a0 = Math.atan2(dy, dx);
+      let flee = null;
+      for (const da of [0, 0.6, -0.6, 1.2, -1.2, 1.8, -1.8]) {
+        const q = { x: Math.max(16, Math.min(W - 16, c.x + Math.cos(a0 + da) * 40)), y: Math.max(20, Math.min(H - 20, c.y + Math.sin(a0 + da) * 40)) };
+        if (offRoad(q) && offRoad({ x: (c.x + q.x) / 2, y: (c.y + q.y) / 2 })) { flee = q; break; }
+      }
+      if (flee) { c.target = flee; c.dir = flee.x >= c.x ? 1 : -1; c.fleeing = true; }
     }
     if (c.target) {
       const d = dist(c, c.target);
@@ -82,9 +90,14 @@ export function updateCritters(dt) {
       c.idle -= dt;
       c.phase += dt * 2;                       // slow grazing nod
       if (c.idle <= 0) {
-        const a = Math.random() * Math.PI * 2, r = b.wander * (0.4 + Math.random() * 0.6);
-        c.target = { x: c.home.x + Math.cos(a) * r, y: c.home.y + Math.sin(a) * r };
-        c.dir = c.target.x >= c.x ? 1 : -1;
+        // Somewhere near home that keeps a clear margin from any road (and so does the way there)
+        for (let tries = 0; tries < 8; tries++) {
+          const a = Math.random() * Math.PI * 2, r = b.wander * (0.4 + Math.random() * 0.6);
+          const q = { x: c.home.x + Math.cos(a) * r, y: c.home.y + Math.sin(a) * r };
+          if (!offRoad(q) || !offRoad({ x: (c.x + q.x) / 2, y: (c.y + q.y) / 2 })) continue;
+          c.target = q; c.dir = q.x >= c.x ? 1 : -1; break;
+        }
+        if (!c.target) c.idle = 0.5 + Math.random();                     // nowhere good to go just now: graze a little longer
       }
     }
   }

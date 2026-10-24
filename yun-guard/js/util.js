@@ -38,3 +38,29 @@ export function pointsAlongPath(path, step) {
   }
   return pts;
 }
+
+// Arc length along the path of the point nearest to p (plus which path segment it lies on)
+export function arcLengthAt(path, p) {
+  let best = null, acc = 0;
+  for (let i = 0; i < path.length - 1; i++) {
+    const a = path[i], b = path[i + 1], dx = b.x - a.x, dy = b.y - a.y, l2 = dx * dx + dy * dy || 1;
+    const u = clamp(((p.x - a.x) * dx + (p.y - a.y) * dy) / l2, 0, 1);
+    const q = { x: a.x + dx * u, y: a.y + dy * u }, d = dist(p, q);
+    if (!best || d < best.d) best = { d, s: acc + Math.sqrt(l2) * u };
+    acc += Math.sqrt(l2);
+  }
+  return best ? best.s : 0;
+}
+// The point at arc length s along the path, with the direction (tx, ty) and sideways normal (nx, ny) there
+export function pointAtArc(path, s) {
+  let acc = 0;
+  for (let i = 0; i < path.length - 1; i++) {
+    const a = path[i], b = path[i + 1], L = dist(a, b) || 1;
+    if (s <= acc + L || i === path.length - 2) {
+      const u = clamp((s - acc) / L, 0, 1), tx = (b.x - a.x) / L, ty = (b.y - a.y) / L;
+      return { x: a.x + (b.x - a.x) * u, y: a.y + (b.y - a.y) * u, tx, ty, nx: -ty, ny: tx };
+    }
+    acc += L;
+  }
+  const a = path[0]; return { x: a.x, y: a.y, tx: 1, ty: 0, nx: 0, ny: 1 };
+}

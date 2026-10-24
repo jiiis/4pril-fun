@@ -40,9 +40,11 @@ export function spawnEnemy(type) {
   const def = ENEMIES[type];
   const maxHp = def.hp;                                     // the same monster is the same everywhere
   const path = map.paths[Math.floor(Math.random() * map.paths.length)];   // each monster picks a route
+  const lane = (Math.random() * 2 - 1) * 0.85;             // where across the road it walks (-1 left edge .. 1 right edge)
   state.enemies.push({
     type, def, hp: maxHp, maxHp, path,
-    x: path[0].x, y: path[0].y, next: 1, travelled: 0,
+    x: path[0].x, y: path[0].y, cx: path[0].x, cy: path[0].y, next: 1, travelled: 0,
+    lane, laneTo: lane, laneT: 1 + Math.random() * 4, pace: 0.94 + Math.random() * 0.12,   // and its own easy pace
     phase: Math.random() * 6, dir: 1, hitFlash: 0,
   });
 }
@@ -52,9 +54,11 @@ export function spawnEnemy(type) {
 export function spawnEnemyAt(type, from, hpFactor = 1, at = from) {
   const def = ENEMIES[type];
   const maxHp = Math.round(def.hp * hpFactor);
+  const lane = (from.lane || 0) + (Math.random() - 0.5) * 0.6;
   state.enemies.push({
     type, def, hp: maxHp, maxHp, path: from.path,
-    x: at.x, y: at.y, next: from.next, travelled: from.travelled,
+    x: at.x, y: at.y, cx: from.cx ?? at.x, cy: from.cy ?? at.y, next: from.next, travelled: from.travelled,
+    lane, laneTo: lane, laneT: 1 + Math.random() * 4, pace: 0.94 + Math.random() * 0.12,
     phase: Math.random() * 6, dir: from.dir || 1, hitFlash: 0,
   });
 }

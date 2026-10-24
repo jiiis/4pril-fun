@@ -1,5 +1,5 @@
-import { W, H, ROWS, COLS, CELL, ROAD_WIDTH } from "./config.js";
-import { rng, dist, closestPointOnPath, clamp } from "./util.js";
+import { W, H, ROWS, COLS, CELL, ROAD_WIDTH, ROAD_EDGE, SPOT_RADIUS } from "./config.js";
+import { rng, dist, closestPointOnPath, clamp, arcLengthAt, pointAtArc, pointsAlongPath } from "./util.js";
 
 // The generated world. Filled in by generateMap() before anything else runs.
 export const map = {
@@ -35,20 +35,29 @@ export function generateMap(seed, opts = {}) {
 
   const main = generateMainRoute(rand);
   map.routes = [main];
-  map.path = cellsToWaypoints(main.cells);
+  map.path = cellsToWaypoints(main.cells, rand);
   map.exit = map.path[map.path.length - 1];
   map.paths = [map.path];
 
   // Usually a second route. It can fork off the main road and rejoin it, come in from its own
   // entrance and merge, fork off and leave by its own exit, or be a completely separate road.
+  // Higher levels want more roads: a second route is tried harder, and later a third branch may appear too
   let allCells = main.cells;
-  if (rand() < map.opts.secondRoute) {
-    const kinds = [forkAndRejoin, separateEntry, forkToExit, separateRoute];
-    shuffle(kinds, rand);
-    for (const make of kinds) {
-      const second = make(main, rand);
-      if (second) { map.routes.push(second); map.paths.push(cellsToWaypoints(second.cells)); allCells = [...main.cells, ...second.cells]; break; }
+  const wanted = (rand() < map.opts.secondRoute ? 1 : 0) + (rand() < (map.opts.thirdRoute || 0) ? 1 : 0);
+  for (let n = 0; n < wanted; n++) {
+    const ends = map.routes.flatMap((r) => [r.entry, r.exit]).filter(Boolean);
+    let added = null;
+    for (let round = 0; round < 3 && !added; round++) {                      // several tries, each with the kinds in a fresh order
+      const kinds = [forkAndRejoin, separateEntry, forkToExit, separateRoute];
+      shuffle(kinds, rand);
+      for (const make of kinds) {
+        const from = map.routes[Math.floor(rand() * map.routes.length)];      // branch off any road so far
+        added = make(from, rand, allCells, ends);
+        if (added) break;
+      }
     }
+    if (!added) break;
+    map.routes.push(added); map.paths.push(cellsToWaypoints(added.cells, rand)); allCells = [...allCells, ...added.cells];
   }
 
   // One signpost per distinct entrance, standing beside the road where it enters the map
@@ -57,9 +66,10 @@ export function generateMap(seed, opts = {}) {
     if (!r.entry || map.entries.some((e) => e.edge === r.entry.edge && e.pos === r.entry.pos)) continue;
     const c0 = center(r.cells[0]), inn = INWARD[r.entry.edge];
     const road = { rx: c0.x + inn.dc * 44, ry: c0.y + inn.dr * 44, inn: { x: inn.dc, y: inn.dr } };            // where the road crosses the edge (for the lair decoration)
+    const off = ROAD_EDGE + 12;                                                                                           // clear of the bank
     map.entries.push(inn.dr === 0
-      ? { x: c0.x + inn.dc * 46, y: c0.y + 62, face: inn, edge: r.entry.edge, pos: r.entry.pos, ...road }                // side entry: sign below the road
-      : { x: c0.x + (c0.x < W / 2 ? 62 : -62), y: c0.y + inn.dr * 50 + 10, face: inn, edge: r.entry.edge, pos: r.entry.pos, ...road });   // top/bottom entry: sign beside it
+      ? { x: c0.x + inn.dc * 46, y: c0.y + off, face: inn, edge: r.entry.edge, pos: r.entry.pos, ...road }                // side entry: sign below the road
+      : { x: c0.x + (c0.x < W / 2 ? off : -off), y: c0.y + inn.dr * 50 + 10, face: inn, edge: r.entry.edge, pos: r.entry.pos, ...road });   // top/bottom entry: sign beside it
   }
   map.entry = map.entries[0];
 
@@ -72,10 +82,10 @@ export function generateMap(seed, opts = {}) {
     let g = null;
     for (const d of [108, 94, 80, 66]) {                                   // where the margin begins, or a little further out if a bend is in the way
       const gx = c.x + inn.dc * d, gy = c.y + inn.dr * d;
-      const span = ROAD_WIDTH / 2 + 14;
+      const span = ROAD_EDGE + 8;
       const posts = [{ x: gx + px * span, y: gy + py * span }, { x: gx - px * span, y: gy - py * span }];
       g = { edge: ex.edge, pos: ex.pos, x: gx, y: gy, out: { x: -inn.dc, y: -inn.dr }, style: 0 };   // 0 stone gate, 1 Chinese paifang (set from the castle below)
-      if (posts.every((p) => roadDistance(p) > ROAD_WIDTH / 2 + 6)) break;
+      if (posts.every((p) => roadDistance(p) > ROAD_EDGE + 4)) break;
     }
     return g;
   });
@@ -87,7 +97,7 @@ export function generateMap(seed, opts = {}) {
     for (let i = 0; i <= 6; i++) for (const [px, py] of [[x - hw + (2 * hw * i) / 6, top], [x - hw + (2 * hw * i) / 6, bot], [x - hw, top + ((bot - top) * i) / 6], [x + hw, top + ((bot - top) * i) / 6]]) best = Math.min(best, roadDistance({ x: px, y: py }));
     return best;
   };
-  const gatePillarPoints = (g) => { const px = -g.out.y, py = g.out.x, span = ROAD_WIDTH / 2 + 14; return [{ x: g.x + px * span, y: g.y + py * span }, { x: g.x - px * span, y: g.y - py * span }]; };
+  const gatePillarPoints = (g) => { const px = -g.out.y, py = g.out.x, span = ROAD_EDGE + 8; return [{ x: g.x + px * span, y: g.y + py * span }, { x: g.x - px * span, y: g.y - py * span }]; };
   const gateClear = (x, y, sc) => map.exits.every((g) => gatePillarPoints(g).every((pp) => Math.abs(pp.x - x) > 52 * sc + 14 || pp.y < y - 96 * sc - 10 || pp.y > y + 12 * sc + 60));
   // Enough room around it first (a road's width of grass), then as close to its own road as possible, full size preferred
   const placed = [];                                                                                      // homes already placed: never two on the same ground
@@ -158,7 +168,7 @@ function makeRivers(rand) {
         for (let x = -30; x <= W + 30; x += 30) { y = Math.max(60, Math.min(H - 60, y + (rand() - 0.5) * 36)); pts.push({ x, y: y + Math.sin(x * meanderFreq + meanderPhase) * meanderAmp * 0.3 }); }
       }
       smoothPoints(pts, 3);
-      river = finishRiver(pts, rand, { base: 26 + rand() * 20 });
+      river = finishRiver(pts, rand, { base: 38 + rand() * 18 });
     }
     if (!river) continue;
     // Maybe a tributary: a narrower stream from a map edge that winds in and joins this river
@@ -181,7 +191,9 @@ function makeRivers(rand) {
           const t = k / steps, wob = Math.sin(k * freq + ph) * amp * Math.sin(t * Math.PI) + (rand() - 0.5) * 20 * Math.sin(t * Math.PI);
           pts.push({ x: start.x + (join.x - start.x) * t - ny * wob, y: start.y + (join.y - start.y) * t + nx * wob });
         }
-        pts.push({ x: join.x + bnx * join.w * 0.2, y: join.y + bny * join.w * 0.2 });   // end just inside the river: its water covers the overlap, banks meet in a clean Y
+        // The stream reaches the river's centre line at `join`; it carries on a little past it (never doubling back,
+        // which folded its outline and tore a gap at the mouth). The river's water covers the overlap.
+        pts.push({ x: join.x - bnx * join.w * 0.15, y: join.y - bny * join.w * 0.15 });
         smoothPoints(pts, 2);
         const trib = finishRiver(pts, rand, { base: river.base * (0.7 + rand() * 0.15), taper: true, parent: river, joinAt: join });
         if (trib) { river.tributary = trib; break; }
@@ -218,7 +230,7 @@ function finishRiver(pts, rand, { base, taper = false, parent = null, joinAt = n
     }
   }
   for (let pass = 0; pass < 2; pass++) for (let i = 1; i < pts.length - 1; i++) pts[i].w = (pts[i - 1].w + pts[i].w + pts[i + 1].w) / 3;
-  pts.forEach((p) => { p.w = Math.max(taper ? 22 : 26, Math.min(80, p.w)); });
+  pts.forEach((p) => { p.w = Math.max(taper ? 28 : 34, Math.min(80, p.w)); });
   if (taper) { const n = pts.length; pts[n - 1].w *= 1.3; pts[n - 2].w *= 1.15; }   // the mouth widens a little where it meets the river
   const river = { points: pts, width: Math.max(...pts.map((p) => p.w)), base, parent };   // width = the widest point (used for clearances)
   // Wherever the water so much as touches the road there must be a bridge. Walk along the river,
@@ -238,14 +250,38 @@ function finishRiver(pts, rand, { base, taper = false, parent = null, joinAt = n
       }
       const cross = Math.abs(tx * q.ny - ty * q.nx);              // sin of the angle between river and road
       if (cross < 0.5) { shallow = true; break; }
-      const near = bridges.find((bg) => dist(bg, q) < 50);
-      if (near) { near.n++; near.span = Math.max(near.span, w + 24); }
-      else bridges.push({ x: q.x, y: q.y, angle: Math.atan2(q.ny, q.nx), span: w + 24, n: 1 });
+      // The bridge sits where the river's centre actually meets the road's centre (the closest approach),
+      // pointing along the road there, and is long enough to clear the water at that crossing angle
+      const span = w / cross + 28;
+      const near = bridges.find((bg) => dist(bg, q) < 70);
+      if (near) { near.n++; if (q.d < near.d) { near.x = q.x; near.y = q.y; near.d = q.d; near.angle = Math.atan2(q.ny, q.nx); } near.span = Math.max(near.span, span); }
+      else bridges.push({ x: q.x, y: q.y, d: q.d, angle: Math.atan2(q.ny, q.nx), span, n: 1 });
     }
   }
   if (shallow) return null;
+  // Two crossings close together would mean two decks overlapping: this river is not wanted
+  for (let i = 0; i < bridges.length; i++) {
+    for (let j = i + 1; j < bridges.length; j++) if (dist(bridges[i], bridges[j]) < 220) return null;
+    if (map.bridges.some((bg) => dist(bg, bridges[i]) < 220)) return null;    // nor next to another river's bridge
+  }
   // A river may hug the road only right where it crosses (the bridge approaches); anywhere else it must keep its distance
   if (nearMisses.some((q) => !bridges.some((bg) => dist(bg, q) < 80))) return null;
+  // A deck follows its road: it is the stretch of the route (by arc length) from where the ground is dry on
+  // one side of the water to where it is dry again on the other, judged across the whole width of the road
+  const inWater = (p) => { let best = Infinity; for (let i = 0; i < pts.length - 1; i++) { const a = pts[i], b = pts[i + 1], L = dist(a, b) || 1, t = Math.max(0, Math.min(1, ((p.x - a.x) * (b.x - a.x) + (p.y - a.y) * (b.y - a.y)) / (L * L))); const d = dist(p, { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t }) - (a.w + (b.w - a.w) * t) / 2; best = Math.min(best, d); } return best < 7; };    // 7: the river's drawn bank
+  for (const b of bridges) {
+    const path = map.paths.map((pth) => ({ pth, d: closestPointOnPath(pth, b).d })).sort((u, v) => u.d - v.d)[0].pth;
+    const s0 = arcLengthAt(path, b), hw = ROAD_EDGE + 8;
+    // Each side of the deck gets its own reach, so on a slanted crossing the ends are cut at an angle
+    // (like a real skew bridge) instead of one corner stretching far over dry land
+    const wet = (sAt, side) => { const q = pointAtArc(path, sAt); return [side * hw, side * hw * 0.5, 0].some((o) => inWater({ x: q.x + q.nx * o, y: q.y + q.ny * o })); };
+    const reach = (side) => { let s1 = s0, s2 = s0; while (s0 - s1 < 260 && wet(s1, side)) s1 -= 3; while (s2 - s0 < 260 && wet(s2, side)) s2 += 3; return [s1 - 5, s2 + 5]; };
+    const [s1L, s2L] = reach(1), [s1R, s2R] = reach(-1);
+    b.path = path; b.s1L = s1L; b.s2L = s2L; b.s1R = s1R; b.s2R = s2R;
+    b.s1 = Math.min(s1L, s1R); b.s2 = Math.max(s2L, s2R);
+    const mid = pointAtArc(path, (b.s1 + b.s2) / 2);
+    b.x = mid.x; b.y = mid.y; b.angle = Math.atan2(mid.ty, mid.tx); b.span = b.s2 - b.s1;
+  }
   map.rivers.push(river);
   map.bridges.push(...bridges);
   return river;
@@ -310,6 +346,9 @@ function makePonds(rand) {
 const center = (cell) => ({ x: cell.c * CELL + CELL / 2, y: cell.r * CELL + CELL / 2 });
 const key = (c, r) => c * 100 + r;
 const NEIGHBOURS = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+const STEPS = [...NEIGHBOURS, [1, 1], [1, -1], [-1, 1], [-1, -1]];       // roads may also run diagonally
+const RING2 = [];                                                         // every offset within two cells (except 0,0)
+for (let dc = -2; dc <= 2; dc++) for (let dr = -2; dr <= 2; dr++) if (dc || dr) RING2.push([dc, dr]);
 const EDGES = ["left", "right", "top", "bottom"];
 const INWARD = { left: { dc: 1, dr: 0 }, right: { dc: -1, dr: 0 }, top: { dc: 0, dr: 1 }, bottom: { dc: 0, dr: -1 } };
 // A position along an edge runs over the interior rows (side edges) or interior columns (top and bottom)
@@ -336,7 +375,7 @@ function walk(rand, start, goal, { avoid = [], allowedNear = [], reserved = [], 
   for (let attempt = 0; attempt < attempts; attempt++) {
     const used = new Set([key(start.c, start.r), ...reserved.map((c) => key(c.c, c.r))]);
     const walked = [];
-    let cur = start, lastMove = null, straight = 0;
+    let cur = start, lastMove = null, straight = 0, lastTurn = 0, turnRun = 0;
     for (let step = 0; step < 90; step++) {
       const nextToGoal = NEIGHBOURS.some(([dc, dr]) => cur.c + dc === goal.c && cur.r + dr === goal.r);
       if (nextToGoal) {                                                        // arrived (too early counts as a failed attempt)
@@ -344,22 +383,41 @@ function walk(rand, start, goal, { avoid = [], allowedNear = [], reserved = [], 
         if (includeGoal) walked.push(goal);
         return walked;
       }
-      const moves = NEIGHBOURS.filter(([dc, dr]) => {
+      const trail = new Set([...(walked.length < 3 ? [key(start.c, start.r)] : []), ...walked.slice(-3).map((w) => key(w.c, w.r))]);   // our own last three cells (a bend brings them within two); anything older counts as another stretch of road
+      const moves = STEPS.filter(([dc, dr]) => {
         const c = cur.c + dc, r = cur.r + dr, k = key(c, r);
         if (!inInterior(c, r) || used.has(k) || avoidSet.has(k)) return false;
+        if (lastMove) {                                                        // bend gently: at most 45° per step, like a real road
+          const cosA = (dc * lastMove[0] + dr * lastMove[1]) / (Math.hypot(dc, dr) * Math.hypot(lastMove[0], lastMove[1]));
+          if (cosA < 0.6) return false;
+          const turn = Math.sign(lastMove[0] * dr - lastMove[1] * dc);
+          if (turn && turn === lastTurn && turnRun >= 2) return false;        // never three 45° turns the same way in a row (a hairpin)
+        }
         if (k === goalKey) return false;                                       // only finish via the check above
-        for (const [ac, ar] of NEIGHBOURS) {                                   // never touch a road sideways
+        const nearGoal = Math.max(Math.abs(c - goal.c), Math.abs(r - goal.r)) <= 2;
+        for (const [ac, ar] of RING2) {                                        // keep a whole empty cell between this road and any other stretch of road
           const nc = c + ac, nr = r + ar, nk = key(nc, nr);
-          if (nc === cur.c && nr === cur.r) continue;
-          if (nk === goalKey) continue;
-          if (used.has(nk) || reservedSet.has(nk)) return false;
-          if (avoidSet.has(nk) && !(allowed.has(nk) && walked.length === 0)) return false;   // may touch the fork cell only on the first step
+          if (trail.has(nk) || nk === goalKey) continue;
+          const adjacent = Math.abs(ac) <= 1 && Math.abs(ar) <= 1;
+          if (reservedSet.has(nk)) { if (adjacent) return false; continue; }
+          if (used.has(nk)) { if (adjacent || !nearGoal) return false; continue; }
+          if (avoidSet.has(nk)) {
+            const fromStart = Math.max(Math.abs(nc - start.c), Math.abs(nr - start.r)), toGoal = Math.max(Math.abs(nc - goal.c), Math.abs(nr - goal.r));
+            if (allowed.has(nk) && walked.length <= 1) continue;               // leaving the fork cell
+            if (walked.length === 0 && fromStart <= 1) continue;               // the road either side of the fork cell, on the first step
+            if (walked.length <= 2 && !adjacent && fromStart <= 2) continue;   // the road we set out from
+            if (nearGoal && !adjacent) continue;                               // closing in on the road we join
+            if (Math.max(Math.abs(c - goal.c), Math.abs(r - goal.r)) <= 1 && toGoal <= 1) continue;   // the last step beside the road we join
+            return false;
+          }
         }
         return true;
       }).map(([dc, dr]) => {
         const c = cur.c + dc, r = cur.r + dr;
         const closer = Math.abs(goal.c - c) + Math.abs(goal.r - r) < Math.abs(goal.c - cur.c) + Math.abs(goal.r - cur.r);
         let w = closer ? bias : 1;
+        if (dc && dr) w *= 0.8;                                                                   // diagonals a little less often than straights
+        if (lastMove && (dc !== lastMove[0] || dr !== lastMove[1]) && lastTurn && Math.sign(lastMove[0] * dr - lastMove[1] * dc) === lastTurn) w *= 0.25;   // a second turn the same way: wide, lazy curves rather than tight ones
         if (lastMove && dc === lastMove[0] && dr === lastMove[1] && straight >= 2) w *= 0.3;   // long straights are boring
         return [dc, dr, w];
       });
@@ -368,6 +426,9 @@ function walk(rand, start, goal, { avoid = [], allowedNear = [], reserved = [], 
       let pick = rand() * total, move = moves[0];
       for (const m of moves) { pick -= m[2]; if (pick <= 0) { move = m; break; } }
       straight = lastMove && move[0] === lastMove[0] && move[1] === lastMove[1] ? straight + 1 : 1;
+      const turn = lastMove ? Math.sign(lastMove[0] * move[1] - lastMove[1] * move[0]) : 0;
+      turnRun = turn && turn === lastTurn ? turnRun + 1 : (turn ? 1 : 0);
+      if (turn) lastTurn = turn; else if (straight >= 2) lastTurn = 0;
       lastMove = move;
       cur = { c: cur.c + move[0], r: cur.r + move[1] };
       used.add(key(cur.c, cur.r));
@@ -377,18 +438,23 @@ function walk(rand, start, goal, { avoid = [], allowedNear = [], reserved = [], 
   return null;
 }
 
+// Entrances and exits must be far apart (in pixels, edge point to edge point), so no route is a short dash
+const FAR_ENDS = 760, FAR_ENDS_SIDE = 640;
+const farApart = (a, b, min) => dist(center(edgeCell(a.edge, a.pos)), center(edgeCell(b.edge, b.pos))) >= min;
+
 // The main road: in through one edge, a long wander, out through a different edge. To spread the road over
 // the whole map it first heads for a detour point well away from the straight line between entry and exit,
 // and a map is only accepted when the road visits every quarter of the middle block.
 function generateMainRoute(rand) {
   const midC = (ROAD_MIN_COL + ROAD_MAX_COL) / 2, midR = (ROAD_MIN_ROW + ROAD_MAX_ROW) / 2;
-  for (let attempt = 0; attempt < 300; attempt++) {
+  for (let attempt = 0; attempt < 900; attempt++) {
     const entryEdge = EDGES[Math.floor(rand() * 4)];
     const others = EDGES.filter((e) => e !== entryEdge);
     const exitEdge = others[Math.floor(rand() * others.length)];
     const entry = { edge: entryEdge, pos: randomEdgePos(rand, entryEdge) }, exit = { edge: exitEdge, pos: randomEdgePos(rand, exitEdge) };
     const start = interiorCell(entry.edge, entry.pos), goal = interiorCell(exit.edge, exit.pos);
     if (start.c === goal.c && start.r === goal.r) continue;
+    if (!farApart(entry, exit, FAR_ENDS)) continue;                                   // the way in and the way out are far apart
     // A detour point on the far side of the map from the start-to-goal line
     const dx = goal.c - start.c, dy = goal.r - start.r, len = Math.hypot(dx, dy) || 1, nx = -dy / len, ny = dx / len;
     const side = (midC - start.c) * nx + (midR - start.r) * ny >= 0 ? 1 : -1;      // toward the centre
@@ -397,13 +463,13 @@ function generateMainRoute(rand) {
       r: Math.round(Math.min(ROAD_MAX_ROW - 1, Math.max(ROAD_MIN_ROW + 1, (start.r + goal.r) / 2 + ny * side * 3 + (rand() - 0.5) * 2))),
     };
     const reserved = [...marginCells(entry.edge, entry.pos), ...marginCells(exit.edge, exit.pos)];
-    const first = walk(rand, start, detour, { reserved, includeGoal: true, bias: 1.6, minLen: 6, attempts: 20 });
+    const first = walk(rand, start, detour, { reserved, includeGoal: true, bias: 1.3, minLen: 8, attempts: 40 });
     if (!first) continue;
     const sofar = [start, ...first];
-    const second = walk(rand, detour, goal, { avoid: sofar.slice(0, -1), reserved, includeGoal: true, bias: 1.6, minLen: 6, attempts: 20 });
+    const second = walk(rand, detour, goal, { avoid: sofar.slice(0, -1), reserved, includeGoal: true, bias: 1.3, minLen: 8, attempts: 40 });
     if (!second) continue;
     const cells = [...marginCells(entry.edge, entry.pos), ...sofar, ...second, ...marginCells(exit.edge, exit.pos).reverse()];
-    if (cells.length < 34) continue;
+    if (cells.length < 36) continue;                                                // a long, meandering road (36 cells is about 2.6 screens of travel)
     // The road must visit every one of six blocks (3 across, 2 down) of the middle, so no big area is left empty
     const bw = (ROAD_MAX_COL - ROAD_MIN_COL + 1) / 3, bh = (ROAD_MAX_ROW - ROAD_MIN_ROW + 1) / 2;
     const blocks = new Set(cells.filter((c) => inInterior(c.c, c.r)).map((c) => Math.floor((c.c - ROAD_MIN_COL) / bw) + 3 * Math.floor((c.r - ROAD_MIN_ROW) / bh)));
@@ -416,8 +482,8 @@ function generateMainRoute(rand) {
 }
 
 // A fresh entrance or exit for a second route: a different spot on any edge, clear of the main road
-function freeEdgeSpot(rand, main, avoid) {
-  const mainSet = new Set(main.cells.map((c) => key(c.c, c.r)));
+function freeEdgeSpot(rand, allCells, avoid) {
+  const mainSet = new Set(allCells.map((c) => key(c.c, c.r)));
   for (let attempt = 0; attempt < 30; attempt++) {
     const edge = EDGES[Math.floor(rand() * 4)], pos = randomEdgePos(rand, edge);
     if (avoid.some((a) => a.edge === edge && Math.abs(a.pos - pos) < 3)) continue;
@@ -431,13 +497,13 @@ function freeEdgeSpot(rand, main, avoid) {
 const interiorRange = (cells) => [2, cells.length - 3];
 
 // Second route A: leaves the main road at a straight stretch and rejoins it further on
-function forkAndRejoin(main, rand) {
+function forkAndRejoin(main, rand, allCells = main.cells) {
   const { cells } = main, [lo, hi] = interiorRange(cells);
   for (let attempt = 0; attempt < 80; attempt++) {
     const i = lo + Math.floor(rand() * Math.floor((hi - lo) * 0.5));
     const j = i + 6 + Math.floor(rand() * Math.max(1, hi - i - 6));
     if (j > hi || !isStraight(cells, i) || !isStraight(cells, j)) continue;
-    const walked = walk(rand, cells[i], cells[j], { avoid: cells, allowedNear: [cells[i], cells[j]], minLen: 6, attempts: 60 });
+    const walked = walk(rand, cells[i], cells[j], { avoid: allCells, allowedNear: [cells[i], cells[j]], minLen: 6, attempts: 320 });
     if (!walked) continue;
     return { cells: [...cells.slice(0, i + 1), ...walked, ...cells.slice(j)], entry: main.entry, exit: main.exit };
   }
@@ -445,15 +511,15 @@ function forkAndRejoin(main, rand) {
 }
 
 // Second route B: comes in through its own entrance and merges into the main road
-function separateEntry(main, rand) {
+function separateEntry(main, rand, allCells = main.cells, ends = [main.entry, main.exit]) {
   const { cells } = main, [lo, hi] = interiorRange(cells);
   for (let attempt = 0; attempt < 40; attempt++) {
-    const entry = freeEdgeSpot(rand, main, [main.entry, main.exit]);
-    if (!entry) continue;
+    const entry = freeEdgeSpot(rand, allCells, ends);
+    if (!entry || !farApart(entry, main.exit, FAR_ENDS_SIDE)) continue;
     const j = lo + 2 + Math.floor(rand() * Math.max(1, hi - lo - 4));
     if (!isStraight(cells, j)) continue;
     const start = interiorCell(entry.edge, entry.pos);
-    const walked = walk(rand, start, cells[j], { avoid: cells, allowedNear: [cells[j]], reserved: marginCells(entry.edge, entry.pos), minLen: 8, attempts: 60 });
+    const walked = walk(rand, start, cells[j], { avoid: allCells, allowedNear: [cells[j]], reserved: marginCells(entry.edge, entry.pos), minLen: 8, attempts: 320 });
     if (!walked) continue;
     return { cells: [...marginCells(entry.edge, entry.pos), start, ...walked, ...cells.slice(j)], entry, exit: main.exit };
   }
@@ -461,15 +527,15 @@ function separateEntry(main, rand) {
 }
 
 // Second route C: leaves the main road and heads for its own exit
-function forkToExit(main, rand) {
+function forkToExit(main, rand, allCells = main.cells, ends = [main.entry, main.exit]) {
   const { cells } = main, [lo, hi] = interiorRange(cells);
   for (let attempt = 0; attempt < 40; attempt++) {
-    const exit = freeEdgeSpot(rand, main, [main.entry, main.exit]);
-    if (!exit) continue;
+    const exit = freeEdgeSpot(rand, allCells, ends);
+    if (!exit || !farApart(main.entry, exit, FAR_ENDS_SIDE)) continue;
     const i = lo + Math.floor(rand() * Math.floor((hi - lo) * 0.7));
     if (!isStraight(cells, i)) continue;
     const goal = interiorCell(exit.edge, exit.pos);
-    const walked = walk(rand, cells[i], goal, { avoid: cells, allowedNear: [cells[i]], reserved: marginCells(exit.edge, exit.pos), includeGoal: true, minLen: 8, attempts: 60 });
+    const walked = walk(rand, cells[i], goal, { avoid: allCells, allowedNear: [cells[i]], reserved: marginCells(exit.edge, exit.pos), includeGoal: true, minLen: 8, attempts: 320 });
     if (!walked) continue;
     return { cells: [...cells.slice(0, i + 1), ...walked, ...marginCells(exit.edge, exit.pos).reverse()], entry: main.entry, exit };
   }
@@ -477,14 +543,14 @@ function forkToExit(main, rand) {
 }
 
 // Second route D: a completely separate road with its own entrance and exit
-function separateRoute(main, rand) {
+function separateRoute(main, rand, allCells = main.cells, ends = [main.entry, main.exit]) {
   for (let attempt = 0; attempt < 40; attempt++) {
-    const entry = freeEdgeSpot(rand, main, [main.entry, main.exit]);
-    const exit = entry && freeEdgeSpot(rand, main, [main.entry, main.exit, entry]);
+    const entry = freeEdgeSpot(rand, allCells, ends);
+    const exit = entry && freeEdgeSpot(rand, allCells, [...ends, entry]);
     if (!entry || !exit) continue;
     const start = interiorCell(entry.edge, entry.pos), goal = interiorCell(exit.edge, exit.pos);
-    if (Math.abs(start.c - goal.c) + Math.abs(start.r - goal.r) < 8) continue;          // ends too close together
-    const walked = walk(rand, start, goal, { avoid: main.cells, reserved: [...marginCells(entry.edge, entry.pos), ...marginCells(exit.edge, exit.pos)], includeGoal: true, bias: 2, minLen: 20, attempts: 60 });
+    if (!farApart(entry, exit, FAR_ENDS_SIDE)) continue;                                 // ends too close together
+    const walked = walk(rand, start, goal, { avoid: allCells, reserved: [...marginCells(entry.edge, entry.pos), ...marginCells(exit.edge, exit.pos)], includeGoal: true, bias: 2, minLen: 16, attempts: 320 });
     if (!walked) continue;
     return { cells: [...marginCells(entry.edge, entry.pos), start, ...walked, ...marginCells(exit.edge, exit.pos).reverse()], entry, exit };
   }
@@ -496,51 +562,94 @@ export function roadDistance(p) {
   return Math.min(...map.paths.map((path) => closestPointOnPath(path, p).d));
 }
 
-function cellsToWaypoints(cells) {
+// The road's centre line: a smooth curve through the cell centres (Catmull-Rom), each interior point nudged
+// a little off its centre so no two stretches line up exactly. The straight runs through the margins at both
+// ends are kept exact so gates and signposts sit square on the road.
+function cellsToWaypoints(cells, rand) {
   const pts = cells.map(center);
-  const first = pts[0], second = pts[1], last = pts[pts.length - 1], before = pts[pts.length - 2];
-  // Off-screen start, first cell, every corner, last cell, off-screen end
-  const out = [{ x: first.x + Math.sign(first.x - second.x) * 70, y: first.y + Math.sign(first.y - second.y) * 70 }, first];
-  for (let i = 1; i < pts.length - 1; i++) {
-    const a = pts[i - 1], b = pts[i], c = pts[i + 1];
-    const straightOn = (a.x === b.x && b.x === c.x) || (a.y === b.y && b.y === c.y);
-    if (!straightOn) out.push(b);                                            // keep corners only
+  for (let i = 3; i < pts.length - 3; i++) { pts[i] = { x: pts[i].x + (rand() - 0.5) * 14, y: pts[i].y + (rand() - 0.5) * 14 }; }
+  for (let pass = 0; pass < 4; pass++) {                                         // relax: each point eases toward its neighbours, rounding every bend
+    const prev = pts.map((p) => ({ ...p }));
+    for (let i = 3; i < pts.length - 3; i++) pts[i] = { x: 0.5 * prev[i].x + 0.25 * (prev[i - 1].x + prev[i + 1].x), y: 0.5 * prev[i].y + 0.25 * (prev[i - 1].y + prev[i + 1].y) };
   }
-  out.push(last, { x: last.x + Math.sign(last.x - before.x) * 70, y: last.y + Math.sign(last.y - before.y) * 70 });
-  return out;
+  const first = pts[0], second = pts[1], last = pts[pts.length - 1], before = pts[pts.length - 2];
+  const startOff = { x: first.x + Math.sign(first.x - second.x) * 70, y: first.y + Math.sign(first.y - second.y) * 70 };
+  const endOff = { x: last.x + Math.sign(last.x - before.x) * 70, y: last.y + Math.sign(last.y - before.y) * 70 };
+  const ctrl = [startOff, startOff, ...pts, endOff, endOff];
+  const out = [startOff];
+  const SUB = 8;
+  for (let i = 1; i < ctrl.length - 2; i++) {
+    const p0 = ctrl[i - 1], p1 = ctrl[i], p2 = ctrl[i + 1], p3 = ctrl[i + 2];
+    for (let k = 1; k <= SUB; k++) {
+      const t = k / SUB, t2 = t * t, t3 = t2 * t;
+      out.push({
+        x: 0.5 * (2 * p1.x + (-p0.x + p2.x) * t + (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * t2 + (-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * t3),
+        y: 0.5 * (2 * p1.y + (-p0.y + p2.y) * t + (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * t2 + (-p0.y + 3 * p1.y - 3 * p2.y + p3.y) * t3),
+      });
+    }
+  }
+  // Thin out points that add nothing (nearly collinear), keeping the curve within a pixel
+  const thin = [out[0]];
+  for (let i = 1; i < out.length - 1; i++) {
+    const a = thin[thin.length - 1], b = out[i], c = out[i + 1];
+    const cross = Math.abs((b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x)) / (Math.hypot(c.x - a.x, c.y - a.y) || 1);
+    if (cross > 0.8 || Math.hypot(b.x - a.x, b.y - a.y) > 40) thin.push(b);
+  }
+  thin.push(out[out.length - 1]);
+  return thin;
 }
 
 // ---------- Build spots ----------
 // Grass cells right next to the road, spread out so towers don't crowd.
+// Pads sit just off the road's verge, and by preference in the elbows of bends and where routes join
+// (that is where a tower sees the most road). Candidates are taken along every route, on both sides.
 function pickSpots(cells, rand) {
-  const road = new Set(cells.map((c) => key(c.c, c.r)));
+  const want = ROAD_EDGE + SPOT_RADIUS + 6;                               // pad edge a clear 6px off the bank
+  // Junctions: where a branch leaves or joins another route
+  const junctions = [];
+  for (let k = 1; k < map.paths.length; k++) {
+    const br = map.paths[k], others = map.paths.filter((_, j) => j !== k);
+    const onOther = (q) => others.some((o) => closestPointOnPath(o, q).d < ROAD_WIDTH * 0.35);
+    for (const seq of [br, br.slice().reverse()]) { let i = 0; while (i < seq.length && onOther(seq[i])) i++; if (i > 0 && i < seq.length) junctions.push(seq[i - 1]); }
+  }
   const candidates = [];
-  for (let c = 0; c < COLS; c++) {
-    for (let r = 0; r < ROWS; r++) {
-      if (road.has(key(c, r))) continue;
-      if (!inInterior(c, r)) continue;                                     // no building in any margin
-      const nextToRoad = NEIGHBOURS.some(([dc, dr]) => road.has(key(c + dc, r + dr)));
-      if (!nextToRoad) continue;
-      const p = center({ c, r });
-      // Keep clear of the castle's whole footprint (it is tall) and the signposts
-      if (map.castles.some((k) => { const cdx = p.x - k.x, cdy = p.y - k.y; return Math.abs(cdx) < 92 * k.scale && cdy > -135 * k.scale && cdy < 42 * k.scale; })) continue;
-      if (map.entries.some((e) => dist(p, e) < 55 || dist(p, { x: e.rx, y: e.ry }) < 78)) continue;   // not on the signpost or the lair stakes
-      if (map.exits.some((g) => dist(p, g) < 78)) continue;                                        // not on the exit gate
-      if (nearWater(p, 30)) continue;                                        // no building in the water
-      candidates.push(p);
+  for (const path of map.paths) {
+    const pts = pointsAlongPath(path, 10);
+    for (let i = 4; i < pts.length - 4; i++) {
+      const p = pts[i], back = pts[i - 4], fwd = pts[i + 4];
+      // How much the road turns here, and which way (the inside of the bend is the better side)
+      const a1 = Math.atan2(p.y - back.y, p.x - back.x), a2 = Math.atan2(fwd.y - p.y, fwd.x - p.x);
+      let turn = a2 - a1; while (turn > Math.PI) turn -= 2 * Math.PI; while (turn < -Math.PI) turn += 2 * Math.PI;
+      const dJ = junctions.length ? Math.min(...junctions.map((j) => dist(j, p))) : Infinity;
+      for (const side of [1, -1]) {
+        const q = { x: p.x + p.nx * side * want, y: p.y + p.ny * side * want };
+        const inside = Math.sign(turn) === side;                                    // this side is the inner side of the bend
+        const score = 1 + 3 * Math.abs(turn) * (inside ? 1.3 : 0.6) + 2.2 * Math.exp(-dJ / 110) + rand() * 0.5;
+        candidates.push({ x: q.x, y: q.y, score });
+      }
     }
   }
-  shuffle(candidates, rand);
+  const ok = (p) => {
+    if (p.x < 40 || p.x > W - 40 || p.y < 40 || p.y > H - 40) return false;
+    if (!inInterior(Math.floor(p.x / CELL), Math.floor(p.y / CELL))) return false;   // no building in any margin
+    if (roadDistance(p) < want - 2) return false;                                      // squeezed against another road
+    if (map.castles.some((k) => { const cdx = p.x - k.x, cdy = p.y - k.y; return Math.abs(cdx) < 92 * k.scale && cdy > -135 * k.scale && cdy < 42 * k.scale; })) return false;
+    if (map.entries.some((e) => dist(p, e) < 55 || dist(p, { x: e.rx, y: e.ry }) < 78)) return false;   // not on the signpost or the lair stakes
+    if (map.exits.some((g) => dist(p, g) < 78)) return false;                                        // not on the exit gate
+    if (nearWater(p, 28)) return false;
+    return true;
+  };
+  candidates.sort((u, v) => v.score - u.score);
   const spots = [];
   for (const p of candidates) {
     if (spots.length >= map.opts.spots) break;
-    if (spots.every((s) => dist(s, p) >= 100)) spots.push(p);
+    if (ok(p) && spots.every((sp) => dist(sp, p) >= 100)) spots.push({ x: p.x, y: p.y });
   }
   return spots;
 }
 
 // ---------- Scenery and animals ----------
-function clear(p, { road = 50, spots = 48, castle = 85, entry = 50, deco = 0, critters = 0, river = 14 }) {
+function clear(p, { road = ROAD_EDGE + 26, spots = 48, castle = 85, entry = 50, deco = 0, critters = 0, river = 14 }) {   // scenery keeps a clear margin from the road's bank
   return roadDistance(p) > road
     && !nearWater(p, river)
     && map.spots.every((s) => dist(s, p) > spots)
@@ -595,7 +704,7 @@ function scatterDeco(rand) {
     for (let n = 0, tries = 0; n < 4 && tries < 30; tries++) {
       const a = rand() * Math.PI, d = (42 + rand() * 40) * k.scale;
       const q = { x: k.x + Math.cos(a) * d, y: k.y + 16 * k.scale + Math.sin(a) * d * 0.45 };
-      if (q.x < 20 || q.x > W - 20 || q.y < 20 || q.y > H - 20 || !clear(q, { road: 28, spots: 30, castle: 0, entry: 40, deco: 16 })) continue;
+      if (q.x < 20 || q.x > W - 20 || q.y < 20 || q.y > H - 20 || !clear(q, { road: ROAD_EDGE + 10, spots: 30, castle: 0, entry: 40, deco: 16 })) continue;
       const roll = rand();
       const type = roll < 0.45 ? "flower" : roll < 0.7 ? "pebbles" : roll < 0.9 ? "bush" : "mushroom";
       const size = type === "flower" ? 0.5 + rand() * 0.2 : type === "pebbles" ? 0.6 + rand() * 0.3 : type === "bush" ? 0.7 + rand() * 0.3 : 0.4 + rand() * 0.15;
@@ -615,7 +724,7 @@ function placeCritters(rand) {
   const count = 5 + Math.floor(rand() * 6);                        // 5 to 10 animals
   for (let i = 0; i < 400 && out.length < count; i++) {
     const p = { x: 40 + rand() * (W - 80), y: 40 + rand() * (H - 80) };
-    if (!clear(p, { road: 70, spots: 55, deco: 32, critters: 60, river: 50 })) continue;
+    if (!clear(p, { road: ROAD_EDGE + 16, spots: 55, deco: 32, critters: 60, river: 50 })) continue;
     let roll = rand(), type = ANIMAL_ODDS[0][0];
     for (const [name, odds] of ANIMAL_ODDS) { roll -= odds; if (roll <= 0) { type = name; break; } }
     if (type === "cow" && out.some((a) => a.type === "cow")) type = "sheep";   // one cow is plenty
