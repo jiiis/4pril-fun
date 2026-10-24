@@ -771,6 +771,18 @@ function scatterDeco(rand) {
       const m = mk(q.x, q.y); if (rand() < 0.3) m.variant = Math.floor(rand() * kinds); out.push(m); count++; k++;
     }
   }
+  // A few tufts and weeds around each build pad, never many and never the same: some pads get a clump or two, some none
+  for (const sp of map.spots) {
+    if (rand() < 0.15) continue;
+    const n = 1 + Math.floor(rand() * 4);
+    for (let k = 0, tries = 0; k < n && tries < 14; tries++) {
+      const a = rand() * Math.PI * 2, d = SPOT_RADIUS + 3 + rand() * 15, q = { x: sp.x + Math.cos(a) * d, y: sp.y + Math.sin(a) * d * 0.8 };
+      if (q.x < 14 || q.x > W - 14 || q.y < 14 || q.y > H - 14 || roadDistance(q) < ROAD_EDGE + 4 || nearWater(q, 10)) continue;
+      if (map.spots.some((o) => o !== sp && dist(o, q) < SPOT_RADIUS + 4) || out.some((o) => dist(o, q) < 7)) continue;
+      out.push({ type: rand() < 0.6 ? "tuft" : "weed", x: q.x, y: q.y, s: 0.75 + rand() * 0.5, variant: Math.floor(rand() * 4), seed: Math.floor(rand() * 1e6) });
+      k++;
+    }
+  }
   // A little landscaping in front of each home: a few flowers, pebbles and a bush close to its walls
   for (const k of map.castles) {
     for (let n = 0, tries = 0; n < 4 && tries < 30; tries++) {

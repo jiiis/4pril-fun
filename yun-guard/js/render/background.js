@@ -348,7 +348,7 @@ function drawRoad(c, rand, paths) {
           rockShape(c, q.x, q.y, rr, ry, rand, ["#9b9488", "#8a8378", "#aaa194", "#7c766c", "#a39a8a"][Math.floor(rand() * 5)], "rgba(40,30,22,0.5)");
           rockShape(c, q.x - rr * 0.28, q.y - ry * 0.28, rr * 0.4, ry * 0.3, rand, "rgba(255,255,255,0.3)");
         }
-      } else if (r0 < 0.26) {                                                              // a pothole: dark inside, a lit lower lip
+      } else if (r0 < 0.225) {                                                            // a pothole: dark inside, a lit lower lip
         const q = inside(i, 0.8), rx = 3.5 + rand() * 4, ry = rx * 0.6;
         if (!onOtherRoad(k, q)) { ellipse(c, q.x, q.y + 1.2, rx + 0.8, ry + 0.8, "rgba(255,225,180,0.28)"); ellipse(c, q.x, q.y, rx, ry, "rgba(45,26,12,0.55)"); ellipse(c, q.x + 0.5, q.y + 0.6, rx * 0.6, ry * 0.55, "rgba(30,16,8,0.4)"); }
       } else if (r0 < 0.36) {                                                               // a crack in the dried earth, forking at the end
