@@ -7,7 +7,7 @@ import { sfx } from "./audio.js";
 export function hurt(e, dmg, type, flash = true, source = null) {
   if (e.dead) return;
   if (type === "physical") dmg *= 1 - e.def.armor;
-  if (type === "pierce") dmg *= 1 - e.def.armor * 0.35;                    // ballista bolts punch through most armour
+  if (type === "pierce") dmg *= 1 - e.def.armor * 0.6;                     // ballista bolts slip past some of the armour
   if (type === "magic" && e.def.magicWeak) dmg *= e.def.magicWeak;
   if (e.cursed > 0) dmg *= e.curseFactor || 1.4;
   e.hp -= dmg;
