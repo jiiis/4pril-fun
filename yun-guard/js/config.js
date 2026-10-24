@@ -32,7 +32,7 @@ export const TOWERS = {
   tesla:    { name: "Lightning Spire", short: "Spire", icon: "zap", cost: 140, range: 143, damage: 24, rate: 0.6, type: "magic", color: "#4fc3f7", desc: "Chain lightning jumps between monsters.", chain: 3, chainRange: 70, chainFalloff: 0.75 },
   // Ballista: slow and very long-ranged. One huge bolt flies through the target and on, hitting every monster along the line,
   // and punches through most armour. Reaches flyers.
-  ballista: { name: "Ballista",     short: "Ballista", icon: "ballista", cost: 190, range: 185, damage: 48, rate: 0.22, type: "pierce", color: "#a1887f", desc: "Huge bolt pierces a whole line. Slow. Ignores some armour.", line: true, lineWidth: 9 },
+  ballista: { name: "Ballista",     short: "Ballista", icon: "ballista", cost: 170, range: 192, damage: 62, rate: 0.25, type: "pierce", color: "#a1887f", desc: "Huge bolt pierces a whole line. Slow. Ignores some armour.", line: true, lineWidth: 9 },
   // Barracks: range = how far away the soldiers' rally point can be. damage/rate = each soldier's attack.
   barracks: { name: "Barracks",     short: "Barracks", icon: "shield", cost: 90,  range: 117,  damage: 6,  rate: 1,    type: "physical", color: "#ef9a9a", desc: "Soldiers block the road.", soldiers: 2, soldierHp: 80 },
 };
