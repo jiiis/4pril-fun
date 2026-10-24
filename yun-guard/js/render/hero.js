@@ -602,7 +602,7 @@ function drawDragon(g) {
   ellipse(ctx, 11, -1.5, 3.5, 2.5, "#ef5350");                                  // snout
   for (const hx of [5, 8]) poly(ctx, [[hx - 1, -7], [hx, -10.5], [hx + 1, -7]], "#ffe0b2", HORN_OUT, 0.5);   // horns
   circle(ctx, 8, -4, 1.4, "#fff"); circle(ctx, 8.4, -4, 0.8, "#212121");         // big eye
-  circle(ctx, 13.5, -2, 0.6, "#4a0000"); circle(ctx, 13, -0.6, 0.6, "#4a0000");   // nostrils
+  circle(ctx, 12.4, -2.1, 0.6, "#4a0000"); circle(ctx, 13.9, -2.4, 0.6, "#4a0000");   // nostrils, side by side
   if (g.breath > 0) {                                                           // a puff of flame from the mouth
     const k = g.breath / 0.3;
     ctx.globalAlpha = k;
