@@ -300,7 +300,7 @@ function drawRoad(c, rand, paths) {
       }
       if (rand() < 0.15) {
         const o = (rand() - 0.5) * (w[i] - 12);
-        circle(c, p.x + p.nx * o, p.y + p.ny * o + 3, 1 + rand() * 1.6, rand() < 0.5 ? "#8d8d8d" : "#c2a98a");
+        { const pr = 0.9 + rand() * 1.1; rockShape(c, p.x + p.nx * o, p.y + p.ny * o + 3, pr, pr * (0.55 + rand() * 0.5), rand, rand() < 0.5 ? "#8d8d8d" : "#c2a98a", null); }
       }
       if (rand() < 0.08) {
         const o = (rand() - 0.5) * (w[i] - 16);
@@ -334,26 +334,50 @@ function drawRoad(c, rand, paths) {
     }
     for (let i = 0; i < pts.length; i++) {
       const r0 = rand();
-      if (r0 < 0.2) {                                                                     // a mound of packed earth: lit on the upper left, shaded below
-        const q = inside(i, 0.95), rx = 4.5 + rand() * 6, ry = rx * (0.5 + rand() * 0.25);
+      if (r0 < 0.12) {                                                                     // a mound of packed earth: lit on the upper left, shaded below
+        const q = inside(i, 0.95), rx = 2.5 + rand() * 2.5, ry = rx * (0.5 + rand() * 0.25);
         if (!onOtherRoad(k, q)) { ellipse(c, q.x + 0.8, q.y + 1.2, rx, ry, "rgba(45,24,10,0.45)"); ellipse(c, q.x, q.y, rx, ry, "rgba(190,140,88,0.75)"); ellipse(c, q.x - rx * 0.25, q.y - ry * 0.3, rx * 0.55, ry * 0.45, "rgba(255,230,185,0.45)"); }
-      } else if (r0 < 0.34) {                                                              // a stone half-sunk in the dirt
-        const q = inside(i, 0.95), rr = 1.8 + rand() * 3.2;
-        if (!onOtherRoad(k, q)) { ellipse(c, q.x + 0.7, q.y + 1, rr * 1.15, rr * 0.7, "rgba(40,24,12,0.38)"); ellipse(c, q.x, q.y, rr, rr * 0.7, ["#9b9488", "#8a8378", "#aaa194", "#7c766c"][Math.floor(rand() * 4)], "rgba(40,30,22,0.5)", 0.6); ellipse(c, q.x - rr * 0.3, q.y - rr * 0.25, rr * 0.4, rr * 0.22, "rgba(255,255,255,0.35)"); }
-      } else if (r0 < 0.4) {                                                              // a pothole: dark inside, a lit lower lip
+      } else if (r0 < 0.2) {                                                              // a stone half-sunk in the dirt, never the same shape twice
+        const q = inside(i, 0.95), rr = 1.2 + rand() * 1.3, ry = rr * (0.55 + rand() * 0.5);
+        if (!onOtherRoad(k, q)) {
+          rockShape(c, q.x + 0.7, q.y + 1, rr * 1.15, ry * 1.15, rand, "rgba(40,24,12,0.38)");
+          rockShape(c, q.x, q.y, rr, ry, rand, ["#9b9488", "#8a8378", "#aaa194", "#7c766c", "#a39a8a"][Math.floor(rand() * 5)], "rgba(40,30,22,0.5)");
+          rockShape(c, q.x - rr * 0.28, q.y - ry * 0.28, rr * 0.4, ry * 0.3, rand, "rgba(255,255,255,0.3)");
+        }
+      } else if (r0 < 0.26) {                                                              // a pothole: dark inside, a lit lower lip
         const q = inside(i, 0.8), rx = 3.5 + rand() * 4, ry = rx * 0.6;
         if (!onOtherRoad(k, q)) { ellipse(c, q.x, q.y + 1.2, rx + 0.8, ry + 0.8, "rgba(255,225,180,0.28)"); ellipse(c, q.x, q.y, rx, ry, "rgba(45,26,12,0.55)"); ellipse(c, q.x + 0.5, q.y + 0.6, rx * 0.6, ry * 0.55, "rgba(30,16,8,0.4)"); }
-      } else if (r0 < 0.5) {                                                               // a crack in the dried earth, forking at the end
+      } else if (r0 < 0.36) {                                                               // a crack in the dried earth, forking at the end
         const q = inside(i, 0.85); if (onOtherRoad(k, q)) continue;
         let x = q.x, y = q.y, a = rand() * 6.28; c.strokeStyle = "rgba(50,30,16,0.45)"; c.lineWidth = 0.9; c.lineCap = "round"; c.beginPath(); c.moveTo(x, y);
         for (let m = 0; m < 4; m++) { a += (rand() - 0.5) * 1.2; x += Math.cos(a) * (2.5 + rand() * 3); y += Math.sin(a) * (2.5 + rand() * 3); c.lineTo(x, y); }
         c.stroke(); c.beginPath(); c.moveTo(x, y); c.lineTo(x + Math.cos(a + 0.8) * 3, y + Math.sin(a + 0.8) * 3); c.stroke();
-      } else if (r0 < 0.62) {                                                               // loose gravel and dried clods
+      } else if (r0 < 0.46) {                                                               // loose gravel and dried clods
         const q = inside(i, 1);
-        if (!onOtherRoad(k, q)) for (let m = 0; m < 3 + Math.floor(rand() * 4); m++) circle(c, q.x + (rand() - 0.5) * 9, q.y + (rand() - 0.5) * 5, 0.6 + rand() * 1.1, rand() < 0.5 ? "rgba(120,96,70,0.8)" : "rgba(205,185,150,0.75)");
+        if (!onOtherRoad(k, q)) for (let m = 0; m < 2 + Math.floor(rand() * 3); m++) { const gr = 0.6 + rand() * 1.0; rockShape(c, q.x + (rand() - 0.5) * 9, q.y + (rand() - 0.5) * 5, gr, gr * (0.6 + rand() * 0.5), rand, rand() < 0.5 ? "rgba(120,96,70,0.85)" : "rgba(205,185,150,0.8)", null); }
+      } else if (r0 < 0.62) {                                                              // fallen leaves, singly or in a little drift
+        const q = inside(i, 0.95);
+        if (!onOtherRoad(k, q)) for (let m = 0, n = 1 + Math.floor(rand() * 3); m < n; m++) {
+          const lx = q.x + (rand() - 0.5) * 9, ly = q.y + (rand() - 0.5) * 5, len = 3 + rand() * 2.6, wd = len * (0.38 + rand() * 0.14), a = rand() * 6.28, ca = Math.cos(a), sa = Math.sin(a);
+          const tone = ["#a65b2a", "#c8873a", "#8a6a2a", "#7a8a3a", "#b5482a", "#d2a04a", "#6f5a2a"][Math.floor(rand() * 7)];
+          const at = (u, v) => [lx + u * ca - v * sa, ly + (u * sa + v * ca) * 0.7];                    // leaf coordinates to the ground, foreshortened
+          poly(c, [at(-len, 0), at(-len * 0.3, -wd), at(len * 0.5, -wd * 0.8), at(len, 0), at(len * 0.5, wd * 0.8), at(-len * 0.3, wd)], tone, "rgba(50,28,12,0.4)", 0.5);
+          const e0 = at(-len, 0), e1 = at(len * 0.85, 0); line(c, e0[0], e0[1], e1[0], e1[1], "rgba(50,28,12,0.45)", 0.6);   // the midrib
+        }
       }
     }
   });
+}
+
+// A rock of random shape: 4 to 8 corners at uneven distances, stretched and turned any way
+function rockShape(c, x, y, rx, ry, rand, fill, stroke, lw = 0.6) {
+  const n = 4 + Math.floor(rand() * 5), rot = rand() * Math.PI * 2, cr = Math.cos(rot), sr = Math.sin(rot), pts = [];
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * Math.PI * 2 + (rand() - 0.5) * (Math.PI * 1.1 / n), k = 0.68 + rand() * 0.5, px = Math.cos(a) * rx * k, py = Math.sin(a) * ry * k;
+    pts.push([x + px * cr - py * sr, y + px * sr + py * cr]);
+  }
+  poly(c, pts, fill, stroke, lw);
+  return pts;
 }
 
 function strokePoly(c, pts, width, color) {
@@ -404,6 +428,18 @@ function drawPond(c, p) {
     const a = rand() * Math.PI * 2, rx = p.x + Math.cos(a) * (p.rx + 4), ry = p.y + Math.sin(a) * (p.ry + 4);
     for (let k = -1; k <= 1; k++) line(c, rx, ry, rx + k * 2.5, ry - 9 - rand() * 5, "#4f7f2a", 1.5);
     if (rand() < 0.6) circle(c, rx, ry - 11, 1.2, "#6d4c41");
+  }
+  { // tufts and weeds crowding the bank all the way round, a few reeds standing in the shallows
+    const edge = pondOutline(p, 1, 0), n = edge.length, count = Math.round((p.rx + p.ry) * 0.55);
+    for (let i = 0; i < count; i++) {
+      const f = rand() * n, i0 = Math.floor(f) % n, i1 = (i0 + 1) % n, t = f - Math.floor(f);
+      const ex = edge[i0][0] + (edge[i1][0] - edge[i0][0]) * t, ey = edge[i0][1] + (edge[i1][1] - edge[i0][1]) * t;
+      const dx = ex - p.x, dy = ey - p.y, dl = Math.hypot(dx, dy) || 1, out = 2 + rand() * 11;
+      const x = ex + (dx / dl) * out, y = ey + (dy / dl) * out * 0.8 + (rand() - 0.5) * 3, v = rand();
+      if (v < 0.5) drawTuft(c, x, y, 0.9 + rand() * 0.4, Math.floor(rand() * TUFT_KINDS), rand);
+      else if (v < 0.9) drawWeed(c, x, y, 0.9 + rand() * 0.4, Math.floor(rand() * WEED_KINDS), rand);
+      else { const h = 12 + rand() * 6, lean = (rand() - 0.5) * 4; line(c, x, y, x + lean, y - h, "#5a8a30", 1.3); line(c, x + lean, y - h, x + lean, y - h - 4, "#6d4c41", 2.2); }   // a cattail
+    }
   }
   for (let i = 0; i < 6; i++) {                                         // pebbles on the bank
     const a = rand() * Math.PI * 2, d = 2 + rand() * 5;
