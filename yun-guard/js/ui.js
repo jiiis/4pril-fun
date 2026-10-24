@@ -25,7 +25,11 @@ function refreshMenu() {
 
 // The big round button: ▶ before the first wave, ⏩ with a countdown badge between waves (press early for
 // bonus gold), crossed swords while a wave is on, an hourglass when the game is over.
+let waveBtnKey = "";
 export function setWaveButton(mode, seconds) {
+  const key = `${mode}|${seconds === undefined ? "" : Math.ceil(Math.max(seconds, 0))}|${state.paused}`;
+  if (key === waveBtnKey) return;                               // called every frame: only touch the DOM on a change
+  waveBtnKey = key;
   const b = $("next"), face = b.querySelector(".face"), badge = $("nextBadge");
   b.classList.toggle("ready", mode === "ready" || mode === "start");
   b.disabled = mode === "busy" || mode === "over" || state.paused;
@@ -222,6 +226,7 @@ function applyView() {
 // A fresh level in the same page (no reload, so full screen survives): clear the end screen, reset the HUD
 export function resetUiForLevel() {
   clearTimeout(endTimer);
+  waveBtnKey = "";
   $("overlay").style.display = "none";
   $("paused").style.display = "none";
   closeMenu();

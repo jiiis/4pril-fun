@@ -56,10 +56,9 @@ export function levelConfig(L) {
   return {
     level: L,
     waves: Math.min(15, 9 + Math.floor((L - 1) / 4)),      // 9 waves at level 1, 15 from level 25
-    hp: 0.95 + (L - 1) * 0.036,                              // monsters' base toughness (0.95 → 4.5), on top of the per-wave growth
-    speed: 1 + Math.min(0.25, (L - 1) * 0.0025),             // a little quicker, up to 25% faster
-    count: Math.min(1.8, 0.8 + (L - 1) * 0.011),             // crowd size, from a little thin to nearly double
-    shift: Math.floor((L - 1) / 6),                          // the tougher kinds arrive this many waves earlier
+    // Monsters themselves never change between levels; only who turns up, and how many
+    count: Math.min(1.4, 0.9 + (L - 1) * 0.006),             // crowd size, from a little thin to 1.4× (level 84+)
+    shift: Math.floor((L - 1) / 8),                          // the tougher kinds arrive this many waves earlier (up to 12)
     gold: 360 + L * 7,                                       // a bigger purse to meet a bigger threat (367 → 1060)
     goldMul: 1 + (L - 1) * 0.012,                            // rewards keep up a little better
     lives: 20,

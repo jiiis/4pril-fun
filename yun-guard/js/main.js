@@ -39,7 +39,7 @@ function startLevel({ level: L, seed, hero }) {
   level = clampLevel(L); saveLevel(level);
   const d = levelConfig(level);
   state.level = level; state.diff = d; state.totalWaves = d.waves; state.gold = d.gold + carryFor(level); state.lives = d.lives;
-  state.wave = 0; state.over = false; state.paused = false; state.countdown = null; state.spawnTimer = 0;
+  state.wave = 0; state.over = false; state.paused = false; state.countdown = null; state.spawnTimer = 0; state.waveTotal = 0;
   for (const k of ["enemies", "towers", "shots", "floaters", "bursts", "bolts", "fires", "smoke", "scorches", "blood", "corpses", "spawnQueue", "fish", "poops", "heroes"]) state[k] = [];
   state.hero = null; state.dog = null; state.eagle = null;
   state.selected = null; state.hover = null; state.rallyFor = null; state.hoverCritter = null; state.preview = null;

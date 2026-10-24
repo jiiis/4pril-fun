@@ -8,7 +8,8 @@ export const H = 840;
 export const START_GOLD = 400;
 export const START_LIVES = 20;
 export const TOTAL_WAVES = 15;
-export const WAVE_BREAK = 9;           // seconds between waves (the countdown starts as soon as a wave has finished appearing)
+export const WAVE_BREAK = 12;          // seconds until the next wave comes by itself, counting from when the current wave has fully appeared
+export const CALL_AT = 0.6;            // the next wave may be called once this share of the current wave has entered
 export const SOLDIER_RESPAWN = 8;      // seconds for a fallen soldier to come back
 export const ENGAGE_RANGE = 50;        // how far from their rally point soldiers will chase
 export const ROAD_WIDTH = 64;           // average width; the drawn road wanders around this
@@ -208,44 +209,58 @@ DRAGON.kind = "dragon";
 //   magicWeak   - takes that many times damage from magic; frostImmune - cannot be chilled
 //   healAura    - heals other monsters within healRange by that much per second
 export const ENEMIES = {
-  goblin:   { hp: 40,  speed: 70,  armor: 0,   gold: 4,  lives: 1, attack: 6,  size: 26 },
-  wolf:     { hp: 30,  speed: 120, armor: 0,   gold: 5,  lives: 1, attack: 8,  size: 30 },
-  bat:      { hp: 28,  speed: 95,  armor: 0,   gold: 5,  lives: 1, attack: 4,  size: 26, flying: true },
-  orc:      { hp: 140, speed: 45,  armor: 0.4, gold: 10, lives: 2, attack: 14, size: 36 },
-  skeleton: { hp: 90,  speed: 55,  armor: 0.6, gold: 9,  lives: 1, attack: 10, size: 30, magicWeak: 1.8, frostImmune: true },
-  shaman:   { hp: 110, speed: 50,  armor: 0.1, gold: 14, lives: 1, attack: 7,  size: 30, healAura: 6, healRange: 70 },
-  golem:    { hp: 520, speed: 26,  armor: 0.7, gold: 35, lives: 3, attack: 28, size: 46, frostImmune: true, magicWeak: 1.4 },
-  troll:    { hp: 900, speed: 35,  armor: 0.3, gold: 60, lives: 5, attack: 35, size: 56 },
+  // Every monster is the same on every level and in every wave: these numbers never scale.
+  // Speeds are unhurried (a goblin takes a good while to cross the map); the kinds still differ a lot.
+  goblin:   { hp: 40,  speed: 40,  armor: 0,   gold: 4,  lives: 1, attack: 6,  size: 26 },
+  wolf:     { hp: 30,  speed: 70,  armor: 0,   gold: 5,  lives: 1, attack: 8,  size: 30 },
+  bat:      { hp: 28,  speed: 56,  armor: 0,   gold: 5,  lives: 1, attack: 4,  size: 26, flying: true },
+  orc:      { hp: 140, speed: 27,  armor: 0.4, gold: 10, lives: 2, attack: 14, size: 36 },
+  skeleton: { hp: 90,  speed: 32,  armor: 0.6, gold: 9,  lives: 1, attack: 10, size: 30, magicWeak: 1.8, frostImmune: true },
+  shaman:   { hp: 110, speed: 30,  armor: 0.1, gold: 14, lives: 1, attack: 7,  size: 30, healAura: 6, healRange: 70 },
+  golem:    { hp: 520, speed: 16,  armor: 0.7, gold: 35, lives: 3, attack: 28, size: 46, frostImmune: true, magicWeak: 1.4 },
+  troll:    { hp: 900, speed: 21,  armor: 0.3, gold: 60, lives: 5, attack: 35, size: 56 },
   //   split       - when killed, bursts into that many smaller monsters
   //   steals      - instead of costing lives, it runs off with this much gold if it reaches the castle
   //   raise       - necromancers turn a nearby corpse into a skeleton every few seconds
-  slime:      { hp: 70,  speed: 55,  armor: 0,   gold: 5,  lives: 1, attack: 5,  size: 28, split: { type: "slimeling", count: 2 }, noCorpse: true },
-  slimeling:  { hp: 22,  speed: 85,  armor: 0,   gold: 2,  lives: 1, attack: 3,  size: 16, noCorpse: true },
-  thief:      { hp: 55,  speed: 110, armor: 0,   gold: 14, lives: 0, attack: 5,  size: 26, steals: 25 },
-  necromancer:{ hp: 160, speed: 40,  armor: 0.1, gold: 24, lives: 2, attack: 9,  size: 32, raise: { every: 5, range: 90 } },
-  wyvern:     { hp: 280, speed: 60,  armor: 0.2, gold: 32, lives: 3, attack: 18, size: 44, flying: true },
+  slime:      { hp: 70,  speed: 33,  armor: 0,   gold: 5,  lives: 1, attack: 5,  size: 28, split: { type: "slimeling", count: 2 }, noCorpse: true },
+  slimeling:  { hp: 22,  speed: 50,  armor: 0,   gold: 2,  lives: 1, attack: 3,  size: 16, noCorpse: true },
+  thief:      { hp: 55,  speed: 64,  armor: 0,   gold: 14, lives: 0, attack: 5,  size: 26, steals: 25 },
+  necromancer:{ hp: 160, speed: 24,  armor: 0.1, gold: 24, lives: 2, attack: 9,  size: 32, raise: { every: 5, range: 90 } },
+  wyvern:     { hp: 280, speed: 36,  armor: 0.2, gold: 32, lives: 3, attack: 18, size: 44, flying: true },
 };
 
-// What appears in each wave. n = wave number (1, 2, 3 ...).
+// What appears in each wave, weakest kinds first and the nastiest last. n = wave number (1, 2, 3 ...).
+// Levels get harder only through what shows up and how many: on higher levels the tougher kinds are
+// judged as if the wave were later (shift) and every group is a little bigger (count).
 export function makeWave(n, d = { count: 1, shift: 0 }) {
-  // n is the wave number; on higher levels the nastier kinds are judged as if the wave were later (shift),
-  // and every group is scaled by the level's crowd size.
   const m = n + d.shift, groups = [];
   const add = (type, count, gap) => groups.push({ type, count: Math.max(1, Math.round(count * d.count)), gap });
-  add("goblin", 5 + n * 2.5, 0.8);
-  if (m >= 2) add("wolf", m + 1, 0.45);
-  if (m >= 3) add("bat", Math.floor(m / 2) + 2, 0.55);
-  if (m >= 4) add("thief", Math.ceil(m / 4), 0.9);
-  if (m >= 4) add("orc", Math.ceil(m * 0.7), 1.3);
-  if (m >= 5) add("slime", Math.ceil(m / 2) + 1, 1);
-  if (m >= 6) add("skeleton", Math.ceil(m * 0.6), 1.1);
-  if (m >= 6) add("shaman", Math.ceil((m - 4) / 2), 2);
-  if (m >= 8 && m % 2 === 0) add("golem", Math.ceil(m / 6), 4);
-  if (m >= 9 && m % 2 === 1) add("necromancer", Math.ceil((m - 8) / 3), 3);
-  if (m >= 10 && m % 2 === 0) add("wyvern", Math.ceil((m - 8) / 2), 2.5);
-  if (n % 5 === 0) add("troll", Math.ceil(m / 4), 3);
+  add("goblin", 3 + n, 1.6);
+  if (m >= 2) add("wolf", Math.ceil(m / 2) + 1, 1.0);
+  if (m >= 3) add("bat", Math.ceil(m / 3) + 1, 1.2);
+  if (m >= 5) add("slime", Math.ceil(m / 4), 1.8);
+  if (m >= 4) add("thief", 1 + Math.floor(m / 8), 1.6);
+  if (m >= 4) add("orc", Math.ceil(m / 3), 2.4);
+  if (m >= 6) add("skeleton", Math.ceil(m / 4), 2.0);
+  if (m >= 6) add("shaman", 1 + Math.floor((m - 6) / 4), 3.5);
+  if (m >= 9 && m % 2 === 1) add("necromancer", 1 + Math.floor((m - 9) / 6), 5);
+  if (m >= 8 && m % 2 === 0) add("golem", Math.ceil(m / 8), 6);
+  if (m >= 10 && m % 2 === 0) add("wyvern", Math.ceil((m - 8) / 4), 4.5);
+  if (n % 5 === 0) add("troll", Math.ceil(m / 8), 6);
   return groups;
 }
 
-// Monsters get 13% tougher each wave.
-export const hpScale = (n) => 1 + (n - 1) * 0.13;
+// Spawn times for a wave: a trickle to begin with, thick in the middle, thinning out again at the end,
+// so every wave builds up and ebbs away (and, with the order above, the big monsters come late).
+export function waveTimeline(groups) {
+  const list = [];
+  for (const g of groups) for (let i = 0; i < g.count; i++) list.push({ type: g.type, gap: g.gap });
+  const N = list.length; let t = 0;
+  return list.map((m, i) => {
+    const bell = Math.sin(Math.PI * (i + 0.5) / N);         // 0 at the ends, 1 in the middle
+    const at = t;
+    t += m.gap * (1.7 - 1.3 * bell);
+    return { type: m.type, at };
+  });
+}
+

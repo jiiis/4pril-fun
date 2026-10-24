@@ -1,12 +1,20 @@
 import { state } from "./state.js";
-import { WAVE_BREAK, ENEMIES, makeWave, hpScale } from "./config.js";
+import { WAVE_BREAK, CALL_AT, ENEMIES, makeWave, waveTimeline } from "./config.js";
 import { map } from "./map.js";
 import { addFloater } from "./combat.js";
 import { setWaveButton, endGame } from "./ui.js";
 import { sfx } from "./audio.js";
 
+// One wave can be called ahead, Kingdom Rush style: once enough of the current wave has entered the road
+// (CALL_AT) the button lights up; once the whole wave has appeared a countdown starts and the next wave
+// comes by itself when it runs out. Calling early pays the seconds left as bonus gold. After a call the
+// button rests (hourglass) until the new wave has progressed far enough in its turn.
+export const canCallWave = () => state.wave > 0 && state.wave < state.totalWaves && !state.over && state.waveTotal > 0
+  && 1 - state.spawnQueue.filter((q) => q.wave === state.wave).length / state.waveTotal >= CALL_AT;
+
 export function startWave() {
   if (state.wave >= state.totalWaves || state.over) return;
+  if (state.wave > 0 && !canCallWave()) return;
 
   // Bonus gold for calling the wave early (like Kingdom Rush).
   if (state.countdown !== null && state.countdown > 0) {
@@ -17,27 +25,23 @@ export function startWave() {
 
   state.wave++;
   state.countdown = null;
-  // Called while the last wave is still appearing? The new one lines up behind it instead of replacing it
-  const queued = state.spawnQueue.length;
-  let t = queued ? state.spawnQueue[state.spawnQueue.length - 1].at + 1.5 : 0;
-  if (!queued) { state.spawnQueue = []; state.spawnTimer = 0; }
-  for (const g of makeWave(state.wave, state.diff)) {
-    for (let i = 0; i < g.count; i++) {
-      state.spawnQueue.push({ type: g.type, at: t });
-      t += g.gap * 0.7;                                   // monsters come thick and fast
-    }
-    t += 1.5;                                             // short pause between groups
-  }
-  setWaveButton(state.wave >= state.totalWaves ? "busy" : "ready");   // the button stays live (no countdown badge) so the next wave can be called early too
+  // The new wave starts entering right away, alongside whatever is left of the last one
+  if (!state.spawnQueue.length) state.spawnTimer = 0;
+  const t0 = state.spawnQueue.length ? state.spawnTimer + 0.4 : 0;
+  const timeline = waveTimeline(makeWave(state.wave, state.diff));
+  for (const m of timeline) state.spawnQueue.push({ type: m.type, at: t0 + m.at, wave: state.wave });
+  state.spawnQueue.sort((a, b) => a.at - b.at);
+  state.waveTotal = timeline.length;
+  setWaveButton("busy");                                   // rests until this wave has entered far enough
   sfx("wave");
 }
 
 export function spawnEnemy(type) {
   const def = ENEMIES[type];
-  const maxHp = Math.round(def.hp * hpScale(Math.max(state.wave, 1)) * state.diff.hp);
+  const maxHp = def.hp;                                     // the same monster is the same everywhere
   const path = map.paths[Math.floor(Math.random() * map.paths.length)];   // each monster picks a route
   state.enemies.push({
-    type, def, hp: maxHp, maxHp, path, speedMul: state.diff.speed,
+    type, def, hp: maxHp, maxHp, path,
     x: path[0].x, y: path[0].y, next: 1, travelled: 0,
     phase: Math.random() * 6, dir: 1, hitFlash: 0,
   });
@@ -47,9 +51,9 @@ export function spawnEnemy(type) {
 // It takes over the route and progress of the monster it came from.
 export function spawnEnemyAt(type, from, hpFactor = 1, at = from) {
   const def = ENEMIES[type];
-  const maxHp = Math.round(def.hp * hpScale(Math.max(state.wave, 1)) * state.diff.hp * hpFactor);
+  const maxHp = Math.round(def.hp * hpFactor);
   state.enemies.push({
-    type, def, hp: maxHp, maxHp, path: from.path, speedMul: state.diff.speed,
+    type, def, hp: maxHp, maxHp, path: from.path,
     x: at.x, y: at.y, next: from.next, travelled: from.travelled,
     phase: Math.random() * 6, dir: from.dir || 1, hitFlash: 0,
   });

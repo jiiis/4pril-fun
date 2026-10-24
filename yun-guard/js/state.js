@@ -28,6 +28,7 @@ export const state = {
   preview: null,     // tower type being considered in the build menu (hover, or first tap on a phone)
   previewUpgrade: false,   // hovering Upgrade (or a level-4 ability): show the range the tower would gain
   spawnQueue: [],
+  waveTotal: 0,    // how many monsters the latest wave brings (to judge when the next may be called)
   spawnTimer: 0,
   countdown: null,   // seconds until next wave auto-starts (null = waiting for player)
   selected: null,    // spot index with the menu open
