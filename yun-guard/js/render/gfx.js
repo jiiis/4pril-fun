@@ -46,6 +46,22 @@ export function line(c, x1, y1, x2, y2, color, lw = 2) {
   c.stroke();
 }
 
-export function shadow(c, x, y, rx, ry = rx * 0.4) {
-  ellipse(c, x, y, rx, ry, "rgba(0,0,0,0.25)");
+// Ground shadows share one light: the sun is high on the upper left, so every shadow is a soft contact patch
+// under the feet plus a fainter, longer one thrown to the lower right. The falloff is a gradient (a unit
+// radial gradient per canvas, scaled into place), so there are no hard edges.
+const unitGrads = new WeakMap();
+function unitGradient(c, key, stops) {
+  let m = unitGrads.get(c); if (!m) { m = {}; unitGrads.set(c, m); }
+  if (!m[key]) { const g = c.createRadialGradient(0, 0, 0, 0, 0, 1); for (const [t, col] of stops) g.addColorStop(t, col); m[key] = g; }
+  return m[key];
+}
+function softBlob(c, x, y, rx, ry, key, stops) {
+  c.save(); c.translate(x, y); c.scale(rx, ry);
+  c.fillStyle = unitGradient(c, key, stops);
+  c.beginPath(); c.arc(0, 0, 1, 0, Math.PI * 2); c.fill();
+  c.restore();
+}
+export function shadow(c, x, y, rx, ry = rx * 0.4, h = 0) {   // h: how tall the thing is, which stretches the cast shadow
+  softBlob(c, x + rx * 0.55 + h * 0.55, y + ry * 0.3 + h * 0.1, rx * 1.45 + h * 0.55, ry * 1.05 + h * 0.06, "cast", [[0, "rgba(10,25,5,0.2)"], [0.55, "rgba(10,25,5,0.12)"], [1, "rgba(10,25,5,0)"]]);   // thrown to the lower right
+  softBlob(c, x, y, rx * 0.95, ry * 1.05, "contact", [[0, "rgba(5,15,0,0.42)"], [0.6, "rgba(5,15,0,0.26)"], [1, "rgba(5,15,0,0)"]]);                 // dark where it touches the ground
 }

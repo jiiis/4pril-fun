@@ -38,7 +38,7 @@ export function drawEnemy(e) {
   const lift = flying ? 18 + Math.sin(e.phase * 0.7) * 3 : 0;   // flyers hover above the road
   const bob = Math.sin(e.phase) * 1.5;
   ctx.globalAlpha = flying ? 0.6 : 1;
-  shadow(ctx, e.x, e.y + e.def.size * 0.45, e.def.size * (flying ? 0.3 : 0.45), e.def.size * 0.16);
+  shadow(ctx, e.x, e.y + e.def.size * 0.45, e.def.size * (flying ? 0.3 : 0.45), e.def.size * 0.16, flying ? 0 : e.def.size * 0.9);
   ctx.globalAlpha = 1;
 
   ctx.save();

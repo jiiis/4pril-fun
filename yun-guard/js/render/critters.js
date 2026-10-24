@@ -14,7 +14,7 @@ export function drawCritter(c) {
     for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) line(ctx, c.x + dx * (pulse + 2), c.y + 1 + dy * (pulse + 2), c.x + dx * (pulse + 6), c.y + 1 + dy * (pulse + 6), "#ffd54f", 1.5);
   }
   const k = CRITTER_SCALE[c.type] || 1;                                      // small animals drawn smaller
-  shadow(ctx, c.x, c.y + 1, (c.type === "deer" ? 11 : c.type === "chicken" || c.type === "duck" ? 5 : 8) * k, 3 * k);
+  shadow(ctx, c.x, c.y + 1, (c.type === "deer" ? 11 : c.type === "chicken" || c.type === "duck" ? 5 : 8) * k, 3 * k, (c.type === "deer" ? 12 : c.type === "chicken" || c.type === "duck" ? 4 : 7) * k);
   ctx.save();
   ctx.translate(c.x, c.y);
   ctx.scale(c.dir * k, k);

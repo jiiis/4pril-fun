@@ -115,7 +115,6 @@ export function generateMap(seed, opts = {}) {
     for (let i = 0; i <= 6; i++) for (const [px, py] of [[x - hw + (2 * hw * i) / 6, top], [x - hw + (2 * hw * i) / 6, bot], [x - hw, top + ((bot - top) * i) / 6], [x + hw, top + ((bot - top) * i) / 6]]) best = Math.min(best, roadDistance({ x: px, y: py }));
     return best;
   };
-  const gatePillarPoints = (g) => { const px = -g.out.y, py = g.out.x, span = ROAD_EDGE + 8; return [{ x: g.x + px * span, y: g.y + py * span }, { x: g.x - px * span, y: g.y - py * span }]; };
   const gateClear = (x, y, sc) => map.exits.every((g) => gatePillarPoints(g).every((pp) => Math.abs(pp.x - x) > 52 * sc + 14 || pp.y < y - 96 * sc - 10 || pp.y > y + 12 * sc + 60));
   // Enough room around it first (a road's width of grass), then as close to its own road as possible, full size preferred
   const placed = [];                                                                                      // homes already placed: never two on the same ground
@@ -627,6 +626,9 @@ function cellsToWaypoints(cells, rand) {
 // Grass cells right next to the road, spread out so towers don't crowd.
 // Pads sit just off the road's verge, and by preference in the elbows of bends and where routes join
 // (that is where a tower sees the most road). Candidates are taken along every route, on both sides.
+// The two pillars of an exit gate stand either side of the road
+function gatePillarPoints(g) { const px = -g.out.y, py = g.out.x, span = ROAD_EDGE + 8; return [{ x: g.x + px * span, y: g.y + py * span }, { x: g.x - px * span, y: g.y - py * span }]; }
+
 function pickSpots(cells, rand) {
   const want = ROAD_EDGE + SPOT_RADIUS + 6;                               // pad edge a clear 6px off the bank
   // Junctions: where a branch leaves or joins another route
@@ -660,6 +662,7 @@ function pickSpots(cells, rand) {
     if (map.castles.some((k) => { const cdx = p.x - k.x, cdy = p.y - k.y; return Math.abs(cdx) < 92 * k.scale && cdy > -135 * k.scale && cdy < 42 * k.scale; })) return false;
     if (map.entries.some((e) => dist(p, e) < 55 || dist(p, { x: e.rx, y: e.ry }) < 78)) return false;   // not on the signpost or the lair stakes
     if (map.exits.some((g) => dist(p, g) < 78)) return false;                                        // not on the exit gate
+    if (map.exits.some((g) => gatePillarPoints(g).some((pp) => dist(p, pp) < 66 || (Math.abs(pp.x - p.x) < 50 && p.y - pp.y > -34 && p.y - pp.y < 70)))) return false;   // nor at the foot of either pillar, which stand tall
     if (nearWater(p, 28)) return false;
     return true;
   };
@@ -673,13 +676,14 @@ function pickSpots(cells, rand) {
 }
 
 // ---------- Scenery and animals ----------
-function clear(p, { road = ROAD_EDGE + 26, spots = 48, castle = 85, entry = 50, deco = 0, critters = 0, river = 14 }) {   // scenery keeps a clear margin from the road's bank
+function clear(p, { road = ROAD_EDGE + 26, spots = 48, castle = 85, entry = 50, deco = 0, critters = 0, river = 14, own = null, apart = 24 }) {   // scenery keeps a clear margin from the road's bank
   return roadDistance(p) > road
     && !nearWater(p, river)
     && map.spots.every((s) => dist(s, p) > spots)
     && map.castles.every((k) => dist(p, k) > castle * k.scale) && map.entries.every((e) => dist(p, e) > entry && dist(p, { x: e.rx, y: e.ry }) > entry + 50)
     && map.deco.every((d) => dist(d, p) > deco)
     && map.critters.every((c) => dist(c, p) > critters)
+    && (map.areas || []).every((g) => g === own || dist(p, g) > g.r + apart)   // a wood, thicket or meadow keeps its distance from everything else
     && !(map.calm || []).some((z) => ((p.x - z.x) / z.rx) ** 2 + ((p.y - z.y) / z.ry) ** 2 < 1);   // empty ground: breathing room (留白)
 }
 
@@ -706,6 +710,7 @@ function scatterDeco(rand) {
   pickCalmZones(rand);
   const out = [];
   map.deco = out;
+  map.areas = [];                                                        // the ground each group (wood, thicket, meadow, patch) occupies
   let placed = 0;                                                        // scenery pieces placed on their own (woods add extra trees)
   // Kinds of tree: broadleaf, pine, birch, cherry, autumn, bare. Cherry trees are a treat, so only a few per map
   let cherries = 0;
@@ -719,6 +724,7 @@ function scatterDeco(rand) {
     const p = { x: 20 + rand() * (W - 40), y: 20 + rand() * (H - 40) };
     if (!clear(p, { deco: 40 })) continue;
     placed++;
+    const startLen = out.length;
     const roll = rand();
     const type = roll < 0.3 ? "tree" : roll < 0.46 ? "bush" : roll < 0.56 ? "rock" : roll < 0.66 ? "pebbles" : roll < 0.85 ? "flower" : roll < 0.93 ? "mushroom" : "stump";
     // Every piece of scenery gets its own look: a variant, a size and a seed for its small random details
@@ -735,11 +741,13 @@ function scatterDeco(rand) {
     const group = type === "tree" && (big || rand() < 0.55) ? (big ? { n: 7 + Math.floor(rand() * 7), near: 30, far: 125, gap: 24, s: () => 0.95 + rand() * 0.4 } : { n: 2 + Math.floor(rand() * 3), near: 30, far: 66, gap: 24, s: () => 0.95 + rand() * 0.4 })
       : type === "flower" && (big || rand() < 0.75) ? (big ? { n: 14 + Math.floor(rand() * 12), near: 10, far: 80, gap: 8, s: () => 0.45 + rand() * 0.3 } : { n: 3 + Math.floor(rand() * 5), near: 10, far: 34, gap: 8, s: () => 0.45 + rand() * 0.3 })
       : type === "bush" && (big ? true : rand() < 0.3) ? (big ? { n: 4 + Math.floor(rand() * 4), near: 10, far: 52, gap: 21, s: () => 0.75 + rand() * 0.4 } : { n: 2 + Math.floor(rand() * 3), near: 10, far: 32, gap: 19, s: () => 0.7 + rand() * 0.4 }) : null;
+    if (group && map.areas.some((g) => dist(p, g) < g.r + group.far + 34)) { out.length = startLen; placed--; continue; }   // would run into another group: not here
     if (group) {
+      const area = { x: p.x, y: p.y, r: group.far + 8 }; map.areas.push(area);
       for (let k = 0, tries = 0; k < group.n && tries < 24 + group.n * 5; tries++) {
         const a = rand() * Math.PI * 2, d = group.near + (group.far - group.near) * (type === "bush" ? Math.sqrt(rand()) : rand());   // bushes fill their patch evenly out to a definite edge
         const q = { x: p.x + Math.cos(a) * d, y: p.y + Math.sin(a) * d * 0.7 };
-        if (q.x < 20 || q.x > W - 20 || q.y < 20 || q.y > H - 20 || !clear(q, { deco: group.gap })) continue;
+        if (q.x < 20 || q.x > W - 20 || q.y < 20 || q.y > H - 20 || !clear(q, { deco: group.gap, own: area })) continue;
         // Trees in a wood mostly match their neighbours (a birch grove, a pine stand); the odd different one slips in
         const variant = type === "tree" ? (rand() < 0.72 ? item.variant : treeVariant()) : type === "bush" && rand() < 0.8 ? item.variant : Math.floor(rand() * 3);
         out.push({ type, x: q.x, y: q.y, s: group.s(), variant, seed: Math.floor(rand() * 1e6) });
@@ -753,10 +761,13 @@ function scatterDeco(rand) {
     if (!clear(p, { deco: 12 })) continue;
     const type = rand() < 0.62 ? "tuft" : "weed", kinds = 4, v = Math.floor(rand() * kinds), alone = rand() < 0.45, bigPatch = rand() < 0.1;
     const mk = (x, y) => ({ type, x, y, s: 0.8 + rand() * 0.55, variant: v, seed: Math.floor(rand() * 1e6) });
+    const reach = bigPatch ? 77 : 31;
+    if (!alone && map.areas.some((g) => dist(p, g) < g.r + reach + 30)) continue;                         // a patch never runs into another group
+    const patch = alone ? null : { x: p.x, y: p.y, r: reach }; if (patch) map.areas.push(patch);
     out.push(mk(p.x, p.y)); count++;
     if (!alone) for (let k = 0, tries = 0, n = bigPatch ? 12 + Math.floor(rand() * 14) : 2 + Math.floor(rand() * 5); k < n && tries < 20 + n * 5; tries++) {   // a patch (now and then a big one): neighbours mostly the same kind
       const a = rand() * Math.PI * 2, d = 7 + rand() * (bigPatch ? 70 : 24), q = { x: p.x + Math.cos(a) * d, y: p.y + Math.sin(a) * d * 0.65 };
-      if (q.x < 14 || q.x > W - 14 || q.y < 14 || q.y > H - 14 || !clear(q, { deco: 7 })) continue;
+      if (q.x < 14 || q.x > W - 14 || q.y < 14 || q.y > H - 14 || !clear(q, { deco: 7, own: patch })) continue;
       const m = mk(q.x, q.y); if (rand() < 0.3) m.variant = Math.floor(rand() * kinds); out.push(m); count++; k++;
     }
   }

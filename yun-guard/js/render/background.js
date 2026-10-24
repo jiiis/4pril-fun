@@ -109,7 +109,8 @@ function liftGrass(c) {
   c.save(); c.setTransform(1, 0, 0, 1, 0, 0);
   const lay = (keep, cut, fill, clip = false) => {                                              // M shifted by `keep` minus M shifted by `cut` (px, down is positive): a strip along the north edges
     kc.globalCompositeOperation = "source-over"; kc.clearRect(0, 0, K.width, K.height);
-    kc.drawImage(M, 0, keep * res); kc.globalCompositeOperation = "destination-out"; kc.drawImage(M, 0, cut * res);
+    const shifted = (dy) => { kc.drawImage(M, 0, dy * res); if (dy > 0) kc.drawImage(M, 0, 0, M.width, 1, 0, 0, M.width, dy * res); };   // a road or river running off the top carries on above it: no wall along the screen's edge
+    shifted(keep); kc.globalCompositeOperation = "destination-out"; shifted(cut);
     if (clip) { kc.globalCompositeOperation = "destination-in"; kc.drawImage(M, 0, 0); }
     kc.globalCompositeOperation = "source-in"; kc.fillStyle = fill; kc.fillRect(0, 0, K.width, K.height);
     c.drawImage(K, 0, 0);
@@ -808,7 +809,7 @@ export const cherryToneOf = (seed) => cherryTone(rng(seed || 1));
 const DRAW_DECO = {
   tree(c, x, y, s, v, r) {
     if (v === 1) s *= 1.35;                                                  // pines grow tall
-    shadow(c, x, y + 4 * s, 14 * s, 5 * s);
+    shadow(c, x, y + 4 * s, 14 * s, 5 * s, 34 * s);
     if (v === 0) {                                                           // broadleaf: a knobbly canopy of blobs
       const trunk = ["#6d4c41", "#5d4037", "#795548"][Math.floor(r() * 3)];
       rect(c, x - 3 * s, y - 18 * s, 6 * s, 22 * s, trunk);                                             // runs up into the canopy
@@ -1159,7 +1160,7 @@ function drawPalace(c, x, y) {
     c.arc(ax, ay - h + w / 2, w / 2, Math.PI, 0); c.lineTo(ax + w / 2, ay); c.closePath(); c.fill();
     c.strokeStyle = goldDark; c.lineWidth = 1.2; c.stroke();
   };
-  shadow(c, x, y + 6, 58, 11);
+  shadow(c, x, y + 6, 58, 11, 55);
   // Main block with a scalloped parapet
   rect(c, x - 44, y - 36, 88, 40, wall, edge, 0.8);
   const lg = c.createLinearGradient(x - 44, 0, x + 44, 0); lg.addColorStop(0, "rgba(255,255,255,0.25)"); lg.addColorStop(1, "rgba(80,60,30,0.2)");
@@ -1206,7 +1207,7 @@ function drawPalace(c, x, y) {
 function drawPagoda(c, x, y) {
   const red = "#a8382f", redDark = "#7a2420", redEdge = "rgba(122,36,32,0.55)", redDeep = "#8e2f29", gold = "#e9c55a", goldDark = "#b8902a";
   const blue = "#2d4e9e", blueDark = "#1c3470", blueLight = "#4a6fc2";
-  shadow(c, x, y + 6, 60, 11);
+  shadow(c, x, y + 6, 60, 11, 70);
   // Marble terrace: three wide round tiers with balustrades, a stair up the middle
   ellipse(c, x, y + 8, 59, 10, "rgba(35,30,20,0.42)");                                               // the foundation's own shadow on the grass, so it sits firmly on the ground
   for (const [hw, hh, ty] of [[56, 8, y + 3], [46, 7, y - 4], [36, 6, y - 10]]) {
@@ -1267,7 +1268,7 @@ function drawPagoda(c, x, y) {
 
 export function drawSign(c, x, y, face = { dc: 1, dr: 0 }) {
   const r = rng(Math.floor(x * 31 + y * 17));                                  // this post's own wear, the same every frame
-  shadow(c, x, y + 12, 8, 3);
+  shadow(c, x, y + 12, 8, 3, 24);
   const lean = (r() - 0.5) * 0.12;                                             // the post leans a little
   c.save(); c.translate(x, y + 12); c.rotate(lean); c.translate(-x, -y - 12);
   rect(c, x - 2, y - 20, 4, 32, "#5d4037");
@@ -1331,7 +1332,7 @@ function drawCastle(c, x, y, styleIndex = 0) {
     circle(c, tx, ty - h, 1.6, S.square ? "#ffd54f" : "#b0bec5");
   };
 
-  shadow(c, x, y + 6, 58, 11);
+  shadow(c, x, y + 6, 58, 11, 55);
   // Curtain wall
   stone(x - 44, y - 36, 88, 40);
   courses(x - 44, y - 36, 88, 40);

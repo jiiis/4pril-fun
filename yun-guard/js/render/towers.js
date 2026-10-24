@@ -19,7 +19,7 @@ export function drawTower(t) {
   sg.addColorStop(0, "rgba(10,30,5,0.3)"); sg.addColorStop(1, "rgba(10,30,5,0)");
   ctx.fillStyle = sg; ctx.beginPath(); ctx.ellipse(0, -tall * 0.4, 20, tall * 1.1, 0, 0, Math.PI * 2); ctx.fill();
   ctx.restore();
-  shadow(ctx, x, y + 10, 22, 8);
+  shadow(ctx, x, y + 10, 22, 8, 40);
   if (t.def === TOWERS.archer) drawArcher(t, x, y, lv);
   else if (t.def === TOWERS.mage) drawMage(t, x, y, lv);
   else if (t.def === TOWERS.barracks) drawBarracks(t, x, y, lv);

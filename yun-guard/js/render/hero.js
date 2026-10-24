@@ -58,7 +58,7 @@ export function drawHero(h) {
     circle(ctx, h.x - h.face * (6 + k * 10), h.y + 12, 2 + k * 4, "#d7ccc8");
     ctx.globalAlpha = 1;
   }
-  shadow(ctx, h.x, h.y + 12, 9 - anim.bob * 0.3, 3.5);
+  shadow(ctx, h.x, h.y + 12, 9 - anim.bob * 0.3, 3.5, 22);
 
   ctx.save();
   ctx.translate(h.x + h.face * anim.lunge, h.y - anim.bob);

@@ -20,7 +20,7 @@ export function drawSoldier(s) {
   const practice = idle && Math.sin(T * 2.6 + s.phase * 3) > 0.72;
   const dir = idle ? (Math.sin(T * 0.3 + s.phase) > 0 ? 1 : -1) : s.dir;
   const swinging = s.swing > 0 || practice;
-  shadow(ctx, s.x, s.y + 13, 7, 3);
+  shadow(ctx, s.x, s.y + 13, 7, 3, 16);
 
   ctx.save();
   ctx.translate(s.x, s.y - bob);
