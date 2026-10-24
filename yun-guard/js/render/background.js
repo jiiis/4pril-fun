@@ -923,9 +923,17 @@ const DRAW_DECO = {
     shadow(c, x, y + 6 * s, 12 * s, 4 * s);
     const greens = r() < 0.22 ? [["#8d4a1e", "#c0652a"], ["#a0521f", "#d98c3a"], ["#7a3e1a", "#b8641f"]][v]      // some bushes have turned russet
       : [["#33691e", "#558b2f"], ["#2e7d32", "#43a047"], ["#4e6b1f", "#6b8e23"]][v];
-    const n = 2 + Math.floor(r() * 3);
-    for (let i = 0; i < n; i++) circle(c, x + (i - (n - 1) / 2) * 6 * s + (r() - 0.5) * 3, y + (r() - 0.5) * 3, (6 + r() * 3) * s, greens[0], "rgba(12,36,10,0.6)", 1);   // each lobe gets a dark rim, so a bush reads as its own shape
-    circle(c, x + (r() - 0.5) * 4, y - 5 * s, (6 + r() * 3) * s, greens[1], "rgba(12,36,10,0.5)", 0.9);
+    const n = 2 + Math.floor(r() * 3), rim = r() < 0.22 ? "#4a2a12" : "#1f4a1c";
+    const lobes = [];
+    for (let i = 0; i < n; i++) lobes.push([x + (i - (n - 1) / 2) * 6 * s + (r() - 0.5) * 3, y + (r() - 0.5) * 3, (6 + r() * 3) * s, greens[0]]);
+    lobes.push([x + (r() - 0.5) * 4, y - 5 * s, (6 + r() * 3) * s, greens[1]]);
+    // No drawn outlines: the edge is a ragged crown of small leaf clusters, with a deeper shade tucked under each lobe
+    for (const [lx, ly, lr] of lobes) {
+      circle(c, lx + 0.4 * s, ly + 1.2 * s, lr, rim, null);                                                      // the shade beneath
+      for (let k = 0, m = 7 + Math.floor(r() * 4); k < m; k++) { const a = r() * Math.PI * 2, d = lr * (0.82 + r() * 0.3); circle(c, lx + Math.cos(a) * d, ly + Math.sin(a) * d * 0.9, (1.4 + r() * 1.6) * s, r() < 0.5 ? greens[0] : rim); }   // leaf clusters breaking the outline
+    }
+    for (const [lx, ly, lr, col] of lobes) circle(c, lx, ly, lr * 0.96, col);
+    for (const [lx, ly, lr] of lobes) for (let k = 0; k < 5; k++) { const a = Math.PI * (1.1 + r() * 0.8), d = lr * (0.3 + r() * 0.5); circle(c, lx + Math.cos(a) * d, ly + Math.sin(a) * d, (0.9 + r() * 1.3) * s, greens[1]); }   // lit leaves on top
     circle(c, x - 2 * s, y - 8 * s, 2.5 * s, "rgba(255,255,255,0.12)");
     const berry = r();
     if (berry < 0.35) for (let i = 0; i < 4; i++) circle(c, x + (r() - 0.5) * 14 * s, y - 2 * s + (r() - 0.5) * 8 * s, 1.4 * s, "#e53935");           // red berries

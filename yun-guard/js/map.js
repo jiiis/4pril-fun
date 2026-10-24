@@ -734,7 +734,7 @@ function scatterDeco(rand) {
     const big = rand() < 0.13;
     const group = type === "tree" && (big || rand() < 0.55) ? (big ? { n: 7 + Math.floor(rand() * 7), near: 30, far: 125, gap: 24, s: () => 0.95 + rand() * 0.4 } : { n: 2 + Math.floor(rand() * 3), near: 30, far: 66, gap: 24, s: () => 0.95 + rand() * 0.4 })
       : type === "flower" && (big || rand() < 0.75) ? (big ? { n: 14 + Math.floor(rand() * 12), near: 10, far: 80, gap: 8, s: () => 0.45 + rand() * 0.3 } : { n: 3 + Math.floor(rand() * 5), near: 10, far: 34, gap: 8, s: () => 0.45 + rand() * 0.3 })
-      : type === "bush" && (big ? true : rand() < 0.3) ? (big ? { n: 6 + Math.floor(rand() * 5), near: 8, far: 46, gap: 14, s: () => 0.75 + rand() * 0.4 } : { n: 2 + Math.floor(rand() * 3), near: 8, far: 28, gap: 13, s: () => 0.7 + rand() * 0.4 }) : null;
+      : type === "bush" && (big ? true : rand() < 0.3) ? (big ? { n: 4 + Math.floor(rand() * 4), near: 10, far: 52, gap: 21, s: () => 0.75 + rand() * 0.4 } : { n: 2 + Math.floor(rand() * 3), near: 10, far: 32, gap: 19, s: () => 0.7 + rand() * 0.4 }) : null;
     if (group) {
       for (let k = 0, tries = 0; k < group.n && tries < 24 + group.n * 5; tries++) {
         const a = rand() * Math.PI * 2, d = group.near + (group.far - group.near) * (type === "bush" ? Math.sqrt(rand()) : rand());   // bushes fill their patch evenly out to a definite edge
