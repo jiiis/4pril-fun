@@ -58,7 +58,7 @@ export function updateWeather(dt) {
 
 function newDrop(type, anywhere) {
   const x = Math.random() * (W + 80) - 40;
-  const land = type === "snow" ? H / 3 + Math.random() * (H * 2 / 3) : Math.random() * H;   // where it hits the ground; snow settles anywhere below the top third
+  const land = Math.random() * H;   // where it hits the ground: anywhere on the screen
   const y = anywhere ? Math.random() * land : -10 - Math.random() * 30;
   if (type === "rain") return { x, y, land, vx: -60, vy: 520 + Math.random() * 160, len: 10 + Math.random() * 8 };
   return { x, y, land, vx: -8, vy: 28 + Math.random() * 30, r: 1 + Math.random() * 1.8, wob: Math.random() * 6 };
