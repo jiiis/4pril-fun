@@ -34,7 +34,7 @@ export function shotOrigin(t) {
     return { x: t.x + s.dx, y: t.y - archerHeight(t.level) - 20 + s.dy };
   }
   if (t.def === TOWERS.mage) return { x: t.x + 10, y: t.y - mageHeight(t.level) - 34 };
-  if (t.def === TOWERS.ballista) return { x: t.x + Math.cos(t.angle) * 16, y: t.y - ballistaHeight(t.level) + 8 - 8 + Math.sin(t.angle) * 7 };
+  if (t.def === TOWERS.ballista) return { x: t.x + Math.cos(t.angle) * 14, y: t.y - ballistaHeight(t.level) + Math.sin(t.angle) * 6 };
   if (t.def === TOWERS.tesla) return { x: t.x, y: t.y - teslaHeight(t.level) - 12 };
   return { x: t.x, y: t.y - 26 };
 }

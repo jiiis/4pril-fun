@@ -405,7 +405,7 @@ function drawBallista(t, x, y, lv) {
   // the weapon on its swivel
   const idle = relaxed(t) ? Math.sin(T * 0.5) * 0.12 : 0, pivotY = deckY - 8;
   rect(ctx, x - 3.4, pivotY, 6.8, 8, "#5d4037", dark, 1);                                              // pedestal
-  ctx.save(); ctx.translate(x, pivotY); ctx.rotate(t.angle + idle);
+  ctx.save(); ctx.translate(x, pivotY); ctx.rotate(t.angle + idle); ctx.scale(0.76, 0.76);                // the weapon is sized to the deck, not bigger than the tower under it
   const len = 24 + lv * 4, arm = 14 + lv * 2.4, slide = -6 + (len * 0.46 + 6) * r;                    // the slider flies forward on a shot, then is wound back
   rect(ctx, -12, -2.8, len + 12, 5.6, "#a1887f", dark, 1);                                             // the stock
   line(ctx, -11, -0.6, len - 2, -0.6, "rgba(0,0,0,0.3)", 0.9); line(ctx, -11, 1.2, len - 2, 1.2, "rgba(255,255,255,0.2)", 0.8);
