@@ -2,7 +2,7 @@ import { state } from "./state.js";
 import { ROAD_WIDTH } from "./config.js";
 import { map } from "./map.js";
 import { TOWERS, FIRE_ARROW } from "./config.js";
-import { startWave, spawnEnemy, spawnEnemyAt, waveFinished, canCallWave } from "./waves.js";
+import { beginWave, spawnEnemy, spawnEnemyAt, waveFinished, canCallWave } from "./waves.js";
 import { updateSoldiers } from "./soldiers.js";
 import { updateCritters } from "./critters.js";
 import { updateHero } from "./hero.js";
@@ -165,7 +165,7 @@ export function update(dt) {
   if (state.countdown !== null) {
     state.countdown -= dt;
     setWaveButton("ready", state.countdown);
-    if (state.countdown <= 0) startWave();
+    if (state.countdown <= 0) beginWave();
   } else if (state.wave > 0 && state.wave < state.totalWaves) {
     setWaveButton(canCallWave() ? "ready" : "busy");       // lights up once enough of this wave has entered
   }

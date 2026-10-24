@@ -5,24 +5,29 @@ import { addFloater } from "./combat.js";
 import { setWaveButton, endGame } from "./ui.js";
 import { sfx } from "./audio.js";
 
-// One wave can be called ahead, Kingdom Rush style: once enough of the current wave has entered the road
-// (CALL_AT) the button lights up; once the whole wave has appeared a countdown starts and the next wave
-// comes by itself when it runs out. Calling early pays the seconds left as bonus gold. After a call the
-// button rests (hourglass) until the new wave has progressed far enough in its turn.
-export const canCallWave = () => state.wave > 0 && state.wave < state.totalWaves && !state.over && state.waveTotal > 0
-  && 1 - state.spawnQueue.filter((q) => q.wave === state.wave).length / state.waveTotal >= CALL_AT;
+// Between waves there is a breather: once every monster of a wave has entered the road, a countdown (shown on the
+// round button) runs down to the next wave. If the wave has been dealt with quickly the player can press the
+// button to start the next one early, and is paid for every second skipped (more if the road is already clear).
+export const canCallWave = () => state.wave > 0 && state.wave < state.totalWaves && !state.over
+  && state.countdown !== null && state.countdown > 0;
 
+// The player pressed the button (or N)
 export function startWave() {
-  if (state.wave >= state.totalWaves || state.over) return;
+  if (state.over || state.wave >= state.totalWaves) return;
   if (state.wave > 0 && !canCallWave()) return;
-
-  // Bonus gold for calling the wave early (like Kingdom Rush).
   if (state.countdown !== null && state.countdown > 0) {
-    const bonus = Math.ceil(state.countdown);
+    const left = Math.ceil(state.countdown), cleared = !state.enemies.some((e) => !e.dead);
+    const bonus = left + (cleared ? Math.ceil(left * 0.5) : 0);
     state.gold += bonus;
-    addFloater(480, 60, `+${bonus} gold early bonus!`, "#ffd54f", 18);
+    addFloater(480, 60, cleared ? `+${bonus} gold: wave cleared early!` : `+${bonus} gold early bonus!`, "#ffd54f", 18);
+    sfx("coin", 0.15);
   }
+  beginWave();
+}
 
+// The next wave begins (called by the countdown running out, or by startWave)
+export function beginWave() {
+  if (state.wave >= state.totalWaves || state.over) return;
   state.wave++;
   state.countdown = null;
   // The new wave starts entering right away, alongside whatever is left of the last one
