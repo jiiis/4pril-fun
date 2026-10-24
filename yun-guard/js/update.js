@@ -94,20 +94,20 @@ function cannonImpact(s) {
 // Now and then a fish leaps out of a river in a little arc and splashes back in.
 function updateFish(dt) {
   for (const r of map.rivers) {
-    if (Math.random() < dt * 0.12) {
+    if (Math.random() < dt * 0.35) {
       const i = Math.floor(Math.random() * (r.points.length - 1));
       const a = r.points[i], b = r.points[i + 1], t = Math.random();
       const across = (Math.random() - 0.5) * ((a.w + b.w) / 2) * 0.5;   // stay inside the local width
       const nx = -(b.y - a.y), ny = b.x - a.x, nl = Math.hypot(nx, ny) || 1;
       const fx = a.x + (b.x - a.x) * t + (nx / nl) * across, fy = a.y + (b.y - a.y) * t + (ny / nl) * across;
       if (map.bridges.some((br) => Math.hypot(br.x - fx, br.y - fy) < br.span / 2 + 16)) continue;   // never under a bridge
-      state.fish.push({ x: fx, y: fy, t: 0, dur: 0.85 + Math.random() * 0.3, dir: Math.random() < 0.5 ? 1 : -1, size: 3.4 + Math.random() * 2, hop: 10 + Math.random() * 7 });
+      state.fish.push({ x: fx, y: fy, t: 0, dur: 0.85 + Math.random() * 0.3, dir: Math.random() < 0.5 ? 1 : -1, size: 4.08 + Math.random() * 2.4, hop: 12 + Math.random() * 8.4 });
     }
   }
   for (const p of map.ponds) {
-    if (Math.random() < dt * 0.05) {
+    if (Math.random() < dt * 0.14) {
       const a = Math.random() * Math.PI * 2, r = Math.random() * 0.4;
-      state.fish.push({ x: p.x + Math.cos(a) * p.rx * r, y: p.y + Math.sin(a) * p.ry * r, t: 0, dur: 0.8 + Math.random() * 0.3, dir: Math.random() < 0.5 ? 1 : -1, size: 3 + Math.random() * 1.6, hop: 9 + Math.random() * 6 });
+      state.fish.push({ x: p.x + Math.cos(a) * p.rx * r, y: p.y + Math.sin(a) * p.ry * r, t: 0, dur: 0.8 + Math.random() * 0.3, dir: Math.random() < 0.5 ? 1 : -1, size: 3.6 + Math.random() * 1.92, hop: 10.8 + Math.random() * 7.2 });
     }
   }
   for (const f of state.fish) f.t += dt;

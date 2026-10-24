@@ -320,6 +320,39 @@ function drawRoad(c, rand, paths) {
         }
       }
     }
+    // A rough, bumpy surface: wheel ruts, mounds, half-buried stones, potholes, cracks and dried clods
+    const inside = (i, frac) => { const o = (rand() - 0.5) * 2 * frac * (w[i] / 2 - 9); const p = pts[i]; return { x: p.x + p.nx * o, y: p.y + p.ny * o, o }; };
+    for (const side of [-1, 1]) {                                                          // two wavering ruts worn along the road
+      let on = false; c.lineCap = "round"; c.lineJoin = "round";
+      for (let i = 0; i < pts.length; i++) {
+        const p = pts[i], o = side * (w[i] * 0.2 + Math.sin(i * 0.11 + side) * 3 + Math.sin(i * 0.37) * 1.2), q = { x: p.x + p.nx * o, y: p.y + p.ny * o };
+        if (onOtherRoad(k, q) || (i % 40 > 30 && rand() < 0.3)) { on = false; continue; }   // ruts fade in and out, and stop at junctions
+        if (on) { const a = pts[i - 1], oa = side * (w[i - 1] * 0.2 + Math.sin((i - 1) * 0.11 + side) * 3 + Math.sin((i - 1) * 0.37) * 1.2), qa = { x: a.x + a.nx * oa, y: a.y + a.ny * oa };
+          line(c, qa.x, qa.y + 1.2, q.x, q.y + 1.2, "rgba(255,225,180,0.07)", 2.4); line(c, qa.x, qa.y, q.x, q.y, "rgba(50,28,14,0.09)", 3); }
+        on = true;
+      }
+    }
+    for (let i = 0; i < pts.length; i++) {
+      const r0 = rand();
+      if (r0 < 0.2) {                                                                     // a mound of packed earth: lit on the upper left, shaded below
+        const q = inside(i, 0.95), rx = 4.5 + rand() * 6, ry = rx * (0.5 + rand() * 0.25);
+        if (!onOtherRoad(k, q)) { ellipse(c, q.x + 0.8, q.y + 1.2, rx, ry, "rgba(45,24,10,0.45)"); ellipse(c, q.x, q.y, rx, ry, "rgba(190,140,88,0.75)"); ellipse(c, q.x - rx * 0.25, q.y - ry * 0.3, rx * 0.55, ry * 0.45, "rgba(255,230,185,0.45)"); }
+      } else if (r0 < 0.34) {                                                              // a stone half-sunk in the dirt
+        const q = inside(i, 0.95), rr = 1.8 + rand() * 3.2;
+        if (!onOtherRoad(k, q)) { ellipse(c, q.x + 0.7, q.y + 1, rr * 1.15, rr * 0.7, "rgba(40,24,12,0.38)"); ellipse(c, q.x, q.y, rr, rr * 0.7, ["#9b9488", "#8a8378", "#aaa194", "#7c766c"][Math.floor(rand() * 4)], "rgba(40,30,22,0.5)", 0.6); ellipse(c, q.x - rr * 0.3, q.y - rr * 0.25, rr * 0.4, rr * 0.22, "rgba(255,255,255,0.35)"); }
+      } else if (r0 < 0.4) {                                                              // a pothole: dark inside, a lit lower lip
+        const q = inside(i, 0.8), rx = 3.5 + rand() * 4, ry = rx * 0.6;
+        if (!onOtherRoad(k, q)) { ellipse(c, q.x, q.y + 1.2, rx + 0.8, ry + 0.8, "rgba(255,225,180,0.28)"); ellipse(c, q.x, q.y, rx, ry, "rgba(45,26,12,0.55)"); ellipse(c, q.x + 0.5, q.y + 0.6, rx * 0.6, ry * 0.55, "rgba(30,16,8,0.4)"); }
+      } else if (r0 < 0.5) {                                                               // a crack in the dried earth, forking at the end
+        const q = inside(i, 0.85); if (onOtherRoad(k, q)) continue;
+        let x = q.x, y = q.y, a = rand() * 6.28; c.strokeStyle = "rgba(50,30,16,0.45)"; c.lineWidth = 0.9; c.lineCap = "round"; c.beginPath(); c.moveTo(x, y);
+        for (let m = 0; m < 4; m++) { a += (rand() - 0.5) * 1.2; x += Math.cos(a) * (2.5 + rand() * 3); y += Math.sin(a) * (2.5 + rand() * 3); c.lineTo(x, y); }
+        c.stroke(); c.beginPath(); c.moveTo(x, y); c.lineTo(x + Math.cos(a + 0.8) * 3, y + Math.sin(a + 0.8) * 3); c.stroke();
+      } else if (r0 < 0.62) {                                                               // loose gravel and dried clods
+        const q = inside(i, 1);
+        if (!onOtherRoad(k, q)) for (let m = 0; m < 3 + Math.floor(rand() * 4); m++) circle(c, q.x + (rand() - 0.5) * 9, q.y + (rand() - 0.5) * 5, 0.6 + rand() * 1.1, rand() < 0.5 ? "rgba(120,96,70,0.8)" : "rgba(205,185,150,0.75)");
+      }
+    }
   });
 }
 
