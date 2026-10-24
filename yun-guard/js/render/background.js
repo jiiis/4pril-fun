@@ -2,6 +2,7 @@ import { W, H, ROAD_WIDTH, ROAD_EDGE } from "../config.js";
 import { rng, pointsAlongPath, closestPointOnPath, pointAtArc } from "../util.js";
 import { map } from "../map.js";
 import { rect, circle, ellipse, poly, line, shadow } from "./gfx.js";
+import { addLight } from "./lights.js";
 
 // The scenery never changes, so we draw it once onto a hidden canvas
 // and then just copy that picture every frame.
@@ -292,6 +293,7 @@ function drawRoad(c, rand, paths) {
       }
     }
     // Surface texture: dark blotches, pebbles, wheel-worn patches and grass tufts along the edges
+    const verge = patchyField(rand, pts.length);
     for (const [i, p] of pts.entries()) {
       const half = w[i] / 2;
       if (rand() < 0.4) {
@@ -306,7 +308,7 @@ function drawRoad(c, rand, paths) {
         const o = (rand() - 0.5) * (w[i] - 16);
         ellipse(c, p.x + p.nx * o, p.y + p.ny * o + 3, 5 + rand() * 6, 2 + rand() * 2, "rgba(255,230,180,0.12)");
       }
-      if (rand() < 0.5) {                                                    // grass tufts along the verge
+      if (rand() < 0.03 + 1.0 * verge[i]) {                                  // grass tufts along the verge, bunched in clumps
         const o = (rand() < 0.5 ? 1 : -1) * (half + 2 + rand() * 6);
         const q = { x: p.x + p.nx * o, y: p.y + p.ny * o }, h = 4 + rand() * 4, shade = rand() < 0.5 ? "#2f6b1f" : "#3e7f2a";
         if (edgeOk(k, q)) for (let kk = -1; kk <= 1; kk++) line(c, q.x, q.y, q.x + kk * (2.5 + rand()), q.y - h - rand() * 3, shade, 1.5);
@@ -430,9 +432,9 @@ function drawPond(c, p) {
     if (rand() < 0.6) circle(c, rx, ry - 11, 1.2, "#6d4c41");
   }
   { // tufts and weeds crowding the bank all the way round, a few reeds standing in the shallows
-    const edge = pondOutline(p, 1, 0), n = edge.length, count = Math.round((p.rx + p.ry) * 0.55);
+    const edge = pondOutline(p, 1, 0), n = edge.length, clumps = Array.from({ length: 2 + Math.floor(rand() * 4) }, () => rand() * n), count = Math.round((p.rx + p.ry) * 0.55 * Math.min(1, (p.rx + p.ry) / 180));   // small ponds get far fewer
     for (let i = 0; i < count; i++) {
-      const f = rand() * n, i0 = Math.floor(f) % n, i1 = (i0 + 1) % n, t = f - Math.floor(f);
+      const f = ((rand() < 0.8 ? clumps[Math.floor(rand() * clumps.length)] + (rand() + rand() - 1) * n * 0.07 : rand() * n) % n + n) % n, i0 = Math.floor(f) % n, i1 = (i0 + 1) % n, t = f - Math.floor(f);
       const ex = edge[i0][0] + (edge[i1][0] - edge[i0][0]) * t, ey = edge[i0][1] + (edge[i1][1] - edge[i0][1]) * t;
       const dx = ex - p.x, dy = ey - p.y, dl = Math.hypot(dx, dy) || 1, out = 2 + rand() * 11;
       const x = ex + (dx / dl) * out, y = ey + (dy / dl) * out * 0.8 + (rand() - 0.5) * 3, v = rand();
@@ -501,6 +503,17 @@ function drawWeed(c, x, y, s, v, r) {
     if (r() < 0.55) { circle(c, x + lean, y - h, 2.3 * s, "#ffd600"); for (let k = 0; k < 8; k++) { const a = k * 0.785; line(c, x + lean, y - h, x + lean + Math.cos(a) * 3.3 * s, y - h + Math.sin(a) * 3.3 * s, "#ffeb3b", 1); } }
     else { circle(c, x + lean, y - h, 2.8 * s, "rgba(255,255,255,0.75)"); for (let k = 0; k < 9; k++) { const a = k * 0.7; line(c, x + lean, y - h, x + lean + Math.cos(a) * 3.8 * s, y - h + Math.sin(a) * 3.8 * s, "rgba(255,255,255,0.8)", 0.8); } }
   }
+}
+
+// How crowded plants are along a stretch of bank or verge: bunched into clumps with bare gaps between, never even.
+// Returns one 0..1 density per sample.
+function patchyField(rand, len) {
+  const ph = [rand() * 6.3, rand() * 6.3, rand() * 6.3], f = [0.07 + rand() * 0.05, 0.19 + rand() * 0.1, 0.47 + rand() * 0.2];
+  return Array.from({ length: len }, (_, i) => {
+    const v = (Math.sin(i * f[0] + ph[0]) + Math.sin(i * f[1] + ph[1]) * 0.7 + Math.sin(i * f[2] + ph[2]) * 0.4) / 2.1;
+    const t = Math.max(0, Math.min(1, (v + 0.1) / 0.7));
+    return t * t * (3 - 2 * t);
+  });
 }
 
 function drawRiver(c, r, rand, pass) {
@@ -596,12 +609,13 @@ function drawRiver(c, r, rand, pass) {
     }
   }
   // Tufts and weeds crowding the banks: grass clumps, tall weeds, ferns, thistles and dandelions, right at the water's edge
+  const crowdL = patchyField(rand, pts.length), crowdR = patchyField(rand, pts.length);
   for (let i = 0; i < pts.length; i++) {
     const p = pts[i], n = normals[i];
     for (const side of [1, -1]) {
-      const nzv = side > 0 ? nzL[i] : nzR[i];
+      const nzv = side > 0 ? nzL[i] : nzR[i], crowd = side > 0 ? crowdL[i] : crowdR[i];
       for (let k = 0; k < 2; k++) {
-        if (rand() < 0.4) continue;
+        if (rand() > 0.06 + 1.3 * crowd) continue;
         const o = side * (p.w / 2 + nzv * 5 + 2 + rand() * 9), x = p.x + n.x * o + (rand() - 0.5) * 4, y = p.y + n.y * o + (rand() - 0.5) * 4, v = rand();
         if (v < 0.55) drawTuft(c, x, y, 1, Math.floor(rand() * TUFT_KINDS), rand);
         else if (v < 0.88) drawWeed(c, x, y, 1, Math.floor(rand() * WEED_KINDS), rand);
@@ -949,10 +963,10 @@ function lairTreePos(e) {
 }
 export function lairParts(e) {                                                  // each piece sorts by its own feet
   const [a, b] = lairStakes(e), t = lairTreePos(e);
-  return [{ y: a.y + 2, draw: (c) => drawLairStake(c, a) }, { y: b.y + 2, draw: (c) => drawLairStake(c, b) }, { y: t.y + 2, draw: (c) => drawLairTree(c, t) }];
+  return [{ y: a.y + 2, draw: (c, T) => drawLairStake(c, a, T) }, { y: b.y + 2, draw: (c, T) => drawLairStake(c, b, T) }, { y: t.y + 2, draw: (c) => drawLairTree(c, t) }];
 }
 export function drawLairStructure(c, e) { for (const p of lairParts(e)) p.draw(c); }
-function drawLairStake(c, s) {
+function drawLairStake(c, s, T) {
   {                                                                             // skull stake
     castShadow(c, s.x, s.y + 2, 5, 22);
     line(c, s.x, s.y + 4, s.x, s.y - 30, "#4e342e", 4); line(c, s.x - 1, s.y + 4, s.x - 1, s.y - 30, "#6d4c41", 1.5);
@@ -960,6 +974,11 @@ function drawLairStake(c, s) {
     circle(c, s.x, s.y - 35, 6, "#eeeeee", "#9e9e9e", 1);
     circle(c, s.x - 2.2, s.y - 36, 1.6, "#1b1b1b"); circle(c, s.x + 2.2, s.y - 36, 1.6, "#1b1b1b");
     line(c, s.x - 2.5, s.y - 31, s.x + 2.5, s.y - 31, "#9e9e9e", 1); for (let k = -1; k <= 1; k++) line(c, s.x + k * 1.6, s.y - 32, s.x + k * 1.6, s.y - 30, "#9e9e9e", 1);
+    if (T !== undefined) {                                                      // the eyes glow green: drawn here so the stake's depth order covers them like the rest of it
+      const gl = 0.5 + Math.sin(T * 3 + s.x) * 0.4;
+      circle(c, s.x - 2.2, s.y - 36, 1.4, `rgba(118,255,3,${gl})`); circle(c, s.x + 2.2, s.y - 36, 1.4, `rgba(118,255,3,${gl})`);
+      addLight(c, s.x, s.y - 36, 7 + gl * 4, "green");
+    }
   }
 }
 // A dead tree leaning over the road, on the signpost's far side

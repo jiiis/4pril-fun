@@ -709,29 +709,32 @@ function scatterDeco(rand) {
       out.push({ type: "leaves", x: p.x + Math.cos(a) * d, y: p.y + 6 + Math.abs(Math.sin(a)) * d * 0.5, s: 0.8 + rand() * 0.5, variant: Math.floor(rand() * 3), seed: Math.floor(rand() * 1e6) });
     }
     // Company: trees often come as a small wood of 2 to 4, flowers as a patch of 3 to 7
-    const group = type === "tree" && rand() < 0.55 ? { n: 2 + Math.floor(rand() * 3), near: 30, far: 66, gap: 24, s: () => 0.95 + rand() * 0.4 }
-      : type === "flower" && rand() < 0.75 ? { n: 3 + Math.floor(rand() * 5), near: 10, far: 34, gap: 8, s: () => 0.45 + rand() * 0.3 } : null;
+    // Now and then a much bigger gathering: a real wood, a whole meadow, a thicket
+    const big = rand() < 0.13;
+    const group = type === "tree" && (big || rand() < 0.55) ? (big ? { n: 7 + Math.floor(rand() * 7), near: 30, far: 125, gap: 24, s: () => 0.95 + rand() * 0.4 } : { n: 2 + Math.floor(rand() * 3), near: 30, far: 66, gap: 24, s: () => 0.95 + rand() * 0.4 })
+      : type === "flower" && (big || rand() < 0.75) ? (big ? { n: 14 + Math.floor(rand() * 12), near: 10, far: 80, gap: 8, s: () => 0.45 + rand() * 0.3 } : { n: 3 + Math.floor(rand() * 5), near: 10, far: 34, gap: 8, s: () => 0.45 + rand() * 0.3 })
+      : type === "bush" && (big ? true : rand() < 0.3) ? (big ? { n: 9 + Math.floor(rand() * 7), near: 6, far: 40, gap: 8, s: () => 0.75 + rand() * 0.4 } : { n: 2 + Math.floor(rand() * 3), near: 8, far: 26, gap: 11, s: () => 0.7 + rand() * 0.4 }) : null;
     if (group) {
-      for (let k = 0, tries = 0; k < group.n && tries < 24; tries++) {
-        const a = rand() * Math.PI * 2, d = group.near + rand() * (group.far - group.near);
+      for (let k = 0, tries = 0; k < group.n && tries < 24 + group.n * 5; tries++) {
+        const a = rand() * Math.PI * 2, d = group.near + (group.far - group.near) * (type === "bush" ? Math.sqrt(rand()) : rand());   // bushes fill their patch evenly out to a definite edge
         const q = { x: p.x + Math.cos(a) * d, y: p.y + Math.sin(a) * d * 0.7 };
         if (q.x < 20 || q.x > W - 20 || q.y < 20 || q.y > H - 20 || !clear(q, { deco: group.gap })) continue;
         // Trees in a wood mostly match their neighbours (a birch grove, a pine stand); the odd different one slips in
-        const variant = type === "tree" ? (rand() < 0.72 ? item.variant : treeVariant()) : Math.floor(rand() * 3);
+        const variant = type === "tree" ? (rand() < 0.72 ? item.variant : treeVariant()) : type === "bush" && rand() < 0.8 ? item.variant : Math.floor(rand() * 3);
         out.push({ type, x: q.x, y: q.y, s: group.s(), variant, seed: Math.floor(rand() * 1e6) });
         k++;
       }
     }
   }
   // Tufts and weeds scattered over the grass: some standing alone, some in loose patches
-  for (let i = 0, count = 0; i < 1400 && count < 150; i++) {
+  for (let i = 0, count = 0; i < 1400 && count < 190; i++) {
     const p = { x: 14 + rand() * (W - 28), y: 14 + rand() * (H - 28) };
     if (!clear(p, { deco: 12 })) continue;
-    const type = rand() < 0.62 ? "tuft" : "weed", kinds = 4, v = Math.floor(rand() * kinds), alone = rand() < 0.45;
+    const type = rand() < 0.62 ? "tuft" : "weed", kinds = 4, v = Math.floor(rand() * kinds), alone = rand() < 0.45, bigPatch = rand() < 0.1;
     const mk = (x, y) => ({ type, x, y, s: 0.8 + rand() * 0.55, variant: v, seed: Math.floor(rand() * 1e6) });
     out.push(mk(p.x, p.y)); count++;
-    if (!alone) for (let k = 0, tries = 0, n = 2 + Math.floor(rand() * 5); k < n && tries < 20; tries++) {   // a patch: neighbours mostly the same kind
-      const a = rand() * Math.PI * 2, d = 7 + rand() * 24, q = { x: p.x + Math.cos(a) * d, y: p.y + Math.sin(a) * d * 0.65 };
+    if (!alone) for (let k = 0, tries = 0, n = bigPatch ? 12 + Math.floor(rand() * 14) : 2 + Math.floor(rand() * 5); k < n && tries < 20 + n * 5; tries++) {   // a patch (now and then a big one): neighbours mostly the same kind
+      const a = rand() * Math.PI * 2, d = 7 + rand() * (bigPatch ? 70 : 24), q = { x: p.x + Math.cos(a) * d, y: p.y + Math.sin(a) * d * 0.65 };
       if (q.x < 14 || q.x > W - 14 || q.y < 14 || q.y > H - 14 || !clear(q, { deco: 7 })) continue;
       const m = mk(q.x, q.y); if (rand() < 0.3) m.variant = Math.floor(rand() * kinds); out.push(m); count++; k++;
     }

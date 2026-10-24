@@ -371,7 +371,7 @@ export function draw() {
   for (const d of map.deco) actors.push({ y: d.y, draw: scaled(d.x, d.y, () => drawDecoItem(ctx, d)) });   // trees, bushes, rocks, flowers...
   for (const k of map.castles) actors.push({ y: k.y + 8 * k.scale, draw: () => drawCastleAt(ctx, k) });
   for (const g of map.exits) actors.push({ y: gateAnchorY(g), draw: () => drawGateStructure(ctx, g) });
-  for (const e of map.entries) for (const p of lairParts(e)) actors.push({ y: p.y, draw: () => p.draw(ctx) });   // stakes and dead tree sort separately
+  map.entries.forEach((e, i) => { for (const p of lairParts(e)) actors.push({ y: p.y, draw: () => p.draw(ctx, state.time + i * 1.7) }); });   // stakes and dead tree sort separately
   for (const e of map.entries) actors.push({ y: e.y + 12, draw: scaled(e.x, e.y, () => { drawSign(ctx, e.x, e.y, e.face); flag(e.x, e.y - 40, 20, "#c62828", 2 + e.y); }) });
   for (const t of state.towers) actors.push({ y: t.y + 12, draw: scaled(t.x, t.y, () => {
     drawTower(t);
@@ -409,7 +409,6 @@ export function draw() {
   // Lairs: the skulls' eyes glow and green mist seeps out of the entrance
   map.entries.forEach((e, i) => {
     const T = state.time + i * 1.7;
-    for (const s of lairStakes(e)) { const gl = 0.5 + Math.sin(T * 3 + s.x) * 0.4; circle(ctx, s.x - 2.2, s.y - 36, 1.4, `rgba(118,255,3,${gl})`); circle(ctx, s.x + 2.2, s.y - 36, 1.4, `rgba(118,255,3,${gl})`); addLight(ctx, s.x, s.y - 36, 7 + gl * 4, "green"); }
     for (let k = 0; k < 5; k++) {
       const p = (T * 0.25 + k / 5) % 1, spread = Math.sin(T * 0.7 + k * 2.3) * 22;
       const mx = e.rx + e.inn.x * p * 70 - e.inn.y * spread, my = e.ry + e.inn.y * p * 70 + e.inn.x * spread - p * 6;
