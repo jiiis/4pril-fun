@@ -25,13 +25,13 @@ export const ROWS = H / CELL;           // 14
 
 // Tower types. "physical" damage is reduced by armour, "magic" is not.
 export const TOWERS = {
-  archer:   { name: "Archer Tower", short: "Archer", icon: "bow", cost: 70,  range: 115, damage: 10, rate: 1.7,  type: "physical", color: "#8bc34a", desc: "Fast arrows. Weak vs armour." },
-  mage:     { name: "Mage Tower",   short: "Mage", icon: "sparkles", cost: 100, range: 105, damage: 26, rate: 0.85, type: "magic",    color: "#b388ff", desc: "Magic ignores armour." },
-  cannon:   { name: "Cannon",       short: "Cannon", icon: "bomb", cost: 125, range: 125, damage: 36, rate: 0.5,  type: "physical", color: "#6d4c41", desc: "Slow, but hits a whole group.", splash: 48 },
+  archer:   { name: "Archer Tower", short: "Archer", icon: "bow", cost: 70,  range: 150, damage: 10, rate: 1.7,  type: "physical", color: "#8bc34a", desc: "Fast arrows. Weak vs armour." },
+  mage:     { name: "Mage Tower",   short: "Mage", icon: "sparkles", cost: 100, range: 136, damage: 26, rate: 0.85, type: "magic",    color: "#b388ff", desc: "Magic ignores armour." },
+  cannon:   { name: "Cannon",       short: "Cannon", icon: "bomb", cost: 125, range: 162, damage: 36, rate: 0.5,  type: "physical", color: "#6d4c41", desc: "Slow, but hits a whole group.", splash: 48 },
   // Lightning Spire: chain lightning leaps from the first monster to the next few nearby (one more hop per level). Reaches flyers.
-  tesla:    { name: "Lightning Spire", short: "Spire", icon: "zap", cost: 140, range: 110, damage: 24, rate: 0.6, type: "magic", color: "#4fc3f7", desc: "Chain lightning jumps between monsters.", chain: 3, chainRange: 70, chainFalloff: 0.75 },
+  tesla:    { name: "Lightning Spire", short: "Spire", icon: "zap", cost: 140, range: 143, damage: 24, rate: 0.6, type: "magic", color: "#4fc3f7", desc: "Chain lightning jumps between monsters.", chain: 3, chainRange: 70, chainFalloff: 0.75 },
   // Barracks: range = how far away the soldiers' rally point can be. damage/rate = each soldier's attack.
-  barracks: { name: "Barracks",     short: "Barracks", icon: "shield", cost: 90,  range: 90,  damage: 6,  rate: 1,    type: "physical", color: "#ef9a9a", desc: "Soldiers block the road.", soldiers: 2, soldierHp: 80 },
+  barracks: { name: "Barracks",     short: "Barracks", icon: "shield", cost: 90,  range: 117,  damage: 6,  rate: 1,    type: "physical", color: "#ef9a9a", desc: "Soldiers block the road.", soldiers: 2, soldierHp: 80 },
 };
 export const MAX_LEVEL = 4;
 // Level 4 is a specialisation: at level 3 you pick one of two abilities. Each tower type has its own pair.
