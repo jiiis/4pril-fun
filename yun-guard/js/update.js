@@ -96,7 +96,7 @@ function fireBallista(t, target) {
       e.pin = { slow: first ? ab.pin.firstSlow : ab.pin.slow, time: first ? ab.pin.firstTime : ab.pin.time };
     }
   });
-  state.bolts.push({ kind: "spear", pts: [o, end], life: 0.4, maxLife: 0.4, seed: Math.random() * 100 });
+  state.bolts.push({ kind: "spear", pts: [o, end], life: 0.55, maxLife: 0.55, seed: Math.random() * 100 });
   t.recoil = RECOIL_TIME * 1.6; t.anim = FIRE_ANIM;
   addSmoke(o.x, o.y, 2, 3);
   sfx("ballista", 0.1);

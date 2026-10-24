@@ -543,12 +543,12 @@ export function draw() {
   // Chain lightning from the spires: jagged white bolts with a blue glow, gone in a flash
   for (const b of state.bolts) {
     if (b.kind === "spear") {                                                              // a heavy ballista bolt: a thick dark streak with a bright head that fades fast
-      const p = b.life / b.maxLife, [a, c] = b.pts, dx = c.x - a.x, dy = c.y - a.y, len = Math.hypot(dx, dy) || 1, head = Math.min(1, (1 - p) * 4);
-      const hx = a.x + dx * head, hy = a.y + dy * head, tx = a.x + dx * Math.max(0, head - 0.35), ty = a.y + dy * Math.max(0, head - 0.35);
+      const q = 1 - b.life / b.maxLife, p = 1 - 0.3 * q - 0.7 * q * q, [a, c] = b.pts, dx = c.x - a.x, dy = c.y - a.y, len = Math.hypot(dx, dy) || 1, raw = q * 1.3, head = Math.min(1, raw);   // p: fading from the moment it is shot, faster toward the end
+      const hx = a.x + dx * head, hy = a.y + dy * head, tail = Math.min(1, Math.max(0, raw - 0.3)), tx = a.x + dx * tail, ty = a.y + dy * tail;   // the whole bolt travels the line, tail following the head
       ctx.lineCap = "round";
-      ctx.globalAlpha = p * 0.35; ctx.strokeStyle = "#fff3d0"; ctx.lineWidth = 7; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(hx, hy); ctx.stroke();
-      ctx.globalAlpha = Math.min(1, p * 1.4); ctx.strokeStyle = "#4e342e"; ctx.lineWidth = 3.2; ctx.beginPath(); ctx.moveTo(tx, ty); ctx.lineTo(hx, hy); ctx.stroke();
-      ctx.strokeStyle = "#eceff1"; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.moveTo(hx - dx / len * 6, hy - dy / len * 6); ctx.lineTo(hx, hy); ctx.stroke();
+      ctx.globalAlpha = p * 0.35; ctx.strokeStyle = "#fff3d0"; ctx.lineWidth = 7; ctx.beginPath(); ctx.moveTo(tx, ty); ctx.lineTo(hx, hy); ctx.stroke();
+      ctx.globalAlpha = p; ctx.strokeStyle = "#4e342e"; ctx.lineWidth = 3.2; ctx.beginPath(); ctx.moveTo(tx, ty); ctx.lineTo(hx, hy); ctx.stroke();
+      ctx.globalAlpha = p; ctx.strokeStyle = "#eceff1"; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.moveTo(hx - dx / len * 6, hy - dy / len * 6); ctx.lineTo(hx, hy); ctx.stroke();
       ctx.globalAlpha = 1;
       continue;
     }
