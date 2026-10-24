@@ -71,6 +71,7 @@ const notes = (freqs, opts, gap) => freqs.forEach((f, i) => tone({ ...opts, freq
 // ---------- The effects ----------
 const SFX = {
   // Towers
+  ballista:  () => { noise({ dur: 0.18, vol: 0.4, filter: 900, filterEnd: 200 }); tone({ freq: 220, end: 70, type: "sawtooth", dur: 0.22, vol: 0.25 }); tone({ freq: 1500, end: 500, dur: 0.12, vol: 0.1, delay: 0.02 }); },
   arrow:     () => { noise({ dur: 0.12, vol: 0.15, filter: 3000, filterEnd: 800, type: "bandpass" }); tone({ freq: 1200, end: 600, dur: 0.08, vol: 0.08 }); },
   arrowHit:  () => noise({ dur: 0.08, vol: 0.2, filter: 1500, filterEnd: 300 }),
   magic:     () => { tone({ freq: 600, end: 1400, dur: 0.25, vol: 0.15 }); tone({ freq: 900, end: 1800, type: "triangle", dur: 0.25, vol: 0.08, delay: 0.03 }); },

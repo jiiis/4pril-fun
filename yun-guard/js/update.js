@@ -73,6 +73,35 @@ function fireLightning(t, first) {
   sfx("zap", 0.08);
 }
 
+// Ballista: one huge bolt flies through its target and keeps going. Everything along the line is struck.
+function fireBallista(t, target) {
+  const ab = abilityDef(t), o = shotOrigin(t), reach = towerRange(t) + 50;
+  const ang = Math.atan2(target.y - o.y, target.x - o.x), dx = Math.cos(ang), dy = Math.sin(ang);
+  const end = { x: o.x + dx * reach, y: o.y + dy * reach };
+  const hits = [];
+  for (const e of state.enemies) {
+    if (e.dead) continue;
+    const ex = e.x - o.x, ey = e.y - (e.def.flying ? 18 : 0) - o.y, along = ex * dx + ey * dy, across = Math.abs(ex * dy - ey * dx);
+    if (along > 0 && along <= reach && across <= t.def.lineWidth + e.def.size * 0.35) hits.push({ e, along });
+  }
+  hits.sort((a, b) => a.along - b.along);
+  const base = towerDamage(t);
+  hits.forEach(({ e }, i) => {
+    let dmg = base;
+    if (ab?.execute && e.hp < e.maxHp * ab.execute.below) dmg *= ab.execute.factor;
+    hurt(e, dmg, "pierce");
+    addBurst(e.x, e.y - e.def.size * 0.3, 12, "rgba(255,236,179,0.9)");
+    if (ab?.pin && !e.dead) {
+      const first = i === 0;
+      e.pin = { slow: first ? ab.pin.firstSlow : ab.pin.slow, time: first ? ab.pin.firstTime : ab.pin.time };
+    }
+  });
+  state.bolts.push({ kind: "spear", pts: [o, end], life: 0.4, maxLife: 0.4, seed: Math.random() * 100 });
+  t.recoil = RECOIL_TIME * 1.6; t.anim = FIRE_ANIM;
+  addSmoke(o.x, o.y, 2, 3);
+  sfx("ballista", 0.1);
+}
+
 function cannonImpact(s) {
   const splash = s.splash || s.def.splash;
   for (const e of state.enemies) if (!e.def.flying && Math.hypot(e.x - s.tx, e.y - s.ty) <= splash) hurt(e, s.dmg, s.def.type);
@@ -160,6 +189,7 @@ export function update(dt) {
     }
     if (e.cursed > 0) e.cursed -= dt;
     if (e.staticSlow > 0) e.staticSlow -= dt;
+    if (e.pin) { e.pin.time -= dt; if (e.pin.time <= 0) e.pin = null; }
     if (!e.def.flying) for (const f of state.fires) if (Math.hypot(e.x - f.x, e.y - f.y) <= f.r) {   // standing in napalm
       hurt(e, f.dps * dt, "magic", false);
       if (!e.burn) e.burn = { time: 0.6, dps: 0 };
@@ -199,7 +229,7 @@ export function update(dt) {
     const target = e.path[e.next];
     const c = { x: e.cx ?? e.x, y: e.cy ?? e.y };
     const d = dist(c, target);
-    const slowMul = (e.frost ? 1 - e.frost.slow : 1) * (e.poison ? 1 - e.poison.slow : 1) * (e.staticSlow > 0 ? 0.75 : 1);
+    const slowMul = (e.frost ? 1 - e.frost.slow : 1) * (e.poison ? 1 - e.poison.slow : 1) * (e.staticSlow > 0 ? 0.75 : 1) * (e.pin ? 1 - e.pin.slow : 1);
     const step = e.def.speed * (e.pace || 1) * slowMul * dt;
     let ux = 0, uy = 0;
     if (d <= step) {
@@ -265,7 +295,8 @@ export function update(dt) {
     if (best) {
       t.angle = Math.atan2(best.y - t.y, best.x - t.x);
       t.lastShot = state.time;                  // the crew relaxes when they haven't fired for a while
-      if (t.def.chain) fireLightning(t, best);
+      if (t.def.line) fireBallista(t, best);
+      else if (t.def.chain) fireLightning(t, best);
       else if (t.def.splash) fireCannon(t, best);
       else {
         t.shooter = (t.shooter + 1) % archerSlots(t.level).length;   // the archers take turns

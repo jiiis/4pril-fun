@@ -532,6 +532,16 @@ export function draw() {
 
   // Chain lightning from the spires: jagged white bolts with a blue glow, gone in a flash
   for (const b of state.bolts) {
+    if (b.kind === "spear") {                                                              // a heavy ballista bolt: a thick dark streak with a bright head that fades fast
+      const p = b.life / b.maxLife, [a, c] = b.pts, dx = c.x - a.x, dy = c.y - a.y, len = Math.hypot(dx, dy) || 1, head = Math.min(1, (1 - p) * 4);
+      const hx = a.x + dx * head, hy = a.y + dy * head, tx = a.x + dx * Math.max(0, head - 0.35), ty = a.y + dy * Math.max(0, head - 0.35);
+      ctx.lineCap = "round";
+      ctx.globalAlpha = p * 0.35; ctx.strokeStyle = "#fff3d0"; ctx.lineWidth = 7; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(hx, hy); ctx.stroke();
+      ctx.globalAlpha = Math.min(1, p * 1.4); ctx.strokeStyle = "#4e342e"; ctx.lineWidth = 3.2; ctx.beginPath(); ctx.moveTo(tx, ty); ctx.lineTo(hx, hy); ctx.stroke();
+      ctx.strokeStyle = "#eceff1"; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.moveTo(hx - dx / len * 6, hy - dy / len * 6); ctx.lineTo(hx, hy); ctx.stroke();
+      ctx.globalAlpha = 1;
+      continue;
+    }
     const p = b.life / b.maxLife, jit = Math.floor(state.time * 40);
     for (let i = 0; i < b.pts.length - 1; i++) {
       const a = b.pts[i], c = b.pts[i + 1], segs = 6, pts = [[a.x, a.y]];

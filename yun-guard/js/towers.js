@@ -19,6 +19,7 @@ export const visLevel = (t) => Math.min(t.level, 3);                   // the ar
 export const archerHeight = (lv) => 34 + Math.min(lv, 3) * 6;
 export const mageHeight = (lv) => 36 + Math.min(lv, 3) * 6;
 export const teslaHeight = (lv) => 34 + Math.min(lv, 3) * 8;
+export const ballistaHeight = (lv) => 26 + Math.min(lv, 3) * 4;
 
 // Where each archer stands on the platform: one girl at level 1, two at level 2, three at level 3.
 export const archerSlots = (lv) =>
@@ -33,6 +34,7 @@ export function shotOrigin(t) {
     return { x: t.x + s.dx, y: t.y - archerHeight(t.level) - 20 + s.dy };
   }
   if (t.def === TOWERS.mage) return { x: t.x + 10, y: t.y - mageHeight(t.level) - 34 };
+  if (t.def === TOWERS.ballista) return { x: t.x + Math.cos(t.angle) * 16, y: t.y - ballistaHeight(t.level) - 6 + Math.sin(t.angle) * 7 };
   if (t.def === TOWERS.tesla) return { x: t.x, y: t.y - teslaHeight(t.level) - 12 };
   return { x: t.x, y: t.y - 26 };
 }

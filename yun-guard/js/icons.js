@@ -24,6 +24,8 @@ const P = {
   brush:     '<path d="M14 3h6v6l-7 7-6-6z" fill="none"/><path d="M20 9l-7 7"/><path d="M9.5 12.5a3.5 3.5 0 0 0-5 3c0 2.2-1 3.8-2.5 5 2.4.3 4.8-.2 6.4-1.8a3.5 3.5 0 0 0 3.1-5.2"/><path d="M14 3l6 6"/>',
   eraser:    '<path d="M7 20h13"/><path d="M4.5 15.5l9-9a2 2 0 0 1 2.8 0l3.2 3.2a2 2 0 0 1 0 2.8l-7 7H8.5l-4-4z"/><path d="M9.5 10.5l6 6"/>',
   chevronRight: '<path d="M9 5l7 7-7 7"/>',
+  ballista:  '<path d="M3 12h18"/><path d="M18 9l3 3-3 3"/><path d="M7 4c-3 2-3 14 0 16"/><path d="M7 4l6 8-6 8"/>',
+  anchor:    '<circle cx="12" cy="5" r="2"/><path d="M12 7v14"/><path d="M5 13c0 4 3 7 7 7s7-3 7-7"/><path d="M8 11h8"/>',
   skull:     '<path d="M12 3a8 8 0 0 0-8 8c0 3 2 5 4 6v3h8v-3c2-1 4-3 4-6a8 8 0 0 0-8-8z"/><circle cx="9" cy="11" r="1.3"/><circle cx="15" cy="11" r="1.3"/><path d="M10 20v-2M14 20v-2"/>',
   tornado:   '<path d="M3 5h18M5 9h14M7 13h10M9 17h6M11 21h2"/>',
   burst:     '<path d="M12 4v4M12 16v4M4 12h4M16 12h4M6.3 6.3l2.9 2.9M14.8 14.8l2.9 2.9M6.3 17.7l2.9-2.9M14.8 9.2l2.9-2.9"/>',

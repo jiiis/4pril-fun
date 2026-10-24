@@ -2,7 +2,7 @@ import { ctx, rect, circle, ellipse, poly, line, shadow } from "./gfx.js";
 import { TOWERS } from "../config.js";
 import { state } from "../state.js";
 import { addLight } from "./lights.js";
-import { archerHeight, mageHeight, teslaHeight, archerSlots, visLevel, abilityDef } from "../towers.js";
+import { archerHeight, mageHeight, teslaHeight, ballistaHeight, archerSlots, visLevel, abilityDef } from "../towers.js";
 
 // Each tower is drawn with simple shapes and looks different at every level.
 // (x, y) is the centre of its build spot, t.angle points at the last target,
@@ -11,7 +11,7 @@ export function drawTower(t) {
   const { x, y } = t;
   const lv = visLevel(t);                                      // level 4 reuses the level-3 artwork plus ability ornaments
   // Long soft shadow cast to the lower-right, taller towers cast longer ones
-  const tall = t.def === TOWERS.archer ? archerHeight(lv) : t.def === TOWERS.mage ? mageHeight(lv) : t.def === TOWERS.tesla ? teslaHeight(lv) : 30;
+  const tall = t.def === TOWERS.archer ? archerHeight(lv) : t.def === TOWERS.mage ? mageHeight(lv) : t.def === TOWERS.tesla ? teslaHeight(lv) : t.def === TOWERS.ballista ? ballistaHeight(lv) + 8 : 30;
   ctx.save();
   ctx.translate(x + 10, y + 10);
   ctx.transform(1, 0, -0.6, 0.35, 0, 0);
@@ -24,6 +24,7 @@ export function drawTower(t) {
   else if (t.def === TOWERS.mage) drawMage(t, x, y, lv);
   else if (t.def === TOWERS.barracks) drawBarracks(t, x, y, lv);
   else if (t.def === TOWERS.tesla) drawTesla(t, x, y, lv);
+  else if (t.def === TOWERS.ballista) drawBallista(t, x, y, lv);
   else drawCannon(t, x, y, lv);
   if (t.ability) drawAbility(t, x, y);
 }
@@ -31,7 +32,7 @@ export function drawTower(t) {
 // Level-4 ornaments: each ability dresses the tower differently so you can tell them apart at a glance
 function drawAbility(t, x, y) {
   const T = state.time + x * 0.013;
-  const topY = t.def === TOWERS.archer ? y - archerHeight(3) - 30 : t.def === TOWERS.mage ? y - mageHeight(3) - 44 : t.def === TOWERS.tesla ? y - teslaHeight(3) - 26 : y - 30;
+  const topY = t.def === TOWERS.archer ? y - archerHeight(3) - 30 : t.def === TOWERS.mage ? y - mageHeight(3) - 44 : t.def === TOWERS.tesla ? y - teslaHeight(3) - 26 : t.def === TOWERS.ballista ? y - ballistaHeight(3) - 14 : y - 30;
   switch (t.ability) {
     case "volley":                                                                       // golden quivers bristling with arrows on the parapet
       for (const qx of [-16, 16]) { rect(ctx, x + qx - 3, y - archerHeight(3) - 6, 6, 10, "#8d6e63", "#4e342e", 1); for (let i = 0; i < 3; i++) { line(ctx, x + qx - 2 + i * 2, y - archerHeight(3) - 6, x + qx - 3 + i * 2.5, y - archerHeight(3) - 14, "#d7ccc8", 1); poly(ctx, [[x + qx - 3 + i * 2.5, y - archerHeight(3) - 14], [x + qx - 4.5 + i * 2.5, y - archerHeight(3) - 11], [x + qx - 1.5 + i * 2.5, y - archerHeight(3) - 11]], "#ffd54f"); } }
@@ -68,6 +69,15 @@ function drawAbility(t, x, y) {
     case "berserk":                                                                      // red war banners and spiked palisade
       for (const bx of [-18, 18]) flag(x + bx, y - 30, 14, "#c62828", bx);
       for (let i = -12; i <= 12; i += 6) poly(ctx, [[x + i - 2, y + 6], [x + i + 2, y + 6], [x + i, y - 4]], "#5d4037", "#3e2723", 1);
+      break;
+    case "executioner":                                                                  // skulls and a black banner hung on the platform
+      for (const [sx, sy] of [[-17, -6], [-10, 1], [17, -4]]) { circle(ctx, x + sx, y + sy, 3.4, "#eeeeee", "#9e9e9e", 0.8); circle(ctx, x + sx - 1.1, y + sy - 0.4, 0.8, "#212121"); circle(ctx, x + sx + 1.1, y + sy - 0.4, 0.8, "#212121"); }
+      flag(x + 19, y - ballistaHeight(3) - 22, 22, "#212121", 4);
+      circle(ctx, x + 23, y - ballistaHeight(3) - 14, 1.6, "#e53935");
+      break;
+    case "harpoon":                                                                      // coiled rope, a rack of barbed harpoons and an iron anchor
+      for (let i = 0; i < 3; i++) { line(ctx, x - 20 + i * 3, y - 6, x - 17 + i * 3, y - 26, "#8d6e63", 1.6); poly(ctx, [[x - 17 + i * 3, y - 26], [x - 20 + i * 3, y - 21], [x - 14 + i * 3, y - 21]], "#90a4ae", "#37474f", 0.6); }
+      ellipse(ctx, x + 18, y + 4, 7, 3.5, null, "#c2a77a", 2); ellipse(ctx, x + 18, y + 2, 7, 3.5, null, "#c2a77a", 2);
       break;
     case "overcharge":                                                                   // a second ring of golden arcs around the orb
       for (let i = 0; i < 5; i++) { const a = T * 7 + i * 1.26, r = 16 + Math.sin(T * 11 + i) * 2; line(ctx, x + Math.cos(a) * r, topY + Math.sin(a) * r * 0.6, x + Math.cos(a + 0.6) * r, topY + Math.sin(a + 0.6) * r * 0.6, "#ffeb3b", 1.4); }
@@ -357,6 +367,47 @@ function drawTesla(t, x, y, lv) {
 // =====================================================================
 //  CANNON
 // =====================================================================
+// A heavy wooden siege crossbow on a swivel: the bow arms are the long way across, the bolt lies on its rail
+function drawBallista(t, x, y, lv) {
+  const T = state.time + x * 0.01, recoil = t.recoil > 0 ? Math.min(1, t.recoil / 0.32) : 0;
+  // The platform: a plank deck on stout legs, bigger and iron-bound with each level
+  const deck = lv === 1 ? "#8d6e63" : lv === 2 ? "#795548" : "#6d4c41", edge = "#3e2723";
+  rect(ctx, x - 20, y - 6, 40, 14, deck, edge);
+  for (const xx of [-13, -4, 5, 14]) line(ctx, x + xx, y - 6, x + xx, y + 8, "rgba(0,0,0,0.25)", 1);
+  rect(ctx, x - 20, y - 8, 40, 3.2, lv === 3 ? "#546e7a" : "#a1887f", edge, 0.8);
+  if (lv >= 2) for (const xx of [-17, 17]) { rect(ctx, x + xx - 1.8, y - 6, 3.6, 14, "#78909c", "#37474f", 0.8); circle(ctx, x + xx, y - 1, 1, "#cfd8dc"); }
+  if (lv === 3) for (const xx of [-8, 8]) circle(ctx, x + xx, y + 3, 1.2, "#cfd8dc");
+  // The weapon pivots toward the target: draw it in its own rotated frame, bow arms across the line of fire
+  const idle = relaxed(t) ? Math.sin(T * 0.5) * 0.12 : 0, pivotY = y - ballistaHeight(lv) + 8;
+  rect(ctx, x - 3, pivotY, 6, y - 8 - pivotY, "#5d4037", edge, 1);                                  // the swivel post
+  ctx.save(); ctx.translate(x, pivotY); ctx.rotate(t.angle + idle);
+  const len = 22 + lv * 4, arm = 13 + lv * 2.5, pull = recoil * 5;
+  rect(ctx, -9, -2.4, len + 6, 4.8, "#a1887f", edge, 1);                                           // the stock and rail
+  line(ctx, -9, 0, len - 2, 0, "rgba(255,255,255,0.18)", 1);
+  // bow arms sweep back, string is drawn tight when loaded
+  const armCol = lv === 1 ? "#6d4c41" : lv === 2 ? "#4e342e" : "#37474f";
+  ctx.strokeStyle = armCol; ctx.lineWidth = 3.2 + lv * 0.5; ctx.lineCap = "round";
+  for (const s of [-1, 1]) { ctx.beginPath(); ctx.moveTo(len * 0.55, s * 2); ctx.quadraticCurveTo(len * 0.55 - 3, s * arm * 0.7, len * 0.3 - 3, s * arm); ctx.stroke(); }
+  ctx.strokeStyle = "#efebe9"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(len * 0.3 - 3, -arm); ctx.lineTo(len * 0.1 - 3 + pull * 0.2 - (recoil > 0 ? 0 : 6), 0); ctx.lineTo(len * 0.3 - 3, arm); ctx.stroke();
+  // the bolt: shaft, iron head and fletching; it leaves on a shot and a new one is slid on
+  const boltOff = recoil > 0 ? len : 0;
+  if (recoil < 0.85) { line(ctx, -4, 0, len + 8 + boltOff * 0.0, 0, "#d7ccc8", 2.4); poly(ctx, [[len + 8, -3], [len + 15, 0], [len + 8, 3]], "#cfd8dc", "#37474f", 0.8); poly(ctx, [[-4, 0], [-8, -3], [-6, 0], [-8, 3]], lv === 3 ? "#c62828" : "#8d6e63"); }
+  rect(ctx, len * 0.45, -3.4, 3, 6.8, "#757575", "#37474f", 0.8);                                   // the iron collar
+  circle(ctx, 0, 0, 3.2, "#546e7a", "#263238", 1);
+  ctx.restore();
+  // A crewman cranks the winch behind it, glancing up now and then
+  const dir = facing(t), gx = x - dir * 17, gy = y + 8;
+  ctx.save(); ctx.translate(gx, gy); ctx.scale(dir, 1);
+  const crank = recoil === 0 && !relaxed(t) ? Math.sin(T * 5) * 1.6 : 0;
+  line(ctx, -2, 0, -2, -5, "#37474f", 2); line(ctx, 2, 0, 2, -5, "#37474f", 2);
+  rect(ctx, -4, -14, 8, 9, lv === 3 ? "#455a64" : "#8d6e63", "#4e342e", 1);
+  circle(ctx, 0, -17.5, 3.6, "#ffcc80");
+  ctx.fillStyle = lv === 3 ? "#cfd8dc" : "#6d4c41"; ctx.beginPath(); ctx.arc(0, -18.5, 4, Math.PI, 0); ctx.fill();
+  line(ctx, 3, -10, 8, -9 + crank, "#ffcc80", 2.2);
+  ctx.restore();
+  if (lv === 3) flag(x + 20, y - ballistaHeight(3) - 18, 26, "#c62828", x);
+}
+
 function drawCannon(t, x, y, lv) {
   const recoil = t.recoil > 0 ? (t.recoil / 0.2) * 6 : 0;
   if (lv === 1) {

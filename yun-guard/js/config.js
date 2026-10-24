@@ -30,6 +30,9 @@ export const TOWERS = {
   cannon:   { name: "Cannon",       short: "Cannon", icon: "bomb", cost: 125, range: 162, damage: 36, rate: 0.5,  type: "physical", color: "#6d4c41", desc: "Slow, but hits a whole group.", splash: 48 },
   // Lightning Spire: chain lightning leaps from the first monster to the next few nearby (one more hop per level). Reaches flyers.
   tesla:    { name: "Lightning Spire", short: "Spire", icon: "zap", cost: 140, range: 143, damage: 24, rate: 0.6, type: "magic", color: "#4fc3f7", desc: "Chain lightning jumps between monsters.", chain: 3, chainRange: 70, chainFalloff: 0.75 },
+  // Ballista: slow and very long-ranged. One huge bolt flies through the target and on, hitting every monster along the line,
+  // and punches through most armour. Reaches flyers.
+  ballista: { name: "Ballista",     short: "Ballista", icon: "ballista", cost: 150, range: 200, damage: 85, rate: 0.28, type: "pierce", color: "#a1887f", desc: "Huge bolt pierces a whole line. Ignores most armour.", line: true, lineWidth: 11, armorPierce: 0.65 },
   // Barracks: range = how far away the soldiers' rally point can be. damage/rate = each soldier's attack.
   barracks: { name: "Barracks",     short: "Barracks", icon: "shield", cost: 90,  range: 117,  damage: 6,  rate: 1,    type: "physical", color: "#ef9a9a", desc: "Soldiers block the road.", soldiers: 2, soldierHp: 80 },
 };
@@ -52,6 +55,10 @@ export const ABILITIES = {
   barracks: {
     paladin:{ name: "Paladins", icon: "shieldCheck", desc: "Soldiers get +50% health, 30% armour and heal 5/s even in battle.", hpFactor: 1.5, armor: 0.3, regen: 5 },
     berserk:{ name: "Berserkers", icon: "axe", desc: "Soldiers hit 60% harder, 30% faster, and every swing cleaves nearby monsters.", damageFactor: 1.6, rateFactor: 1.3, cleave: 26 },
+  },
+  ballista: {
+    execute: { name: "Executioner", icon: "skull", desc: "Bolts deal triple damage to any monster below 30% health.", execute: { below: 0.3, factor: 3 } },
+    harpoon: { name: "Harpoons", icon: "anchor", desc: "Every monster hit is slowed 50% for 3s; the first one is pinned almost still.", pin: { slow: 0.5, time: 3, firstSlow: 0.85, firstTime: 1.6 } },
   },
   tesla: {
     overcharge: { name: "Overcharge", icon: "zap", desc: "Lightning makes 3 more hops and leaps 40% further.", extraHops: 3, rangeFactor: 1.4 },
