@@ -128,6 +128,26 @@ function drawRoad(c, rand, paths) {
       junctions.push({ x: P.x, y: P.y, sigma: ROAD_WIDTH * (0.36 - 0.14 * cosA) });
     }
   }
+  // Grass can also pinch to a boxy point without any junction: inside a sharp bend, or where a road doubles back
+  // close to itself or to another route. Round those the same way.
+  {
+    const addJ = (x, y) => { if (!junctions.some((J) => Math.hypot(J.x - x, J.y - y) < ROAD_WIDTH * 1.1)) junctions.push({ x, y, sigma: ROAD_WIDTH * 0.3 }); };
+    const samp = [];
+    paths.forEach((path, k) => { const pts = pointsAlongPath(path, 16); pts.forEach((p, i) => samp.push({ x: p.x, y: p.y, k, i })); });
+    for (const a of samp) {                                                              // sharp bends: the heading turns far within a short stretch
+      const A = samp.find((q) => q.k === a.k && q.i === a.i - 3), B = samp.find((q) => q.k === a.k && q.i === a.i + 3);
+      if (!A || !B) continue;
+      const v1x = a.x - A.x, v1y = a.y - A.y, v2x = B.x - a.x, v2y = B.y - a.y;
+      const cos = (v1x * v2x + v1y * v2y) / ((Math.hypot(v1x, v1y) * Math.hypot(v2x, v2y)) || 1);
+      if (cos < 0.35) addJ(a.x, a.y);
+    }
+    for (let m = 0; m < samp.length; m++) for (let n = m + 1; n < samp.length; n++) {     // near misses: two stretches closer than a road's width apart
+      const a = samp[m], b = samp[n];
+      if (a.k === b.k && Math.abs(a.i - b.i) < 22) continue;
+      const d = Math.hypot(a.x - b.x, a.y - b.y);
+      if (d < ROAD_WIDTH * 1.55 && d > ROAD_WIDTH * 0.45) addJ((a.x + b.x) / 2, (a.y + b.y) / 2);
+    }
+  }
   // Around each junction the layer is redrawn as a mask (strokes, blurred, cut at a threshold): that rounds
   // the corners where the roads meet, inside and out, and leaves straight stretches exactly as they were.
   const res = c.getTransform().a, REG = Math.round(ROAD_WIDTH * 3.4), RP = Math.round(REG * res);
