@@ -785,7 +785,7 @@ export function drawCastleAt(c, k) {
   drawCastle(c, 0, 0, k.style);
   const r = rng(Math.floor(k.x * 13 + k.y * 7));
   const S = CASTLE_STYLES[k.style] || CASTLE_STYLES[0];
-  const regions = S.pagoda ? [[-38, -34, 76, 20], [-28, -60, 56, 10], [-56, -3, 112, 6], [-46, -10, 92, 6]]
+  const regions = S.pagoda ? [[-38, -34, 76, 20], [-28, -60, 56, 10]]
     : S.palace ? [[-44, -36, 88, 40], [-18, -60, 36, 26]]
     : [[-44, -36, 88, 40], [-16, -70, 32, 36], [-52, -64, 24, 68], [28, -64, 24, 68]];
   wearOut(c, r, regions);                                                              // lightly weathered to begin with ...
@@ -924,8 +924,8 @@ const DRAW_DECO = {
     const greens = r() < 0.22 ? [["#8d4a1e", "#c0652a"], ["#a0521f", "#d98c3a"], ["#7a3e1a", "#b8641f"]][v]      // some bushes have turned russet
       : [["#33691e", "#558b2f"], ["#2e7d32", "#43a047"], ["#4e6b1f", "#6b8e23"]][v];
     const n = 2 + Math.floor(r() * 3);
-    for (let i = 0; i < n; i++) circle(c, x + (i - (n - 1) / 2) * 6 * s + (r() - 0.5) * 3, y + (r() - 0.5) * 3, (6 + r() * 3) * s, greens[0]);
-    circle(c, x + (r() - 0.5) * 4, y - 5 * s, (6 + r() * 3) * s, greens[1]);
+    for (let i = 0; i < n; i++) circle(c, x + (i - (n - 1) / 2) * 6 * s + (r() - 0.5) * 3, y + (r() - 0.5) * 3, (6 + r() * 3) * s, greens[0], "rgba(12,36,10,0.6)", 1);   // each lobe gets a dark rim, so a bush reads as its own shape
+    circle(c, x + (r() - 0.5) * 4, y - 5 * s, (6 + r() * 3) * s, greens[1], "rgba(12,36,10,0.5)", 0.9);
     circle(c, x - 2 * s, y - 8 * s, 2.5 * s, "rgba(255,255,255,0.12)");
     const berry = r();
     if (berry < 0.35) for (let i = 0; i < 4; i++) circle(c, x + (r() - 0.5) * 14 * s, y - 2 * s + (r() - 0.5) * 8 * s, 1.4 * s, "#e53935");           // red berries
@@ -1200,12 +1200,17 @@ function drawPagoda(c, x, y) {
   const blue = "#2d4e9e", blueDark = "#1c3470", blueLight = "#4a6fc2";
   shadow(c, x, y + 6, 60, 11);
   // Marble terrace: three wide round tiers with balustrades, a stair up the middle
+  ellipse(c, x, y + 8, 59, 10, "rgba(35,30,20,0.42)");                                               // the foundation's own shadow on the grass, so it sits firmly on the ground
   for (const [hw, hh, ty] of [[56, 8, y + 3], [46, 7, y - 4], [36, 6, y - 10]]) {
-    ellipse(c, x, ty, hw, hh, "#e6e2da", "rgba(184,178,166,0.6)", 0.7);
-    rect(c, x - hw, ty - 6, hw * 2, 6, "#efece5", "rgba(184,178,166,0.6)", 0.6);
-    ellipse(c, x, ty - 6, hw, hh, "#f5f2ec", "rgba(184,178,166,0.6)", 0.7);
-    for (let i = -hw + 4; i <= hw - 4; i += 6) rect(c, x + i - 0.8, ty - 12, 1.6, 6, "#d9d4ca");         // balustrade posts
-    line(c, x - hw + 3, ty - 12, x + hw - 3, ty - 12, "#c9c3b6", 1.4);                                  // rail
+    const EDGE = "#6f685a", wall = c.createLinearGradient(0, ty - 6, 0, ty);                          // stone with a lit top and a shaded front: it has weight
+    wall.addColorStop(0, "#d6d0c2"); wall.addColorStop(1, "#b3ab99");
+    ellipse(c, x, ty, hw, hh, "#b3ab99", EDGE, 0.9);
+    rect(c, x - hw, ty - 6, hw * 2, 6, wall, EDGE, 0.9);
+    ellipse(c, x, ty - 6, hw, hh, "#eeeadf", EDGE, 0.9);                                              // the lit top of the tier
+    // A solid parapet wall: a firm band with a coping on top and stubby pillars along it, nothing to see through
+    rect(c, x - hw + 2, ty - 12, hw * 2 - 4, 6, "#d9d3c5", EDGE, 0.8);
+    for (let i = -hw + 4; i <= hw - 4; i += 8) rect(c, x + i - 1.6, ty - 13, 3.2, 8, "#c3bcab", EDGE, 0.6);
+    rect(c, x - hw + 1, ty - 14, hw * 2 - 2, 2.4, "#ece7da", EDGE, 0.7);                              // the coping, catching the light
   }
   rect(c, x - 6, y - 2, 12, 12, "#d9d4ca", "rgba(184,178,166,0.6)", 0.6); for (let s = 0; s < 4; s++) line(c, x - 6, y + s * 3, x + 6, y + s * 3, "rgba(184,178,166,0.7)", 0.7);
   // A conical roof: flaring eaves at the base, straight-ish sides rising to a ring at the top

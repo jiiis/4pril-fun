@@ -679,10 +679,31 @@ function clear(p, { road = ROAD_EDGE + 26, spots = 48, castle = 85, entry = 50, 
     && map.spots.every((s) => dist(s, p) > spots)
     && map.castles.every((k) => dist(p, k) > castle * k.scale) && map.entries.every((e) => dist(p, e) > entry && dist(p, { x: e.rx, y: e.ry }) > entry + 50)
     && map.deco.every((d) => dist(d, p) > deco)
-    && map.critters.every((c) => dist(c, p) > critters);
+    && map.critters.every((c) => dist(c, p) > critters)
+    && !(map.calm || []).some((z) => ((p.x - z.x) / z.rx) ** 2 + ((p.y - z.y) / z.ry) ** 2 < 1);   // empty ground: breathing room (留白)
+}
+
+// Occasionally a stretch of open grass is left deliberately empty, so the map has somewhere for the eye to rest
+function pickCalmZones(rand) {
+  const roll = rand(), want = roll < 0.3 ? 0 : roll < 0.75 ? 1 : 2, zones = [];
+  map.calm = [];
+  for (let n = 0; n < want; n++) {
+    let best = null;
+    for (let i = 0; i < 260; i++) {
+      const p = { x: 110 + rand() * (W - 220), y: 110 + rand() * (H - 220) }, room = roadDistance(p);
+      if (room < ROAD_EDGE + 80 || nearWater(p, 70) || map.spots.some((sp) => dist(sp, p) < 70) || map.castles.some((k) => dist(p, k) < 130) || map.entries.some((e) => dist(p, e) < 120 || dist(p, { x: e.rx, y: e.ry }) < 150) || zones.some((z) => dist(z, p) < 300)) continue;
+      const score = Math.min(room, 190) + rand() * 30;
+      if (!best || score > best.score) best = { ...p, score, room };
+    }
+    if (!best) break;
+    const rx = Math.max(80, Math.min(150, best.room - ROAD_EDGE - 20));
+    const z = { x: best.x, y: best.y, rx, ry: rx * 0.7 };
+    zones.push(z); map.calm.push(z);
+  }
 }
 
 function scatterDeco(rand) {
+  pickCalmZones(rand);
   const out = [];
   map.deco = out;
   let placed = 0;                                                        // scenery pieces placed on their own (woods add extra trees)
