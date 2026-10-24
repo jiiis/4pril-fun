@@ -49,6 +49,7 @@ export function buildBackground(res = 1) {                      // res: device p
   for (const r of rivers) drawRiver(c, r, rand, 1);              // ... then the water, so a tributary flows into its river
 
   drawRoad(c, rand, map.paths);
+  liftGrass(c);                                                  // the grass stands above the roads and rivers: a soil wall, a lit crest and a shadow
 
   for (const b of map.bridges) drawBridge(c, b);
   for (const g of map.exits) drawGateGround(c, g);                // chevrons on the road
@@ -67,6 +68,53 @@ export function buildBackground(res = 1) {                      // res: device p
   sun.addColorStop(1, "rgba(0,0,40,0.10)");
   c.fillStyle = sun; c.fillRect(0, Y0, W, HH);
   return off;
+}
+
+// The grass is higher ground. Roads and rivers are cut into it, so wherever the grass meets one from the north
+// (sunlight from the top-left, looking in from the south) you see a short wall of soil under a bright crest,
+// with a soft shadow on the road or water just below. Found from what is actually drawn: any pixel that is
+// not green counts as road or water, so rounded corners and ragged edges are followed exactly.
+function liftGrass(c) {
+  const res = c.getTransform().a, cv = c.canvas, W1 = cv.width, H1 = cv.height;   // the mask is found at full resolution, then blurred a hair so its edges run smooth
+  const mk = (w, h) => { const k = document.createElement("canvas"); k.width = w; k.height = h; return k; };
+  const S = mk(W1, H1), sctx = S.getContext("2d", { willReadFrequently: true });
+  sctx.drawImage(cv, 0, 0, W1, H1);
+  const img = sctx.getImageData(0, 0, W1, H1), d = img.data, n = W1 * H1;
+  for (let i = 0; i < d.length; i += 4) { const r = d[i], g = d[i + 1], b = d[i + 2]; d[i + 3] = (g < r + 6 || b > g) ? 255 : 0; }   // not grass: road, mud or water
+  const w = W1;
+  { // small islands of green inside a road or the water (lily pads, tufts, specks) are not ground: fill them in
+    const seen = new Uint8Array(n), limit = 700 * res * res, stack = new Int32Array(n), comp = new Int32Array(n);
+    for (let s0 = 0; s0 < n; s0++) {
+      if (seen[s0] || d[s0 * 4 + 3]) continue;
+      let sp = 0, cn = 0; stack[sp++] = s0; seen[s0] = 1;
+      while (sp) {
+        const q = stack[--sp]; comp[cn++] = q; const x = q % w;
+        if (x > 0 && !seen[q - 1] && !d[(q - 1) * 4 + 3]) { seen[q - 1] = 1; stack[sp++] = q - 1; }
+        if (x < w - 1 && !seen[q + 1] && !d[(q + 1) * 4 + 3]) { seen[q + 1] = 1; stack[sp++] = q + 1; }
+        if (q >= w && !seen[q - w] && !d[(q - w) * 4 + 3]) { seen[q - w] = 1; stack[sp++] = q - w; }
+        if (q < n - w && !seen[q + w] && !d[(q + w) * 4 + 3]) { seen[q + w] = 1; stack[sp++] = q + w; }
+      }
+      if (cn <= limit) for (let i = 0; i < cn; i++) d[comp[i] * 4 + 3] = 255;
+    }
+  }
+  sctx.putImageData(img, 0, 0);
+  const M = mk(cv.width, cv.height), mctx = M.getContext("2d");                              // the mask, edges smoothed
+  mctx.filter = `blur(${0.9 * res}px)`; mctx.drawImage(S, 0, 0, cv.width, cv.height); mctx.filter = "none";
+  const K = mk(cv.width, cv.height), kc = K.getContext("2d");
+  c.save(); c.setTransform(1, 0, 0, 1, 0, 0);
+  const lay = (keep, cut, fill, clip = false) => {                                              // M shifted by `keep` minus M shifted by `cut` (px, down is positive): a strip along the north edges
+    kc.globalCompositeOperation = "source-over"; kc.clearRect(0, 0, K.width, K.height);
+    kc.drawImage(M, 0, keep * res); kc.globalCompositeOperation = "destination-out"; kc.drawImage(M, 0, cut * res);
+    if (clip) { kc.globalCompositeOperation = "destination-in"; kc.drawImage(M, 0, 0); }
+    kc.globalCompositeOperation = "source-in"; kc.fillStyle = fill; kc.fillRect(0, 0, K.width, K.height);
+    c.drawImage(K, 0, 0);
+  };
+  const WALL = 5;
+  lay(WALL, WALL + 8, "rgba(15,8,4,0.4)", true);                                                // a soft shadow on the road or water just under the wall
+  lay(0, WALL, "#4d3524");                                                                      // the soil wall
+  lay(0, WALL * 0.45, "#7d5c3b");                                                               // its sunlit upper part
+  lay(-2.2, 0, "rgba(205,242,135,0.7)");                                                        // a bright crest of grass above it
+  c.restore();
 }
 
 // A long, soft shadow stretching to the lower-right, as if the sun were high on the left
