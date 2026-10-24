@@ -175,24 +175,45 @@ export function draw() {
   // Arrows worn into the dirt at the map edges: soft filled wedges, no outlines. A gentle wave
   // runs along the three of them so each swells, brightens and nudges forward in turn.
   const wave = (k) => { const p = ((state.time * 0.55 - k * 0.22) % 1 + 1) % 1; return Math.pow(Math.sin(p * Math.PI), 3); };
-  const chevron = (cx, cy, ax, ay, glow) => {
+  const chevron = (cx, cy, ax, ay, glow, seed = 0) => {
     const px = -ay, py = ax;
-    // A chubby rounded chevron, like a little footprint of an arrow pressed into the dirt
-    ctx.strokeStyle = `rgba(60,38,18,${0.26 + glow * 0.28})`; ctx.lineWidth = 5.5; ctx.lineCap = "round"; ctx.lineJoin = "round";
-    ctx.beginPath();
-    ctx.moveTo(cx - ax * 4 + px * 8, cy - ay * 4 + py * 8);
-    ctx.lineTo(cx + ax * 4, cy + ay * 4);
-    ctx.lineTo(cx - ax * 4 - px * 8, cy - ay * 4 - py * 8);
-    ctx.stroke();                                                                           // one plain stroke, no inner light or edge
+    // Wayside marker: pale stones set into the dirt roughly in a chevron, the way villagers mark a path. Each
+    // marker is its own loose arrangement: a different count of stones per arm, uneven spacing, stones of all
+    // sizes a touch off the line, the whole thing a little askew, and the odd stray pebble. The wave brightens them.
+    const j = (n) => Math.sin(seed * 12.9898 + n * 78.233) * 0.5;
+    const rot = j(0) * 0.45, cs = Math.cos(rot), sn = Math.sin(rot);
+    const at = (a, b) => [cx + (ax * cs - px * sn) * a + (px * cs + ax * sn) * b, cy + (ay * cs - py * sn) * a + (py * cs + ay * sn) * b];
+    const len = 15 + j(1) * 7, spread = 13 + j(2) * 5;
+    const stones = [];
+    for (const side of [1, -1]) {
+      const n = 3 + (j(3 + side) > -0.1 ? 1 : 0) + (j(5 + side) > 0.2 ? 1 : 0) + (j(6 + side) > 0.4 ? 1 : 0);   // 3 to 6 stones on each arm
+      const L = len + j(7 + side) * 5, sp = spread + j(9 + side) * 4;
+      for (let i = 0; i < n; i++) {
+        const t = (i + 0.5 + j(20 + i * 3 + side) * 0.7) / n;                                   // uneven spacing
+        const [x, y] = at(4 - t * L + j(30 + i + side * 7) * 4, side * t * sp + j(40 + i + side * 7) * 4);
+        stones.push({ x, y, r: 2 + Math.abs(j(50 + i + side * 7)) * 3.4 + (1 - t) * 0.8 });
+      }
+    }
+    const [tx, ty] = at(6.5 + j(60) * 3, j(61) * 3.5); stones.push({ x: tx, y: ty, r: 3.2 + Math.abs(j(62)) * 2 });   // a stone at the point
+    for (let k = 0; k < 2; k++) if (j(63 + k * 5) > -0.15) { const [sx, sy] = at(-len * 0.6 + j(64 + k * 5) * 16, j(65 + k * 5) * 38); stones.push({ x: sx, y: sy, r: 1.4 + Math.abs(j(66 + k * 5)) * 1.6 }); }   // stray pebbles
+    for (const st of stones) {
+      const squash = 0.7 + Math.abs(j(70 + st.x)) * 0.3, tilt = j(80 + st.y) * 1.2;
+      ctx.fillStyle = "rgba(50,32,16,0.35)"; ctx.beginPath(); ctx.ellipse(st.x + 0.6, st.y + 1.1, st.r + 0.5, st.r * squash + 0.4, tilt, 0, Math.PI * 2); ctx.fill();   // the dent it sits in
+      const g = ctx.createRadialGradient(st.x - st.r * 0.35, st.y - st.r * 0.4, 0.3, st.x, st.y, st.r);
+      const lit = 0.15 + glow * 0.35, warm = j(90 + st.x) * 12;                                   // each stone its own slight tint
+      g.addColorStop(0, `rgb(${Math.round(205 + lit * 50 + warm)},${Math.round(190 + lit * 50)},${Math.round(165 + lit * 45 - warm)})`);
+      g.addColorStop(1, `rgb(${Math.round(140 + lit * 40 + warm)},${Math.round(125 + lit * 40)},${Math.round(105 + lit * 35 - warm)})`);
+      ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(st.x, st.y, st.r, st.r * squash, tilt, 0, Math.PI * 2); ctx.fill();
+    }
   };
   for (const g of map.exits) for (let k = 0; k < 3; k++) {                 // beyond the gate, on the way out
     const glow = wave(k);
-    const off = (g.out.y < 0 ? 84 : 36) + k * 16;                        // a gate on the top edge towers over the road behind it
-    chevron(g.x + g.out.x * off, g.y + g.out.y * off, g.out.x, g.out.y, glow);
+    const off = (g.out.y < 0 ? 84 : 36) + k * 24;                        // a gate on the top edge towers over the road behind it
+    chevron(g.x + g.out.x * off, g.y + g.out.y * off, g.out.x, g.out.y, glow, g.x + g.y + k * 7);
   }
   for (const e of map.entries) for (let k = 0; k < 3; k++) {               // before the lair, on the way in
     const glow = wave(k);
-    chevron(e.rx - e.inn.x * (30 + k * 16), e.ry - e.inn.y * (30 + k * 16), e.inn.x, e.inn.y, glow);
+    chevron(e.rx - e.inn.x * (34 + k * 24), e.ry - e.inn.y * (34 + k * 24), e.inn.x, e.inn.y, glow, e.rx + e.ry + k * 7);
   }
 
   drawSnowCover(ctx);                                        // settled snow lies on the ground
