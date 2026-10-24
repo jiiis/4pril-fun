@@ -211,24 +211,25 @@ DRAGON.kind = "dragon";
 //   magicWeak   - takes that many times damage from magic; frostImmune - cannot be chilled
 //   healAura    - heals other monsters within healRange by that much per second
 export const ENEMIES = {
-  // Every monster is the same on every level and in every wave: these numbers never scale.
+  // Every monster is the same on every level and in every wave: these numbers never scale (and they are
+  // tough: with slow, sparse waves the challenge comes from each monster taking real punishment).
   // Speeds are slow (a goblin takes a long while to cross the map); the kinds still differ a lot.
-  goblin:   { hp: 40,  speed: 30,  armor: 0,   gold: 4,  lives: 1, attack: 6,  size: 18 },
-  wolf:     { hp: 30,  speed: 52,  armor: 0,   gold: 5,  lives: 1, attack: 8,  size: 20 },
-  bat:      { hp: 28,  speed: 42,  armor: 0,   gold: 5,  lives: 1, attack: 4,  size: 18, flying: true },
-  orc:      { hp: 140, speed: 20,  armor: 0.4, gold: 10, lives: 2, attack: 14, size: 25 },
-  skeleton: { hp: 90,  speed: 24,  armor: 0.6, gold: 9,  lives: 1, attack: 10, size: 20, magicWeak: 1.8, frostImmune: true },
-  shaman:   { hp: 110, speed: 22,  armor: 0.1, gold: 14, lives: 1, attack: 7,  size: 20, healAura: 6, healRange: 70 },
-  golem:    { hp: 520, speed: 12,  armor: 0.7, gold: 35, lives: 3, attack: 28, size: 31, frostImmune: true, magicWeak: 1.4 },
-  troll:    { hp: 900, speed: 16,  armor: 0.3, gold: 60, lives: 5, attack: 35, size: 38 },
+  goblin:   { hp: 100,  speed: 30,  armor: 0,   gold: 6,  lives: 1, attack: 11,  size: 18 },
+  wolf:     { hp: 75,  speed: 52,  armor: 0,   gold: 7,  lives: 1, attack: 14,  size: 20 },
+  bat:      { hp: 70,  speed: 42,  armor: 0,   gold: 7,  lives: 1, attack: 7,  size: 18, flying: true },
+  orc:      { hp: 350, speed: 20,  armor: 0.4, gold: 14, lives: 2, attack: 25, size: 25 },
+  skeleton: { hp: 225,  speed: 24,  armor: 0.6, gold: 13,  lives: 1, attack: 18, size: 20, magicWeak: 1.8, frostImmune: true },
+  shaman:   { hp: 275, speed: 22,  armor: 0.1, gold: 20, lives: 1, attack: 13,  size: 20, healAura: 6, healRange: 70 },
+  golem:    { hp: 1300, speed: 12,  armor: 0.7, gold: 49, lives: 3, attack: 50, size: 31, frostImmune: true, magicWeak: 1.4 },
+  troll:    { hp: 2250, speed: 16,  armor: 0.3, gold: 84, lives: 5, attack: 63, size: 38 },
   //   split       - when killed, bursts into that many smaller monsters
   //   steals      - instead of costing lives, it runs off with this much gold if it reaches the castle
   //   raise       - necromancers turn a nearby corpse into a skeleton every few seconds
-  slime:      { hp: 70,  speed: 25,  armor: 0,   gold: 5,  lives: 1, attack: 5,  size: 19, split: { type: "slimeling", count: 2 }, noCorpse: true },
-  slimeling:  { hp: 22,  speed: 38,  armor: 0,   gold: 2,  lives: 1, attack: 3,  size: 11, noCorpse: true },
-  thief:      { hp: 55,  speed: 48,  armor: 0,   gold: 14, lives: 0, attack: 5,  size: 18, steals: 25 },
-  necromancer:{ hp: 160, speed: 18,  armor: 0.1, gold: 24, lives: 2, attack: 9,  size: 22, raise: { every: 5, range: 90 } },
-  wyvern:     { hp: 280, speed: 27,  armor: 0.2, gold: 32, lives: 3, attack: 18, size: 30, flying: true },
+  slime:      { hp: 175,  speed: 25,  armor: 0,   gold: 7,  lives: 1, attack: 9,  size: 19, split: { type: "slimeling", count: 2 }, noCorpse: true },
+  slimeling:  { hp: 55,  speed: 38,  armor: 0,   gold: 3,  lives: 1, attack: 5,  size: 11, noCorpse: true },
+  thief:      { hp: 138,  speed: 48,  armor: 0,   gold: 20, lives: 0, attack: 9,  size: 18, steals: 25 },
+  necromancer:{ hp: 400, speed: 18,  armor: 0.1, gold: 34, lives: 2, attack: 16,  size: 22, raise: { every: 5, range: 90 } },
+  wyvern:     { hp: 700, speed: 27,  armor: 0.2, gold: 45, lives: 3, attack: 32, size: 30, flying: true },
 };
 
 // What appears in each wave, weakest kinds first and the nastiest last. n = wave number (1, 2, 3 ...).
