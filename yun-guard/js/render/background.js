@@ -99,7 +99,10 @@ function liftGrass(c) {
   }
   sctx.putImageData(img, 0, 0);
   const M = mk(cv.width, cv.height), mctx = M.getContext("2d");                              // the mask, edges smoothed
-  mctx.filter = `blur(${0.9 * res}px)`; mctx.drawImage(S, 0, 0, cv.width, cv.height); mctx.filter = "none";
+  mctx.filter = `blur(${1.4 * res}px)`; mctx.drawImage(S, 0, 0, cv.width, cv.height); mctx.filter = "none";
+  { const q = mctx.getImageData(0, 0, cv.width, cv.height), qd = q.data;                       // blur then cut at half: a smooth outline with a crisp, anti-aliased edge
+    for (let i = 3; i < qd.length; i += 4) qd[i] = Math.max(0, Math.min(255, (qd[i] - 128) * 6 + 128));
+    mctx.putImageData(q, 0, 0); }
   const K = mk(cv.width, cv.height), kc = K.getContext("2d");
   c.save(); c.setTransform(1, 0, 0, 1, 0, 0);
   const lay = (keep, cut, fill, clip = false) => {                                              // M shifted by `keep` minus M shifted by `cut` (px, down is positive): a strip along the north edges
@@ -109,11 +112,11 @@ function liftGrass(c) {
     kc.globalCompositeOperation = "source-in"; kc.fillStyle = fill; kc.fillRect(0, 0, K.width, K.height);
     c.drawImage(K, 0, 0);
   };
-  const WALL = 5;
-  lay(WALL, WALL + 8, "rgba(15,8,4,0.4)", true);                                                // a soft shadow on the road or water just under the wall
+  const WALL = 3.5;
+  lay(WALL, WALL + 6, "rgba(15,8,4,0.32)", true);                                                // a soft shadow on the road or water just under the wall
   lay(0, WALL, "#4d3524");                                                                      // the soil wall
   lay(0, WALL * 0.45, "#7d5c3b");                                                               // its sunlit upper part
-  lay(-2.2, 0, "rgba(205,242,135,0.7)");                                                        // a bright crest of grass above it
+  lay(-1.6, 0, "rgba(205,242,135,0.6)");                                                        // a bright crest of grass above it
   c.restore();
 }
 
