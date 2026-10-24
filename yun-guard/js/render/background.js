@@ -307,6 +307,62 @@ function drawPond(c, p) {
   }
 }
 
+// ---------- Small plants (shared by the river banks and the open grass) ----------
+const GREENS = ["#4f8a34", "#5f9e3d", "#3e7a2c", "#6aa845", "#487a30"];
+const pick = (arr, r) => arr[Math.floor(r() * arr.length)];
+export const TUFT_KINDS = 4, WEED_KINDS = 4;
+// Grass tufts: 0 a fan of curved blades, 1 a seeding grass with tiny golden heads, 2 a low dense clump, 3 a clover patch
+function drawTuft(c, x, y, s, v, r) {
+  const col = pick(GREENS, r);
+  if (v === 0) {
+    const blades = 4 + Math.floor(r() * 4), h = (5 + r() * 6) * s;
+    for (let q = 0; q < blades; q++) line(c, x, y, x + (q - (blades - 1) / 2) * (1.4 + r() * 0.8) * s + (r() - 0.5) * 2, y - h * (0.65 + r() * 0.5), col, 1.2);
+  } else if (v === 1) {
+    const n = 3 + Math.floor(r() * 3);
+    for (let q = 0; q < n; q++) { const lean = (q - (n - 1) / 2) * 2.4 * s + (r() - 0.5) * 2, h = (9 + r() * 6) * s; line(c, x, y, x + lean, y - h, "#8aa84a", 1.1); ellipse(c, x + lean, y - h - 1.5 * s, 1 * s, 2.2 * s, "#d8b84a"); }
+  } else if (v === 2) {
+    const n = 8 + Math.floor(r() * 6);
+    for (let q = 0; q < n; q++) { const a = -Math.PI / 2 + (r() - 0.5) * 2.2, h = (3 + r() * 4) * s; line(c, x + (r() - 0.5) * 5 * s, y, x + Math.cos(a) * h * 1.2, y + Math.sin(a) * h, pick(GREENS, r), 1.1); }
+  } else {
+    const n = 3 + Math.floor(r() * 4);
+    for (let q = 0; q < n; q++) {
+      const px = x + (r() - 0.5) * 12 * s, py = y + (r() - 0.5) * 5 * s;
+      line(c, px, py, px, py - 3 * s, "#4f8a34", 0.9);
+      for (let k = 0; k < 3; k++) { const a = -Math.PI / 2 + (k - 1) * 0.9; circle(c, px + Math.cos(a) * 1.7 * s, py - 3 * s + Math.sin(a) * 1.7 * s, 1.5 * s, k === 1 ? "#6aa845" : "#58a03c"); }
+    }
+  }
+}
+// Weeds: 0 tall and leafy, sometimes flowering; 1 a fern with arching fronds; 2 a thistle with a purple head; 3 a dandelion with its seed puff
+function drawWeed(c, x, y, s, v, r) {
+  const col = pick(GREENS, r);
+  if (v === 0) {
+    const h = (10 + r() * 9) * s, lean = (r() - 0.5) * 6;
+    line(c, x, y, x + lean, y - h, col, 1.4);
+    for (let q = 1; q <= 3; q++) { const t = q / 4, lx = x + lean * t, ly = y - h * t, d = (q % 2 ? 1 : -1) * (3 + r() * 2) * s; line(c, lx, ly, lx + d, ly - (3 + r() * 2) * s, col, 1.2); }
+    if (r() < 0.3) circle(c, x + lean, y - h, 1.3 * s, pick(["#ffeb3b", "#fff", "#f48fb1", "#ce93d8"], r));
+  } else if (v === 1) {
+    const n = 5 + Math.floor(r() * 3);
+    for (let q = 0; q < n; q++) {
+      const side = q % 2 ? 1 : -1, len = (9 + r() * 6) * s, a = side * (0.5 + (q >> 1) * 0.28 + r() * 0.15);
+      const ex = x + Math.sin(a) * len, ey = y - Math.cos(a) * len * 0.8 + len * 0.18 * Math.abs(Math.sin(a));
+      c.strokeStyle = "#3f7a33"; c.lineWidth = 1.2; c.lineCap = "round"; c.beginPath(); c.moveTo(x, y); c.quadraticCurveTo(x + Math.sin(a) * len * 0.45, y - len * 0.85, ex, ey); c.stroke();
+      for (let k = 1; k <= 4; k++) { const t = k / 5, bx = x + (ex - x) * t, by = y + (ey - y) * t - Math.sin(t * 2.2) * len * 0.3; line(c, bx, by, bx + side * 1.8 * s, by - 1.6 * s, "#4f8f3d", 1); line(c, bx, by, bx - side * 1.4 * s, by - 1.2 * s, "#4f8f3d", 1); }
+    }
+  } else if (v === 2) {
+    const h = (11 + r() * 7) * s;
+    line(c, x, y, x, y - h, "#5a8a3a", 1.5);
+    for (const d of [-1, 1]) { poly(c, [[x, y - h * 0.3], [x + d * 5 * s, y - h * 0.42], [x + d * 2.6 * s, y - h * 0.2]], "#6f9a4a"); poly(c, [[x, y - h * 0.55], [x + d * 4 * s, y - h * 0.7], [x + d * 2 * s, y - h * 0.46]], "#6f9a4a"); }
+    circle(c, x, y - h - 1 * s, 2.6 * s, "#8e6bb0"); for (let k = -2; k <= 2; k++) line(c, x + k * 0.9 * s, y - h - 2 * s, x + k * 1.4 * s, y - h - 5 * s, "#b995d6", 1);
+    ellipse(c, x, y - h + 1.5 * s, 2.8 * s, 1.6 * s, "#5f9e3d");
+  } else {
+    const h = (8 + r() * 5) * s, lean = (r() - 0.5) * 3;
+    for (let q = -1; q <= 1; q++) poly(c, [[x, y], [x + q * 5 * s - 1, y - 3 * s], [x + q * 5 * s + 1, y - 2.5 * s]], "#5f9e3d");
+    line(c, x, y, x + lean, y - h, "#6aa845", 1.1);
+    if (r() < 0.55) { circle(c, x + lean, y - h, 2.3 * s, "#ffd600"); for (let k = 0; k < 8; k++) { const a = k * 0.785; line(c, x + lean, y - h, x + lean + Math.cos(a) * 3.3 * s, y - h + Math.sin(a) * 3.3 * s, "#ffeb3b", 1); } }
+    else { circle(c, x + lean, y - h, 2.8 * s, "rgba(255,255,255,0.75)"); for (let k = 0; k < 9; k++) { const a = k * 0.7; line(c, x + lean, y - h, x + lean + Math.cos(a) * 3.8 * s, y - h + Math.sin(a) * 3.8 * s, "rgba(255,255,255,0.8)", 0.8); } }
+  }
+}
+
 function drawRiver(c, r, rand, pass) {
   const pts = r.points;
   // Smooth sideways normals at every point (average of the two neighbouring segments)
@@ -315,21 +371,44 @@ function drawRiver(c, r, rand, pass) {
     const dx = b.x - a.x, dy = b.y - a.y, l = Math.hypot(dx, dy) || 1;
     return { x: -dy / l, y: dx / l };
   });
+  // Each bank wanders on its own: smooth, uneven noise so the water's edge bulges and pinches like real
+  // ground (coves, small points, a muddy shelf that comes and goes), never a clean ribbon
+  const nz = (seed) => {
+    const r2 = rng(seed), f = [0.5 + r2() * 0.4, 1.3 + r2() * 0.8, 2.6 + r2() * 1.2], ph = f.map(() => r2() * 6.3), amp = 0.6 + r2() * 0.7;
+    let v = pts.map((_, i) => (Math.sin(i * f[0] + ph[0]) * 0.55 + Math.sin(i * f[1] + ph[1]) * 0.33 + Math.sin(i * f[2] + ph[2]) * 0.17 + (r2() - 0.5) * 0.9) * amp);
+    for (let pass = 0; pass < 4; pass++) v = v.map((x, i) => (v[Math.max(0, i - 1)] + 2 * x + v[Math.min(v.length - 1, i + 1)]) / 4);   // smoothed, so the edge flows with no kinks
+    return v.map((x) => x * 1.5);
+  };
+  const sd = Math.floor(pts[0].x * 3 + pts[0].y * 5) + 13;
+  const nzL = nz(sd), nzR = nz(sd + 1), mudL = nz(sd + 2), mudR = nz(sd + 3);
   // Fill the band between the two banks, scaled to a fraction of the local width, shifted sideways if asked
-  const band = (scale, color, extra = 0, shift = 0) => {
+  const band = (scale, color, extra = 0, shift = 0, mud = 0) => {
     const sc = (i) => (typeof scale === "function" ? scale(i) : scale);
+    const offL = (i) => pts[i].w * sc(i) / 2 + extra + shift + nzL[i] * 5 * Math.min(1, sc(i) + 0.3) + (mud ? mud * (1 + mudL[i]) : 0);
+    const offR = (i) => -(pts[i].w * sc(i) / 2 + extra - shift + nzR[i] * 5 * Math.min(1, sc(i) + 0.3) + (mud ? mud * (1 + mudR[i]) : 0));
     c.fillStyle = color;
     c.beginPath();
-    pts.forEach((p, i) => { const o = p.w * sc(i) / 2 + extra + shift; const x = p.x + normals[i].x * o, y = p.y + normals[i].y * o; i ? c.lineTo(x, y) : c.moveTo(x, y); });
-    for (let i = pts.length - 1; i >= 0; i--) { const p = pts[i], o = -(p.w * sc(i) / 2 + extra) + shift; c.lineTo(p.x + normals[i].x * o, p.y + normals[i].y * o); }
+    pts.forEach((p, i) => { const o = offL(i); const x = p.x + normals[i].x * o, y = p.y + normals[i].y * o; i ? c.lineTo(x, y) : c.moveTo(x, y); });
+    for (let i = pts.length - 1; i >= 0; i--) { const p = pts[i], o = offR(i); c.lineTo(p.x + normals[i].x * o, p.y + normals[i].y * o); }
     c.closePath();
     c.fill();
   };
   if (pass === 0) {
-    band(1, "rgba(60,90,35,0.55)", 7);                                // damp bank
-    band(1, "#5c4a33", 3);                                            // mud edge
+    band(1, "rgba(60,90,35,0.5)", 6, 0, 4.5);                           // damp bank, wider in places
+    band(1, "rgba(70,58,38,0.7)", 3, 0, 2.4);                           // wet soil
+    band(1, "#5c4a33", 1.5, 0, 2);                                      // muddy bank, a shelf that comes and goes
+    for (let i = 0; i < pts.length - 1; i++) {                       // muddy slumps, sandy spits and wet stones strewn along both banks
+      for (const side of [1, -1]) {
+        if (rand() < 0.45) continue;
+        const p = pts[i], n = normals[i], o = side * (p.w / 2 + 1 + rand() * 7), x = p.x + n.x * o, y = p.y + n.y * o, k = rand();
+        if (k < 0.4) ellipse(c, x, y, 3 + rand() * 6, 2 + rand() * 3, "rgba(80,62,40,0.55)");
+        else if (k < 0.7) ellipse(c, x, y, 2.5 + rand() * 5, 1.5 + rand() * 2.5, "rgba(196,176,128,0.5)");
+        else ellipse(c, x, y, 1.8 + rand() * 2.4, 1.3 + rand() * 1.6, ["#8e8a82", "#74706a", "#a29d92"][Math.floor(rand() * 3)], "rgba(40,36,30,0.5)", 0.6);
+      }
+    }
     return;
   }
+  band(1, "rgba(25,45,40,0.4)", 1.8, 0, 0.8);                         // a dark wet rim hugging the water's edge
   band(1, "#2f6a93");                                                 // deep water
   // The shallows lighten toward the middle in soft, wavering layers rather than hard stripes
   const ph = rand() * 6;
@@ -373,6 +452,20 @@ function drawRiver(c, r, rand, pass) {
       if (w < 18 && rand() < 0.12) {                                  // white water in the narrow runs
         const o = (rand() - 0.5) * w * 0.6;
         line(c, x + n.x * o - 3, y + n.y * o, x + n.x * o + 3, y + n.y * o, "rgba(255,255,255,0.55)", 1.5);
+      }
+    }
+  }
+  // Tufts and weeds crowding the banks: grass clumps, tall weeds, ferns, thistles and dandelions, right at the water's edge
+  for (let i = 0; i < pts.length; i++) {
+    const p = pts[i], n = normals[i];
+    for (const side of [1, -1]) {
+      const nzv = side > 0 ? nzL[i] : nzR[i];
+      for (let k = 0; k < 2; k++) {
+        if (rand() < 0.4) continue;
+        const o = side * (p.w / 2 + nzv * 5 + 2 + rand() * 9), x = p.x + n.x * o + (rand() - 0.5) * 4, y = p.y + n.y * o + (rand() - 0.5) * 4, v = rand();
+        if (v < 0.55) drawTuft(c, x, y, 1, Math.floor(rand() * TUFT_KINDS), rand);
+        else if (v < 0.88) drawWeed(c, x, y, 1, Math.floor(rand() * WEED_KINDS), rand);
+        else { const h = 12 + rand() * 6, lean = (rand() - 0.5) * 4; line(c, x, y, x + lean, y - h, "#5a8a30", 1.3); line(c, x + lean, y - h, x + lean, y - h - 4, "#6d4c41", 2.2); }   // a cattail
       }
     }
   }
@@ -483,7 +576,7 @@ function drawBridge(c, b) {
 // Every function gets a size, a variant (0-2) and its own random generator, so no two pieces look alike.
 export function drawDecoItem(c, d) {
   const s = d.s || 1;
-  castShadow(c, d.x, d.y, d.type === "tree" ? 16 * s : d.type === "flower" || d.type === "mushroom" ? 0 : 9 * s, d.type === "tree" ? 22 * s : 6);
+  castShadow(c, d.x, d.y, d.type === "tree" ? 16 * s : d.type === "flower" || d.type === "mushroom" || d.type === "tuft" || d.type === "weed" ? 0 : 9 * s, d.type === "tree" ? 22 * s : 6);
   DRAW_DECO[d.type](c, d.x, d.y, s, d.variant || 0, rng(d.seed || 1));
 }
 // Age marks on a wall region: a hairline crack or two, a damp stain, a few chipped flecks and moss at the foot
@@ -663,6 +756,8 @@ const DRAW_DECO = {
       circle(c, fx, fy, 2.2 * fs, palette[1]);
     }
   },
+  tuft(c, x, y, s, v, r) { drawTuft(c, x, y, s, v % TUFT_KINDS, r); },
+  weed(c, x, y, s, v, r) { drawWeed(c, x, y, s, v % WEED_KINDS, r); },
   mushroom(c, x, y, s, v, r) {
     const caps = [["#d84315", "#fff"], ["#8d6e63", "#efebe9"], ["#c62828", "#fff"]][v];
     const n = 1 + Math.floor(r() * 3);

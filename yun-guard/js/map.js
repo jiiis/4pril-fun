@@ -723,6 +723,19 @@ function scatterDeco(rand) {
       }
     }
   }
+  // Tufts and weeds scattered over the grass: some standing alone, some in loose patches
+  for (let i = 0, count = 0; i < 1400 && count < 150; i++) {
+    const p = { x: 14 + rand() * (W - 28), y: 14 + rand() * (H - 28) };
+    if (!clear(p, { deco: 12 })) continue;
+    const type = rand() < 0.62 ? "tuft" : "weed", kinds = 4, v = Math.floor(rand() * kinds), alone = rand() < 0.45;
+    const mk = (x, y) => ({ type, x, y, s: 0.8 + rand() * 0.55, variant: v, seed: Math.floor(rand() * 1e6) });
+    out.push(mk(p.x, p.y)); count++;
+    if (!alone) for (let k = 0, tries = 0, n = 2 + Math.floor(rand() * 5); k < n && tries < 20; tries++) {   // a patch: neighbours mostly the same kind
+      const a = rand() * Math.PI * 2, d = 7 + rand() * 24, q = { x: p.x + Math.cos(a) * d, y: p.y + Math.sin(a) * d * 0.65 };
+      if (q.x < 14 || q.x > W - 14 || q.y < 14 || q.y > H - 14 || !clear(q, { deco: 7 })) continue;
+      const m = mk(q.x, q.y); if (rand() < 0.3) m.variant = Math.floor(rand() * kinds); out.push(m); count++; k++;
+    }
+  }
   // A little landscaping in front of each home: a few flowers, pebbles and a bush close to its walls
   for (const k of map.castles) {
     for (let n = 0, tries = 0; n < 4 && tries < 30; tries++) {
