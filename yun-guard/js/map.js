@@ -219,17 +219,17 @@ function finishRiver(pts, rand, { base, taper = false, parent = null, joinAt = n
   pts.forEach((p, i) => {
     const wave = 0.5 + 0.5 * Math.sin(i * f1 + p1);
     const ripple = 0.5 + 0.5 * Math.sin(i * f2 + p2);
-    p.w = base * (0.78 + wave * 0.3 + ripple * 0.14) + (rand() - 0.5) * 3;   // gentle variation along the course
+    p.w = base * (0.84 + wave * 0.22 + ripple * 0.08);                          // gentle variation along the course, no per-point noise
     if (taper) p.w *= 0.85 + 0.25 * (i / (pts.length - 1));                  // a stream grows a little as it nears the river
   });
   if (!taper) {
     const pools = 1 + Math.floor(rand() * 2);
     for (let k = 0; k < pools; k++) {                            // a pool: the river balloons out over a few points
-      const at = 3 + Math.floor(rand() * (pts.length - 6)), bulge = 10 + rand() * 14;
-      for (let i = -3; i <= 3; i++) if (pts[at + i]) pts[at + i].w += bulge * Math.exp(-i * i / 2.2);
+      const at = 4 + Math.floor(rand() * (pts.length - 8)), bulge = 8 + rand() * 12;
+      for (let i = -5; i <= 5; i++) if (pts[at + i]) pts[at + i].w += bulge * Math.exp(-i * i / 5);   // a long, soft swell
     }
   }
-  for (let pass = 0; pass < 2; pass++) for (let i = 1; i < pts.length - 1; i++) pts[i].w = (pts[i - 1].w + pts[i].w + pts[i + 1].w) / 3;
+  for (let pass = 0; pass < 5; pass++) for (let i = 1; i < pts.length - 1; i++) pts[i].w = (pts[i - 1].w + pts[i].w + pts[i + 1].w) / 3;   // well smoothed
   pts.forEach((p) => { p.w = Math.max(taper ? 28 : 34, Math.min(80, p.w)); });
   if (taper) { const n = pts.length; pts[n - 1].w *= 1.3; pts[n - 2].w *= 1.15; }   // the mouth widens a little where it meets the river
   const river = { points: pts, width: Math.max(...pts.map((p) => p.w)), base, parent };   // width = the widest point (used for clearances)
