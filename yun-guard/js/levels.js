@@ -47,8 +47,17 @@ export function mapOptionsFor(L) {
   L = clampLevel(L);
   return {
     spots: Math.min(20, 8 + Math.floor((L - 1) * 0.45)),              // 8 pads at level 1, 20 from level 28
-    secondRoute: L < 4 ? 0 : L < 10 ? 0.5 : L < 25 ? 0.85 : 1,        // one road to start with; a second one creeps in, then is the rule
-    thirdRoute: L < 30 ? 0 : Math.min(0.7, (L - 30) * 0.014),         // from level 30 a third branch grows ever more likely (70% at level 80+)
+    // Roads beyond the main one, each with its own chance: a second creeps in early and is the rule from level 20,
+    // a third from level 25 on (certain by 60), a fourth from level 45 (likely by 100). High levels are a tangle.
+    extraRoutes: [
+      L < 4 ? 0 : L < 10 ? 0.5 : L < 20 ? 0.85 : 1,
+      L < 25 ? 0 : Math.min(1, (L - 25) * 0.03),
+      L < 45 ? 0 : Math.min(0.85, (L - 45) * 0.016),
+    ],
+    rounds: 2 + Math.floor(L / 40),                                    // how hard the map tries to fit each extra road (up to 4 rounds at 100)
+    entryChances: [L < 10 ? 0 : Math.min(1, (L - 10) / 60), L < 40 ? 0 : Math.min(0.85, (L - 40) / 70)],   // chance of a 2nd and a 3rd entrance, growing with level
+    exitChances: [L < 10 ? 0 : Math.min(1, (L - 10) / 50)],               // chance of a 2nd exit
+    minRoutes: L < 20 ? 1 : L < 60 ? 2 : 3,                              // and the layout is redone until at least this many roads exist (when wanted)
   };
 }
 

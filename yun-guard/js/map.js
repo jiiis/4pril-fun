@@ -33,32 +33,50 @@ export function generateMap(seed, opts = {}) {
   map.seed = seed;
   map.opts = { spots: 20, secondRoute: 0.85, ...opts };            // how much world this level gets (see levels.js)
 
-  const main = generateMainRoute(rand);
-  map.routes = [main];
-  map.path = cellsToWaypoints(main.cells, rand);
-  map.exit = map.path[map.path.length - 1];
-  map.paths = [map.path];
-
-  // Usually a second route. It can fork off the main road and rejoin it, come in from its own
-  // entrance and merge, fork off and leave by its own exit, or be a completely separate road.
-  // Higher levels want more roads: a second route is tried harder, and later a third branch may appear too
-  let allCells = main.cells;
-  const wanted = (rand() < map.opts.secondRoute ? 1 : 0) + (rand() < (map.opts.thirdRoute || 0) ? 1 : 0);
-  for (let n = 0; n < wanted; n++) {
-    const ends = map.routes.flatMap((r) => [r.entry, r.exit]).filter(Boolean);
-    let added = null;
-    for (let round = 0; round < 3 && !added; round++) {                      // several tries, each with the kinds in a fresh order
-      const kinds = [forkAndRejoin, separateEntry, forkToExit, separateRoute];
-      shuffle(kinds, rand);
-      for (const make of kinds) {
-        const from = map.routes[Math.floor(rand() * map.routes.length)];      // branch off any road so far
-        added = make(from, rand, allCells, ends);
-        if (added) break;
+  // Lay out the roads: a main route, then the extra routes this level asks for. An extra route can fork off a
+  // road and rejoin it, come in from its own entrance and merge, fork off to its own exit, or run separately.
+  // Some main roads leave no room for branches, so when the level insists on a minimum number of roads the
+  // whole layout is tried again (keeping the best so far).
+  const chance = (ps) => ps.reduce((n, q) => n + (rand() < q ? 1 : 0), 1);             // 1, plus one for every chance that comes up
+  const minIn = chance(map.opts.entryChances || []), minOut = chance(map.opts.exitChances || []);
+  const wanted0 = (map.opts.extraRoutes || [map.opts.secondRoute || 0, map.opts.thirdRoute || 0]).reduce((n, p) => n + (rand() < p ? 1 : 0), 0);   // roads beyond the main one
+  const wanted = Math.max(wanted0, minIn - 1, minOut - 1);
+  const need = Math.min(1 + wanted, Math.max(map.opts.minRoutes || 1, minIn, minOut));
+  let keepMain = null;
+  const layout = (reuse) => {
+    const main = reuse && keepMain ? keepMain : (keepMain = generateMainRoute(rand));       // retries first try other branches off the same main road (far cheaper than a new one)
+    const routes = [main], paths = [cellsToWaypoints(main.cells, rand)];
+    map.routes = routes; map.paths = paths;                                       // the kinds below read map.paths / map.routes
+    let allCells = main.cells;
+    for (let n = 0; n < wanted; n++) {
+      const ends = routes.flatMap((r) => [r.entry, r.exit]).filter(Boolean);
+      let added = null;
+      for (let round = 0; round < (map.opts.rounds || 3) && !added; round++) {   // several tries, each with the kinds in a fresh order
+        const count = (k) => new Set(routes.map((r) => r[k].edge + ":" + r[k].pos)).size;
+        const needIn = count("entry") < (minIn), needOut = count("exit") < (minOut);
+        const kinds = round >= 2 || !(needIn || needOut) ? [forkAndRejoin, separateEntry, forkToExit, separateRoute]   // levels that want several entrances / exits ask for them first
+          : needIn && needOut ? [separateRoute] : needIn ? [separateEntry, separateRoute] : [forkToExit, separateRoute];
+        shuffle(kinds, rand);
+        for (const make of kinds) {
+          const from = routes[Math.floor(rand() * routes.length)];                // branch off any road so far
+          added = make(from, rand, allCells, ends);
+          if (added) break;
+        }
       }
+      if (!added) continue;                                                       // no room for this one; still try for the next
+      routes.push(added); paths.push(cellsToWaypoints(added.cells, rand)); allCells = [...allCells, ...added.cells];
     }
-    if (!added) break;
-    map.routes.push(added); map.paths.push(cellsToWaypoints(added.cells, rand)); allCells = [...allCells, ...added.cells];
-  }
+    return { routes, paths, allCells };
+  };
+  const distinct = (l, k) => new Set(l.routes.map((r) => r[k].edge + ":" + r[k].pos)).size;
+  const layoutScore = (l) => l.routes.length + 2 * Math.min(minIn, distinct(l, "entry")) + 2 * Math.min(minOut, distinct(l, "exit"));
+  const enough = (l) => l.routes.length >= need && layoutScore(l) >= need + 2 * (minIn) + 2 * (minOut);
+  let best = layout();
+  for (let attempt = 1; attempt < 5 && !enough(best); attempt++) { const l = layout(false); if (layoutScore(l) > layoutScore(best)) best = l; }
+  map.routes = best.routes; map.paths = best.paths;
+  const main = best.routes[0], allCells = best.allCells;
+  map.path = map.paths[0];
+  map.exit = map.path[map.path.length - 1];
 
   // One signpost per distinct entrance, standing beside the road where it enters the map
   map.entries = [];
@@ -359,7 +377,11 @@ const stepCell = (cell, d, n = 1) => ({ c: cell.c + d.dc * n, r: cell.r + d.dr *
 const marginCells = (edge, pos) => { const e = edgeCell(edge, pos), inn = INWARD[edge]; return [e, stepCell(e, inn)]; };
 const interiorCell = (edge, pos) => stepCell(edgeCell(edge, pos), INWARD[edge], 2);
 const inInterior = (c, r) => c >= ROAD_MIN_COL && c <= ROAD_MAX_COL && r >= ROAD_MIN_ROW && r <= ROAD_MAX_ROW;
-const isStraight = (cells, i) => i > 0 && i < cells.length - 1 && ((cells[i - 1].c === cells[i + 1].c) || (cells[i - 1].r === cells[i + 1].r));
+const isStraight = (cells, i) => {                                                  // the road runs on (nearly) straight here, so a branch can leave or join cleanly
+  if (i <= 0 || i >= cells.length - 1) return false;
+  const ax = cells[i].c - cells[i - 1].c, ay = cells[i].r - cells[i - 1].r, bx = cells[i + 1].c - cells[i].c, by = cells[i + 1].r - cells[i].r;
+  return (ax * bx + ay * by) / (Math.hypot(ax, ay) * Math.hypot(bx, by) || 1) >= 0.7;
+};
 const randomEdgePos = (rand, edge) => { const [lo, hi] = edgePositions(edge); return lo + Math.floor(rand() * (hi - lo + 1)); };
 const touches = (cell, set) => NEIGHBOURS.some(([dc, dr]) => set.has(key(cell.c + dc, cell.r + dr)));
 
@@ -371,9 +393,9 @@ function walk(rand, start, goal, { avoid = [], allowedNear = [], reserved = [], 
   const avoidSet = new Set(avoid.map((c) => key(c.c, c.r)));
   const allowed = new Set(allowedNear.map((c) => key(c.c, c.r)));
   const reservedSet = new Set(reserved.map((c) => key(c.c, c.r)));
-  const goalKey = key(goal.c, goal.r);
+  const goalKey = key(goal.c, goal.r), startKey = key(start.c, start.r), reservedKeys = reserved.map((c) => key(c.c, c.r));
   for (let attempt = 0; attempt < attempts; attempt++) {
-    const used = new Set([key(start.c, start.r), ...reserved.map((c) => key(c.c, c.r))]);
+    const used = new Set([startKey, ...reservedKeys]);
     const walked = [];
     let cur = start, lastMove = null, straight = 0, lastTurn = 0, turnRun = 0;
     for (let step = 0; step < 90; step++) {
@@ -383,7 +405,7 @@ function walk(rand, start, goal, { avoid = [], allowedNear = [], reserved = [], 
         if (includeGoal) walked.push(goal);
         return walked;
       }
-      const trail = new Set([...(walked.length < 3 ? [key(start.c, start.r)] : []), ...walked.slice(-3).map((w) => key(w.c, w.r))]);   // our own last three cells (a bend brings them within two); anything older counts as another stretch of road
+      const trail = []; if (walked.length < 3) trail.push(startKey); for (let t = Math.max(0, walked.length - 3); t < walked.length; t++) trail.push(key(walked[t].c, walked[t].r));   // our own last three cells (a bend brings them within two); anything older counts as another stretch of road
       const moves = STEPS.filter(([dc, dr]) => {
         const c = cur.c + dc, r = cur.r + dr, k = key(c, r);
         if (!inInterior(c, r) || used.has(k) || avoidSet.has(k)) return false;
@@ -397,7 +419,7 @@ function walk(rand, start, goal, { avoid = [], allowedNear = [], reserved = [], 
         const nearGoal = Math.max(Math.abs(c - goal.c), Math.abs(r - goal.r)) <= 2;
         for (const [ac, ar] of RING2) {                                        // keep a whole empty cell between this road and any other stretch of road
           const nc = c + ac, nr = r + ar, nk = key(nc, nr);
-          if (trail.has(nk) || nk === goalKey) continue;
+          if (nk === goalKey || trail.includes(nk)) continue;
           const adjacent = Math.abs(ac) <= 1 && Math.abs(ar) <= 1;
           if (reservedSet.has(nk)) { if (adjacent) return false; continue; }
           if (used.has(nk)) { if (adjacent || !nearGoal) return false; continue; }
@@ -463,13 +485,14 @@ function generateMainRoute(rand) {
       r: Math.round(Math.min(ROAD_MAX_ROW - 1, Math.max(ROAD_MIN_ROW + 1, (start.r + goal.r) / 2 + ny * side * 3 + (rand() - 0.5) * 2))),
     };
     const reserved = [...marginCells(entry.edge, entry.pos), ...marginCells(exit.edge, exit.pos)];
-    const first = walk(rand, start, detour, { reserved, includeGoal: true, bias: 1.3, minLen: 8, attempts: 40 });
+    const bias = map.opts.bias || 1.3;
+    const first = walk(rand, start, detour, { reserved, includeGoal: true, bias, minLen: 8, attempts: 40 });
     if (!first) continue;
     const sofar = [start, ...first];
-    const second = walk(rand, detour, goal, { avoid: sofar.slice(0, -1), reserved, includeGoal: true, bias: 1.3, minLen: 8, attempts: 40 });
+    const second = walk(rand, detour, goal, { avoid: sofar.slice(0, -1), reserved, includeGoal: true, bias, minLen: 8, attempts: 40 });
     if (!second) continue;
     const cells = [...marginCells(entry.edge, entry.pos), ...sofar, ...second, ...marginCells(exit.edge, exit.pos).reverse()];
-    if (cells.length < 36) continue;                                                // a long, meandering road (36 cells is about 2.6 screens of travel)
+    if (cells.length < (map.opts.minCells || 36)) continue;                         // a long, meandering road (36 cells is about 2.6 screens of travel; more on high levels)
     // The road must visit every one of six blocks (3 across, 2 down) of the middle, so no big area is left empty
     const bw = (ROAD_MAX_COL - ROAD_MIN_COL + 1) / 3, bh = (ROAD_MAX_ROW - ROAD_MIN_ROW + 1) / 2;
     const blocks = new Set(cells.filter((c) => inInterior(c.c, c.r)).map((c) => Math.floor((c.c - ROAD_MIN_COL) / bw) + 3 * Math.floor((c.r - ROAD_MIN_ROW) / bh)));
@@ -503,7 +526,7 @@ function forkAndRejoin(main, rand, allCells = main.cells) {
     const i = lo + Math.floor(rand() * Math.floor((hi - lo) * 0.5));
     const j = i + 6 + Math.floor(rand() * Math.max(1, hi - i - 6));
     if (j > hi || !isStraight(cells, i) || !isStraight(cells, j)) continue;
-    const walked = walk(rand, cells[i], cells[j], { avoid: allCells, allowedNear: [cells[i], cells[j]], minLen: 6, attempts: 320 });
+    const walked = walk(rand, cells[i], cells[j], { avoid: allCells, allowedNear: [cells[i], cells[j]], minLen: 6, attempts: 40 });
     if (!walked) continue;
     return { cells: [...cells.slice(0, i + 1), ...walked, ...cells.slice(j)], entry: main.entry, exit: main.exit };
   }
@@ -516,10 +539,11 @@ function separateEntry(main, rand, allCells = main.cells, ends = [main.entry, ma
   for (let attempt = 0; attempt < 40; attempt++) {
     const entry = freeEdgeSpot(rand, allCells, ends);
     if (!entry || !farApart(entry, main.exit, FAR_ENDS_SIDE)) continue;
-    const j = lo + 2 + Math.floor(rand() * Math.max(1, hi - lo - 4));
-    if (!isStraight(cells, j)) continue;
     const start = interiorCell(entry.edge, entry.pos);
-    const walked = walk(rand, start, cells[j], { avoid: allCells, allowedNear: [cells[j]], reserved: marginCells(entry.edge, entry.pos), minLen: 8, attempts: 320 });
+    const near = []; for (let k = lo + 2; k < hi - 1; k++) if (isStraight(cells, k)) near.push({ k, d: Math.hypot(cells[k].c - start.c, cells[k].r - start.r) * (0.7 + rand() * 0.6) });   // merge somewhere reasonably close to the entrance
+    if (!near.length) continue;
+    const j = near.reduce((a, b) => (b.d < a.d ? b : a)).k;
+    const walked = walk(rand, start, cells[j], { avoid: allCells, allowedNear: [cells[j]], reserved: marginCells(entry.edge, entry.pos), bias: 2, minLen: 8, attempts: 40 });
     if (!walked) continue;
     return { cells: [...marginCells(entry.edge, entry.pos), start, ...walked, ...cells.slice(j)], entry, exit: main.exit };
   }
@@ -535,7 +559,7 @@ function forkToExit(main, rand, allCells = main.cells, ends = [main.entry, main.
     const i = lo + Math.floor(rand() * Math.floor((hi - lo) * 0.7));
     if (!isStraight(cells, i)) continue;
     const goal = interiorCell(exit.edge, exit.pos);
-    const walked = walk(rand, cells[i], goal, { avoid: allCells, allowedNear: [cells[i]], reserved: marginCells(exit.edge, exit.pos), includeGoal: true, minLen: 8, attempts: 320 });
+    const walked = walk(rand, cells[i], goal, { avoid: allCells, allowedNear: [cells[i]], reserved: marginCells(exit.edge, exit.pos), includeGoal: true, bias: 2, minLen: 8, attempts: 40 });
     if (!walked) continue;
     return { cells: [...cells.slice(0, i + 1), ...walked, ...marginCells(exit.edge, exit.pos).reverse()], entry: main.entry, exit };
   }
@@ -550,7 +574,7 @@ function separateRoute(main, rand, allCells = main.cells, ends = [main.entry, ma
     if (!entry || !exit) continue;
     const start = interiorCell(entry.edge, entry.pos), goal = interiorCell(exit.edge, exit.pos);
     if (!farApart(entry, exit, FAR_ENDS_SIDE)) continue;                                 // ends too close together
-    const walked = walk(rand, start, goal, { avoid: allCells, reserved: [...marginCells(entry.edge, entry.pos), ...marginCells(exit.edge, exit.pos)], includeGoal: true, bias: 2, minLen: 16, attempts: 320 });
+    const walked = walk(rand, start, goal, { avoid: allCells, reserved: [...marginCells(entry.edge, entry.pos), ...marginCells(exit.edge, exit.pos)], includeGoal: true, bias: 2, minLen: 16, attempts: 40 });
     if (!walked) continue;
     return { cells: [...marginCells(entry.edge, entry.pos), start, ...walked, ...marginCells(exit.edge, exit.pos).reverse()], entry, exit };
   }
