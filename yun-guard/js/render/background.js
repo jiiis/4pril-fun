@@ -386,7 +386,7 @@ function drawBridge(c, b) {
   const widthAt = (p) => {
     let best = null, bd = Infinity;
     for (const s of roadSamples) { const d = (s.x - p.x) ** 2 + (s.y - p.y) ** 2; if (d < bd) { bd = d; best = s; } }
-    return roadReach(best ? best.w : ROAD_WIDTH) + 2;
+    return roadReach(best ? best.w : ROAD_WIDTH) - 6;   // just past the road's bank (its ragged fringe can show)
   };
   // Plank edges every ~7px along the road; on a bend the inner side bunches up, so an edge is only kept
   // when both sides have moved forward (no plank ever crosses its neighbour)
@@ -407,30 +407,73 @@ function drawBridge(c, b) {
   }
   const left = edges.map((e) => e.L), right = edges.map((e) => e.R);
   const deck = [...left, ...right.slice().reverse()];
-  c.globalAlpha = 0.25; poly(c, deck.map(([x, y]) => [x, y + 3]), "#000"); c.globalAlpha = 1;   // shadow onto the water
-  poly(c, deck, "#8d6e63");                                                                 // base
-  // Planks: each one a quad between two edges, its own shade of weathered timber, a grain line or two, nails at the ends
-  const tones = ["#8d6e63", "#947668", "#86675c", "#9a7a6b", "#80625a", "#8f7064"];
-  for (let i = 0; i < edges.length - 1; i++) {
-    const a = edges[i], d = edges[i + 1];
-    poly(c, [a.L, d.L, d.R, a.R], tones[Math.floor(r() * tones.length)], "rgba(62,39,35,0.55)", 0.8);
-    const mix = (u, v, t) => [u[0] + (v[0] - u[0]) * t, u[1] + (v[1] - u[1]) * t];
-    for (let g = 0; g < 1 + Math.floor(r() * 2); g++) {                                      // grain: a faint streak along the plank
-      const t = 0.3 + r() * 0.4, s0 = 0.08 + r() * 0.25, s1 = 0.6 + r() * 0.3;
-      const p0 = mix(mix(a.L, d.L, t), mix(a.R, d.R, t), s0), p1 = mix(mix(a.L, d.L, t), mix(a.R, d.R, t), s1);
-      line(c, p0[0], p0[1], p1[0], p1[1], "rgba(62,39,35,0.22)", 0.8);
+  // One weathered plank between two cross-lines (each [left, right]): its own shade, uneven corners, grain,
+  // cracks, knots, stains, moss, nails; some planks are split, shortened, bleached, rotten or missing
+  const mix = (u, v, t) => [u[0] + (v[0] - u[0]) * t, u[1] + (v[1] - u[1]) * t];
+  const TONES = ["#8d6e63", "#947668", "#86675c", "#9a7a6b", "#80625a", "#8f7064", "#a99383", "#b09d8c", "#6e554b", "#5f4a41", "#7b6a52", "#867560"];
+  const jit = (pt, k) => [pt[0] + (r() - 0.5) * k, pt[1] + (r() - 0.5) * k];
+  const wornPlank = (a, d, ramp) => {
+    const roll = r();
+    let aL = jit(a[0], 1.6), aR = jit(a[1], 1.6), dL = jit(d[0], 1.6), dR = jit(d[1], 1.6);
+    if (roll < 0.04) { poly(c, [a[0], d[0], d[1], a[1]], "rgba(18,12,10,0.75)"); return; }                          // a missing plank: a dark gap
+    if (roll < 0.13) { const cut = 0.45 + r() * 0.4, fromLeft = r() < 0.5; if (fromLeft) { aR = mix(aL, aR, cut); dR = mix(dL, dR, cut + (r() - 0.5) * 0.1); } else { aL = mix(aR, aL, cut); dL = mix(dR, dL, cut + (r() - 0.5) * 0.1); }
+      const other = fromLeft ? [mix(a[0], a[1], cut), a[1], d[1], mix(d[0], d[1], cut)] : [a[0], mix(a[0], a[1], 1 - cut), mix(d[0], d[1], 1 - cut), d[0]];
+      poly(c, other, "rgba(18,12,10,0.6)"); }                                                                        // a broken plank: only part of it is left
+    const tone = TONES[Math.floor(r() * TONES.length)];
+    poly(c, [aL, dL, dR, aR], tone, "rgba(40,26,22,0.6)", 0.8);
+    const across = (t, u) => mix(mix(aL, dL, t), mix(aR, dR, t), u);
+    for (let g = 0; g < 1 + Math.floor(r() * 3); g++) { const t = 0.15 + r() * 0.7, p0 = across(t, 0.05 + r() * 0.3), p1 = across(t, 0.55 + r() * 0.4); line(c, p0[0], p0[1], p1[0], p1[1], "rgba(62,39,35,0.25)", 0.8); }   // grain
+    if (r() < 0.35) {                                                                                                // a crack, zigzagging across the plank
+      let u = 0.1 + r() * 0.5, t = 0.2 + r() * 0.6, pt = across(t, u); c.strokeStyle = "rgba(20,12,10,0.7)"; c.lineWidth = 0.9; c.beginPath(); c.moveTo(pt[0], pt[1]);
+      for (let k = 0; k < 4; k++) { u += 0.12 + r() * 0.1; t += (r() - 0.5) * 0.25; pt = across(Math.min(0.95, Math.max(0.05, t)), Math.min(1, u)); c.lineTo(pt[0], pt[1]); } c.stroke(); }
+    if (r() < 0.25) { const k = across(0.3 + r() * 0.4, 0.15 + r() * 0.7); circle(c, k[0], k[1], 1 + r() * 1.3, "rgba(45,28,22,0.6)"); }                  // a knot
+    if (r() < 0.22) { const k = across(0.5, 0.2 + r() * 0.6); ellipse(c, k[0], k[1], 3 + r() * 5, 2 + r() * 3, "rgba(25,35,25,0.28)"); }                    // a damp, dark stain
+    if (r() < 0.14) { const k = across(0.5, r() < 0.5 ? 0.1 : 0.9); ellipse(c, k[0], k[1], 2.5 + r() * 3, 1.6 + r() * 1.6, "rgba(90,140,60,0.5)"); }        // moss
+    if (r() < 0.12) { const k = across(0.5, 0.2 + r() * 0.6); ellipse(c, k[0], k[1], 4 + r() * 5, 2 + r() * 2, "rgba(220,205,185,0.16)"); }              // sun-bleached patch
+    for (const side of [0.08, 0.92]) if (r() < 0.8) { const k = across(0.5, side); circle(c, k[0], k[1], 0.7, r() < 0.2 ? "rgba(120,60,30,0.7)" : "rgba(40,30,28,0.7)"); }   // nails, some rusted
+    if (r() < 0.1) { const k = across(r() < 0.5 ? 0.04 : 0.96, 0.1 + r() * 0.8); ellipse(c, k[0], k[1], 3 + r() * 3, 1.2, "rgba(20,12,10,0.45)"); }       // a chipped end
+  };
+  // Ramps: at each end the deck's own planks run on and slope down to the road, widening as they go, with
+  // a shading that darkens toward the ground (no seam where they meet the level deck)
+  for (const [e, dir] of [[edges[0], -1], [edges[edges.length - 1], 1]]) {
+    const q = e.q, ax = q.tx * dir, ay = q.ty * dir, L = 34, flare = 9;
+    const nL = [e.L[0] - e.R[0], e.L[1] - e.R[1]], nl = Math.hypot(nL[0], nL[1]) || 1, ux = nL[0] / nl, uy = nL[1] / nl;
+    const far = (pt, sgn) => [pt[0] + ax * L + ux * flare * sgn, pt[1] + ay * L + uy * flare * sgn];
+    const fL = far(e.L, 1), fR = far(e.R, -1);
+    poly(c, [e.L, fL, fR, e.R], "#8d6e63");
+    const planks = 8;
+    for (let k = 0; k < planks; k++) {                                                      // planks bunch up toward the foot, as the slope foreshortens
+      const t0 = 1 - Math.pow(1 - k / planks, 1.3), t1 = 1 - Math.pow(1 - (k + 1) / planks, 1.3);
+      wornPlank([mix(e.L, fL, t0), mix(e.R, fR, t0)], [mix(e.L, fL, t1), mix(e.R, fR, t1)], true);
     }
-    if (r() < 0.25) { const k = mix(mix(a.L, d.L, 0.5), mix(a.R, d.R, 0.5), 0.2 + r() * 0.6); circle(c, k[0], k[1], 1.1, "rgba(50,30,25,0.5)"); }   // a knot
-    for (const side of [0.08, 0.92]) { const k = mix(mix(a.L, d.L, 0.5), mix(a.R, d.R, 0.5), side); circle(c, k[0], k[1], 0.7, "rgba(40,30,28,0.7)"); }   // nails
+    for (const [u, v] of [[e.L, fL], [e.R, fR]]) {                                           // worn side beams, uneven
+      line(c, u[0], u[1], v[0], v[1], "#3e2723", 3);
+      line(c, u[0], u[1], v[0], v[1], "#6d4c41", 1.2);
+    }
+    line(c, fL[0], fL[1], fR[0], fR[1], "rgba(40,26,22,0.7)", 1.6);                           // a crisp end where the last plank meets the road
+    for (let k = 0; k < 6; k++) { const pt = mix(mix(e.L, fL, 0.8 + r() * 0.2), mix(e.R, fR, 0.8 + r() * 0.2), r()); circle(c, pt[0], pt[1], 0.9 + r() * 1.3, "rgba(139,111,85,0.9)"); }   // a little crisp dirt trodden onto the last planks
+    for (let k = 0; k < 5; k++) { const pt = mix(fR, fL, r()), d = 2 + r() * 8; circle(c, pt[0] + ax * d, pt[1] + ay * d, 0.8 + r() * 1.1, "rgba(150,140,125,0.7)"); }   // a few pebbles
   }
+  c.globalAlpha = 0.42; poly(c, deck.map(([x, y]) => [x + 3, y + 7]), "#0a1a14"); c.globalAlpha = 1;   // a clear shadow thrown onto the water
+  poly(c, deck, "#8d6e63");                                                                 // base
+  for (let i = 0; i < edges.length - 1; i++) wornPlank([edges[i].L, edges[i].R], [edges[i + 1].L, edges[i + 1].R], false);
+  for (let k = 0; k < Math.round(b.span / 25); k++) { const e = edges[Math.floor(r() * edges.length)], pt = mix(e.L, e.R, 0.1 + r() * 0.8); ellipse(c, pt[0], pt[1], 4 + r() * 8, 3 + r() * 5, r() < 0.5 ? "rgba(20,28,22,0.2)" : "rgba(210,195,175,0.12)"); }   // big stains and bleached stretches across planks
   poly(c, deck, null, "#4e342e", 1.5);                                                      // deck outline
-  for (const side of [left, right]) {                                                       // rails and posts along each edge
-    c.strokeStyle = "#5d4037"; c.lineWidth = 3; c.lineCap = "round"; c.beginPath();
-    side.forEach(([x, y], i) => (i ? c.lineTo(x, y) : c.moveTo(x, y))); c.stroke();
-    for (let i = 0; i < side.length; i += 3) {
-      const [x, y] = side[i], q = edges[i].q;
-      c.save(); c.translate(x, y); c.rotate(Math.atan2(q.ty, q.tx)); rect(c, -2, -6, 4, 12, "#6d4c41", "#3e2723", 0.8); c.restore();
+  for (const side of [left, right]) {                                                       // low rails on upright posts along each edge
+    const RISE = 6;                                                                         // how high the rail stands above the deck, as seen from above
+    c.lineCap = "round"; c.lineJoin = "round";
+    c.strokeStyle = "rgba(30,18,14,0.35)"; c.lineWidth = 2.5; c.beginPath();               // the rail's shadow on the deck edge
+    side.forEach(([x, y], i) => (i ? c.lineTo(x, y + 1) : c.moveTo(x, y + 1))); c.stroke();
+    for (let i = 0; i < side.length; i += 3) {                                              // upright posts: a short shaft with a cap
+      const [x, y] = side[i];
+      line(c, x, y, x, y - RISE - 2, "#4e342e", 3.2);
+      line(c, x - 0.6, y, x - 0.6, y - RISE - 2, "#6d4c41", 1.6);
+      rect(c, x - 2.6, y - RISE - 4.2, 5.2, 3, "#8d6e63", "#3e2723", 0.7);
     }
+    c.strokeStyle = "#3e2723"; c.lineWidth = 3.4; c.beginPath();                            // the rail itself, raised over the posts
+    side.forEach(([x, y], i) => (i ? c.lineTo(x, y - RISE) : c.moveTo(x, y - RISE))); c.stroke();
+    c.strokeStyle = "#7a5646"; c.lineWidth = 1.8; c.beginPath();
+    side.forEach(([x, y], i) => (i ? c.lineTo(x, y - RISE - 0.6) : c.moveTo(x, y - RISE - 0.6))); c.stroke();
   }
 }
 
