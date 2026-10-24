@@ -164,7 +164,7 @@ export function update(dt) {
   // --- Countdown between waves, and whether the next one may be called yet ---
   if (state.countdown !== null) {
     state.countdown -= dt;
-    setWaveButton("ready", state.countdown);
+    setWaveButton(canCallWave() ? "ready" : "busy", state.countdown);
     if (state.countdown <= 0) beginWave();
   } else if (state.wave > 0 && state.wave < state.totalWaves) {
     setWaveButton(canCallWave() ? "ready" : "busy");       // lights up once enough of this wave has entered
@@ -318,6 +318,13 @@ export function update(dt) {
 
   // --- Shots fly ---
   for (const s of state.shots) {
+    if (s.ghost) {                            // an arrow that has struck: it flies on a good way, sinks to the ground and fades
+      s.life -= dt;
+      s.x += s.vx * dt; s.y += s.vy * dt; s.z = Math.max(0, s.z - 14 * dt);
+      s.tx = s.x + s.vx; s.ty = s.y + s.vy;
+      if (s.life <= 0) s.done = true;
+      continue;
+    }
     if (s.ballistic) {                        // cannonball: fixed landing spot, arcs through the air
       s.t += dt / s.T;
       if (s.t >= 1) { s.done = true; cannonImpact(s); continue; }
@@ -369,6 +376,10 @@ export function update(dt) {
       if (s.poison && !s.target.dead) { s.target.poison = { ...s.poison }; addBurst(s.tx, s.ty, 10, "rgba(124,179,66,0.9)"); }
       if (s.def.type === "magic") { addBurst(s.tx, s.ty, 14, "rgba(186,104,200,0.7)"); sfx("magicHit", 0.08); }
       else sfx("arrowHit", 0.06);
+      if (s.def.type !== "magic") {                           // the arrow carries on past its target, then fades away
+        const ux = d > 0.5 ? (s.tx - s.x) / d : (s.ux ?? 1), uy = d > 0.5 ? (s.ty - s.y) / d : (s.uy ?? 0), sp = SHOT_SPEED * 0.7, life = 0.5 + Math.random() * 0.15;
+        state.shots.push({ ghost: true, x: s.x, y: s.y, z: Math.max(s.z, 6), vx: ux * sp, vy: uy * sp, tx: s.x + ux, ty: s.y + uy, life, maxLife: life, def: s.def, dmg: 0 });
+      }
       if (s.frost && !s.target.dead && !s.target.def.frostImmune) {   // frost arrow: the monster is chilled and slowed
         s.target.frost = { slow: s.frost.slow, time: s.frost.time };
         addBurst(s.tx, s.ty, 12, "rgba(128,222,234,0.9)");
@@ -379,6 +390,7 @@ export function update(dt) {
         addSmoke(s.tx, s.ty - 6, 2, 4);
       }
     } else {
+      s.ux = (s.tx - s.x) / d; s.uy = (s.ty - s.y) / d;                       // remembered heading, for an arrow that flies on after its hit
       s.x += ((s.tx - s.x) / d) * step;
       s.y += ((s.ty - s.y) / d) * step;
       const p = clamp(1 - d / s.total, 0, 1);               // how far along the flight we are

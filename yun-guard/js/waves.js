@@ -9,7 +9,8 @@ import { sfx } from "./audio.js";
 // round button) runs down to the next wave. If the wave has been dealt with quickly the player can press the
 // button to start the next one early, and is paid for every second skipped (more if the road is already clear).
 export const canCallWave = () => state.wave > 0 && state.wave < state.totalWaves && !state.over
-  && state.countdown !== null && state.countdown > 0;
+  && state.countdown !== null && state.countdown > 0
+  && (state.countdown <= 10 || !state.enemies.some((e) => !e.dead));   // only within 10 seconds of the next wave, or once this wave is all dead
 
 // The player pressed the button (or N)
 export function startWave() {
@@ -76,5 +77,5 @@ export function waveFinished() {
     return;
   }
   state.countdown = WAVE_BREAK;
-  setWaveButton("ready", WAVE_BREAK);
+  setWaveButton(canCallWave() ? "ready" : "busy", WAVE_BREAK);
 }

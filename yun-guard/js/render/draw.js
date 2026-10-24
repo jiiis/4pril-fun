@@ -290,6 +290,16 @@ export function draw() {
   // Shots
   for (const s of state.shots) {
     const a = Math.atan2(s.ty - s.y, s.tx - s.x);
+    if (s.ghost) {                                           // a spent arrow in flight: it fades out over the last part of its life
+      const al = Math.min(1, s.life / (s.maxLife * 0.55)), cx = Math.cos(a), cy = Math.sin(a), y = s.y - s.z;
+      ctx.globalAlpha = 0.2 * al; circle(ctx, s.x, s.y + 2, 1.5, "#000");
+      ctx.globalAlpha = al;
+      line(ctx, s.x - cx * 8, y - cy * 8, s.x + cx * 6, y + cy * 6, "#d7ccc8", 1.6);
+      poly(ctx, [[s.x + cx * 6 - cy * 1.8, y + cy * 6 + cx * 1.8], [s.x + cx * 11, y + cy * 11], [s.x + cx * 6 + cy * 1.8, y + cy * 6 - cx * 1.8]], "#cfd8dc");
+      line(ctx, s.x - cx * 8, y - cy * 8, s.x - cx * 11 - cy * 2, y - cy * 11 + cx * 2, "#ffffff", 1.2); line(ctx, s.x - cx * 8, y - cy * 8, s.x - cx * 11 + cy * 2, y - cy * 11 - cx * 2, "#ffffff", 1.2);
+      ctx.globalAlpha = 1;
+      continue;
+    }
     if (s.ballistic) {
       // Shadow on the ground shrinks as the ball climbs; the ball grows as it gets closer to the camera
       const k = s.z / 150;
