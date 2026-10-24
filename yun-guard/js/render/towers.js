@@ -70,15 +70,19 @@ function drawAbility(t, x, y) {
       for (const bx of [-18, 18]) flag(x + bx, y - 30, 14, "#c62828", bx);
       for (let i = -12; i <= 12; i += 6) poly(ctx, [[x + i - 2, y + 6], [x + i + 2, y + 6], [x + i, y - 4]], "#5d4037", "#3e2723", 1);
       break;
-    case "executioner":                                                                  // skulls and a black banner hung on the platform
-      for (const [sx, sy] of [[-17, -6], [-10, 1], [17, -4]]) { circle(ctx, x + sx, y + sy, 3.4, "#eeeeee", "#9e9e9e", 0.8); circle(ctx, x + sx - 1.1, y + sy - 0.4, 0.8, "#212121"); circle(ctx, x + sx + 1.1, y + sy - 0.4, 0.8, "#212121"); }
-      flag(x + 19, y - ballistaHeight(3) - 22, 22, "#212121", 4);
-      circle(ctx, x + 23, y - ballistaHeight(3) - 14, 1.6, "#e53935");
+    case "executioner": {                                                                // skulls hung on the fascia and a black banner above
+      const fy = y - ballistaHeight(3) + 8 + 8.5;
+      for (const sx of [-7.5, 7.5]) { circle(ctx, x + sx, fy, 3.4, "#eeeeee", "#9e9e9e", 0.8); circle(ctx, x + sx - 1.1, fy - 0.4, 0.8, "#212121"); circle(ctx, x + sx + 1.1, fy - 0.4, 0.8, "#212121"); line(ctx, x + sx - 1, fy + 2.4, x + sx + 1, fy + 2.4, "#9e9e9e", 0.8); }
+      flag(x - 23, y - ballistaHeight(3) - 22, 24, "#212121", 4);
+      circle(ctx, x - 17.5, y - ballistaHeight(3) - 17, 1.6, "#e53935");
       break;
-    case "harpoon":                                                                      // coiled rope, a rack of barbed harpoons and an iron anchor
-      for (let i = 0; i < 3; i++) { line(ctx, x - 20 + i * 3, y - 6, x - 17 + i * 3, y - 26, "#8d6e63", 1.6); poly(ctx, [[x - 17 + i * 3, y - 26], [x - 20 + i * 3, y - 21], [x - 14 + i * 3, y - 21]], "#90a4ae", "#37474f", 0.6); }
-      ellipse(ctx, x + 18, y + 4, 7, 3.5, null, "#c2a77a", 2); ellipse(ctx, x + 18, y + 2, 7, 3.5, null, "#c2a77a", 2);
+    }
+    case "harpoon": {                                                                    // a rack of barbed harpoons and coiled line on the deck, an anchor on the plinth
+      const dy = y - ballistaHeight(3) + 8;
+      for (let i = 0; i < 3; i++) { line(ctx, x + 12 + i * 3.4, dy, x + 14 + i * 3.4, dy - 20, "#8d6e63", 1.7); poly(ctx, [[x + 14 + i * 3.4, dy - 20], [x + 11.5 + i * 3.4, dy - 15], [x + 17.5 + i * 3.4, dy - 15]], "#90a4ae", "#37474f", 0.6); }
+      circle(ctx, x - 27, y + 2, 4, null, "#78909c", 1.8); line(ctx, x - 27, y - 2, x - 27, y + 9, "#78909c", 1.8); line(ctx, x - 31, y + 6, x - 23, y + 6, "#78909c", 1.8);
       break;
+    }
     case "overcharge":                                                                   // a second ring of golden arcs around the orb
       for (let i = 0; i < 5; i++) { const a = T * 7 + i * 1.26, r = 16 + Math.sin(T * 11 + i) * 2; line(ctx, x + Math.cos(a) * r, topY + Math.sin(a) * r * 0.6, x + Math.cos(a + 0.6) * r, topY + Math.sin(a + 0.6) * r * 0.6, "#ffeb3b", 1.4); }
       break;
@@ -367,45 +371,74 @@ function drawTesla(t, x, y, lv) {
 // =====================================================================
 //  CANNON
 // =====================================================================
-// A heavy wooden siege crossbow on a swivel: the bow arms are the long way across, the bolt lies on its rail
+// A siege ballista on a timber lookout: four braced posts carry a plank deck with a shielded fascia, and on it a
+// heavy crossbow on a swivel with twisted-rope torsion bundles, a slider that snaps forward when it looses, a winch
+// and a crew member. Bigger and more armoured with each level; level 3 sits on a stone plinth.
 function drawBallista(t, x, y, lv) {
-  const T = state.time + x * 0.01, recoil = t.recoil > 0 ? Math.min(1, t.recoil / 0.32) : 0;
-  // The platform: a plank deck on stout legs, bigger and iron-bound with each level
-  const deck = lv === 1 ? "#8d6e63" : lv === 2 ? "#795548" : "#6d4c41", edge = "#3e2723";
-  rect(ctx, x - 20, y - 6, 40, 14, deck, edge);
-  for (const xx of [-13, -4, 5, 14]) line(ctx, x + xx, y - 6, x + xx, y + 8, "rgba(0,0,0,0.25)", 1);
-  rect(ctx, x - 20, y - 8, 40, 3.2, lv === 3 ? "#546e7a" : "#a1887f", edge, 0.8);
-  if (lv >= 2) for (const xx of [-17, 17]) { rect(ctx, x + xx - 1.8, y - 6, 3.6, 14, "#78909c", "#37474f", 0.8); circle(ctx, x + xx, y - 1, 1, "#cfd8dc"); }
-  if (lv === 3) for (const xx of [-8, 8]) circle(ctx, x + xx, y + 3, 1.2, "#cfd8dc");
-  // The weapon pivots toward the target: draw it in its own rotated frame, bow arms across the line of fire
-  const idle = relaxed(t) ? Math.sin(T * 0.5) * 0.12 : 0, pivotY = y - ballistaHeight(lv) + 8;
-  rect(ctx, x - 3, pivotY, 6, y - 8 - pivotY, "#5d4037", edge, 1);                                  // the swivel post
+  const T = state.time + x * 0.01, H = ballistaHeight(lv), deckY = y - H + 8, r = t.recoil > 0 ? Math.min(1, t.recoil / 0.32) : 0;
+  const wood = lv === 1 ? "#8d6e63" : lv === 2 ? "#795548" : "#6d4c41", dark = "#3e2723", iron = "#78909c", ironDark = "#37474f";
+  // footings and posts
+  for (const fx of [-17, 17]) ellipse(ctx, x + fx, y + 9, 6.5, 2.6, "#8a847a", "rgba(40,36,30,0.5)", 0.8);
+  for (const bx of [-12, 12]) line(ctx, x + bx, y + 3, x + bx, deckY + 4, "#4e342e", 3.2);              // the back posts, in shade
+  if (lv === 3) {                                                                                      // a stone plinth the whole way up
+    rect(ctx, x - 23, deckY + 6, 46, y + 9 - deckY - 6, "#9e9e9e", "#546e7a", 1);
+    bricks(x - 23, deckY + 6, 46, y + 9 - deckY - 6, Math.max(3, Math.round((y + 9 - deckY - 6) / 7)), "#757575");
+    rect(ctx, x - 25, y + 5, 50, 5, "#8d8d8d", "#546e7a", 0.8);
+  } else {
+    for (const fx of [-17, 17]) { line(ctx, x + fx, y + 9, x + fx, deckY + 5, wood, 4.6); line(ctx, x + fx - 1.2, y + 9, x + fx - 1.2, deckY + 5, "rgba(255,255,255,0.14)", 1.2); }
+    line(ctx, x - 17, y + 7, x + 17, deckY + 9, "#5d4037", 2.2); line(ctx, x + 17, y + 7, x - 17, deckY + 9, "#5d4037", 2.2);   // cross bracing
+    line(ctx, x - 17, (y + deckY) / 2 + 6, x + 17, (y + deckY) / 2 + 6, "#5d4037", 2);
+    if (lv === 2) for (const fx of [-17, 17]) for (const k of [0.3, 0.7]) rect(ctx, x + fx - 2.6, y + 9 - (y + 9 - deckY) * k - 1.3, 5.2, 2.6, iron, ironDark, 0.6);   // iron bands
+  }
+  // the deck: planks with a shielded fascia in front
+  rect(ctx, x - 24, deckY, 48, 6, wood, dark, 1);
+  for (const px of [-16, -8, 0, 8, 16]) line(ctx, x + px, deckY, x + px, deckY + 6, "rgba(0,0,0,0.25)", 0.9);
+  line(ctx, x - 23, deckY + 1.2, x + 23, deckY + 1.2, "rgba(255,255,255,0.2)", 1);
+  rect(ctx, x - 24, deckY + 6, 48, 5, lv === 1 ? "#6d4c41" : "#5d4037", dark, 1);
+  if (lv >= 2) for (const [sx, col] of [[-15, "#c62828"], [0, lv === 3 ? "#ffd54f" : "#f5f5f5"], [15, "#c62828"]]) { circle(ctx, x + sx, deckY + 8.5, 4, col, dark, 1); circle(ctx, x + sx, deckY + 8.5, 1.3, "#b0bec5", ironDark, 0.6); }   // painted shields
+  // rails at the corners, a bolt barrel on the left and a coil of rope on the right
+  for (const cx of [-22.5, 22.5]) line(ctx, x + cx, deckY, x + cx, deckY - 9, wood, 2.2);
+  line(ctx, x - 22.5, deckY - 8, x - 12, deckY - 8, wood, 1.6); line(ctx, x + 12, deckY - 8, x + 22.5, deckY - 8, wood, 1.6);
+  rect(ctx, x - 21, deckY - 9, 7, 9, "#6d4c41", dark, 0.8); line(ctx, x - 21, deckY - 5, x - 14, deckY - 5, ironDark, 1);
+  for (let i = 0; i < 3; i++) { line(ctx, x - 19.5 + i * 2.4, deckY - 9, x - 20.5 + i * 2.8, deckY - 17, "#d7ccc8", 1.1); poly(ctx, [[x - 20.5 + i * 2.8, deckY - 17], [x - 22 + i * 2.8, deckY - 14.5], [x - 19 + i * 2.8, deckY - 14.5]], "#cfd8dc", ironDark, 0.4); }
+  ellipse(ctx, x + 18, deckY - 1.5, 4.8, 2.2, null, "#c2a77a", 1.6); ellipse(ctx, x + 18, deckY - 3.3, 4.8, 2.2, null, "#c2a77a", 1.6);
+  // the weapon on its swivel
+  const idle = relaxed(t) ? Math.sin(T * 0.5) * 0.12 : 0, pivotY = deckY - 8;
+  rect(ctx, x - 3.4, pivotY, 6.8, 8, "#5d4037", dark, 1);                                              // pedestal
   ctx.save(); ctx.translate(x, pivotY); ctx.rotate(t.angle + idle);
-  const len = 22 + lv * 4, arm = 13 + lv * 2.5, pull = recoil * 5;
-  rect(ctx, -9, -2.4, len + 6, 4.8, "#a1887f", edge, 1);                                           // the stock and rail
-  line(ctx, -9, 0, len - 2, 0, "rgba(255,255,255,0.18)", 1);
-  // bow arms sweep back, string is drawn tight when loaded
-  const armCol = lv === 1 ? "#6d4c41" : lv === 2 ? "#4e342e" : "#37474f";
-  ctx.strokeStyle = armCol; ctx.lineWidth = 3.2 + lv * 0.5; ctx.lineCap = "round";
-  for (const s of [-1, 1]) { ctx.beginPath(); ctx.moveTo(len * 0.55, s * 2); ctx.quadraticCurveTo(len * 0.55 - 3, s * arm * 0.7, len * 0.3 - 3, s * arm); ctx.stroke(); }
-  ctx.strokeStyle = "#efebe9"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(len * 0.3 - 3, -arm); ctx.lineTo(len * 0.1 - 3 + pull * 0.2 - (recoil > 0 ? 0 : 6), 0); ctx.lineTo(len * 0.3 - 3, arm); ctx.stroke();
-  // the bolt: shaft, iron head and fletching; it leaves on a shot and a new one is slid on
-  const boltOff = recoil > 0 ? len : 0;
-  if (recoil < 0.85) { line(ctx, -4, 0, len + 8 + boltOff * 0.0, 0, "#d7ccc8", 2.4); poly(ctx, [[len + 8, -3], [len + 15, 0], [len + 8, 3]], "#cfd8dc", "#37474f", 0.8); poly(ctx, [[-4, 0], [-8, -3], [-6, 0], [-8, 3]], lv === 3 ? "#c62828" : "#8d6e63"); }
-  rect(ctx, len * 0.45, -3.4, 3, 6.8, "#757575", "#37474f", 0.8);                                   // the iron collar
-  circle(ctx, 0, 0, 3.2, "#546e7a", "#263238", 1);
+  const len = 24 + lv * 4, arm = 14 + lv * 2.4, slide = -6 + (len * 0.46 + 6) * r;                    // the slider flies forward on a shot, then is wound back
+  rect(ctx, -12, -2.8, len + 12, 5.6, "#a1887f", dark, 1);                                             // the stock
+  line(ctx, -11, -0.6, len - 2, -0.6, "rgba(0,0,0,0.3)", 0.9); line(ctx, -11, 1.2, len - 2, 1.2, "rgba(255,255,255,0.2)", 0.8);
+  const tx = len * 0.52, torsion = lv === 3 ? "#cfd8dc" : "#e0cfa8";
+  for (const s of [-1, 1]) {                                                                           // torsion bundles: twisted rope skeins in iron frames
+    rect(ctx, tx - 4, s > 0 ? 2.6 : -10.6, 8, 8, torsion, dark, 0.9);
+    for (let k = 0; k < 4; k++) line(ctx, tx - 4 + k * 2.2, s > 0 ? 2.6 : -10.6, tx - 3 + k * 2.2, s > 0 ? 10.6 : -2.6, "rgba(90,60,30,0.55)", 0.9);
+    rect(ctx, tx - 5, s > 0 ? 2.2 : -11, 10, 1.8, iron, ironDark, 0.6); rect(ctx, tx - 5, s > 0 ? 8.8 : -2.4, 10, 1.8, iron, ironDark, 0.6);
+    ctx.strokeStyle = lv === 1 ? "#6d4c41" : lv === 2 ? "#4e342e" : ironDark; ctx.lineWidth = 3.4 + lv * 0.5; ctx.lineCap = "round";      // the arm sweeps out and forward
+    ctx.beginPath(); ctx.moveTo(tx, s * 8); ctx.quadraticCurveTo(tx + 2, s * (arm + 2), tx - 7 + (r > 0 ? 6 : 0), s * arm); ctx.stroke();
+  }
+  ctx.strokeStyle = "#efebe9"; ctx.lineWidth = 1.1; ctx.lineCap = "round";                            // the string: slack when loosed, taut when wound back
+  const armTipX = tx - 7 + (r > 0 ? 6 : 0);
+  ctx.beginPath(); ctx.moveTo(armTipX, -arm); ctx.lineTo(slide, 0); ctx.lineTo(armTipX, arm); ctx.stroke();
+  rect(ctx, slide - 2, -2.2, 4.5, 4.4, "#8d6e63", dark, 0.7);                                          // the slider
+  if (r < 0.6) {                                                                                       // the loaded bolt: long shaft, broad iron head, vanes
+    line(ctx, slide, 0, len + 9, 0, "#d7ccc8", 2.4); line(ctx, slide, -0.5, len + 9, -0.5, "rgba(255,255,255,0.4)", 0.8);
+    poly(ctx, [[len + 8, -3.4], [len + 17, 0], [len + 8, 3.4]], "#cfd8dc", ironDark, 0.8);
+    poly(ctx, [[slide, 0], [slide - 4, -3], [slide - 2, 0], [slide - 4, 3]], lv === 3 ? "#c62828" : "#8d6e63");
+  }
+  circle(ctx, -9, 0, 3.4, iron, ironDark, 1); line(ctx, -9, 0, -9, -5, ironDark, 1.4); circle(ctx, -9, -5, 1.2, "#8d6e63");   // the winch and its crank
   ctx.restore();
-  // A crewman cranks the winch behind it, glancing up now and then
-  const dir = facing(t), gx = x - dir * 17, gy = y + 8;
+  // a crewman on the deck, behind the weapon, working the winch and looking out now and then
+  const dir = facing(t), gx = x - dir * 15, gy = deckY;
   ctx.save(); ctx.translate(gx, gy); ctx.scale(dir, 1);
-  const crank = recoil === 0 && !relaxed(t) ? Math.sin(T * 5) * 1.6 : 0;
+  const crank = r === 0 && !relaxed(t) ? Math.sin(T * 5) * 1.6 : 0, look = relaxed(t) && Math.sin(T * 0.7) > 0.8;
   line(ctx, -2, 0, -2, -5, "#37474f", 2); line(ctx, 2, 0, 2, -5, "#37474f", 2);
   rect(ctx, -4, -14, 8, 9, lv === 3 ? "#455a64" : "#8d6e63", "#4e342e", 1);
-  circle(ctx, 0, -17.5, 3.6, "#ffcc80");
-  ctx.fillStyle = lv === 3 ? "#cfd8dc" : "#6d4c41"; ctx.beginPath(); ctx.arc(0, -18.5, 4, Math.PI, 0); ctx.fill();
+  circle(ctx, look ? 0.6 : 0, -17.5, 3.6, "#ffcc80");
+  ctx.fillStyle = lv === 3 ? "#cfd8dc" : "#6d4c41"; ctx.beginPath(); ctx.arc(look ? 0.6 : 0, -18.5, 4, Math.PI, 0); ctx.fill();
   line(ctx, 3, -10, 8, -9 + crank, "#ffcc80", 2.2);
   ctx.restore();
-  if (lv === 3) flag(x + 20, y - ballistaHeight(3) - 18, 26, "#c62828", x);
+  if (lv === 3) flag(x + 22, deckY - 30, 26, "#c62828", x);
 }
 
 function drawCannon(t, x, y, lv) {

@@ -260,17 +260,22 @@ export function makeWave(n, d = { count: 1, shift: 0 }) {
   return groups;
 }
 
-// Spawn times for a wave: a trickle to begin with, thick in the middle, thinning out again at the end,
-// so every wave builds up and ebbs away (and, with the order above, the big monsters come late).
+// Spawn times for a wave. Monsters come in small bunches of two to four with only a short gap between the ones in a
+// bunch, then a pause before the next bunch (shorter in the thick of the wave, longer at its ends). The big brutes
+// travel alone or in pairs.
 export function waveTimeline(groups) {
   const list = [];
   for (const g of groups) for (let i = 0; i < g.count; i++) list.push({ type: g.type, gap: g.gap });
-  const N = list.length; let t = 0;
-  return list.map((m, i) => {
-    const bell = Math.sin(Math.PI * (i + 0.5) / N);         // 0 at the ends, 1 in the middle
-    const at = t;
-    t += m.gap * (1.7 - 1.3 * bell);
-    return { type: m.type, at };
-  });
+  const N = list.length, out = [];
+  let t = 0, i = 0;
+  while (i < N) {
+    const heavy = list[i].gap >= 4;
+    const size = Math.min(N - i, heavy ? 1 + Math.floor(Math.random() * 2) : 2 + Math.floor(Math.random() * 3));
+    for (let k = 0; k < size; k++) { out.push({ type: list[i + k].type, at: t }); t += Math.min(0.9, list[i + k].gap * 0.45) * (0.8 + Math.random() * 0.4); }
+    i += size;
+    const bell = Math.sin(Math.PI * (i + 0.5) / N);                  // 0 at the ends, 1 in the middle
+    t += (heavy ? 4.2 : 3.2) * (1.35 - 0.55 * bell) * (0.85 + Math.random() * 0.3);
+  }
+  return out;
 }
 

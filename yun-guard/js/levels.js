@@ -67,7 +67,7 @@ export function levelConfig(L) {
     level: L,
     waves: Math.min(15, 9 + Math.floor((L - 1) / 4)),      // 9 waves at level 1, 15 from level 25
     // Monsters themselves never change between levels; only who turns up, and how many
-    count: Math.min(1.4, 0.9 + (L - 1) * 0.006),             // crowd size, from a little thin to 1.4× (level 84+)
+    count: Math.min(1, 0.62 + (L - 1) * 0.004),              // crowd size: thin early on, filling out to 1× by level 96
     shift: Math.floor((L - 1) / 8),                          // the tougher kinds arrive this many waves earlier (up to 12)
     gold: 360 + L * 7,                                       // a bigger purse to meet a bigger threat (367 → 1060)
     goldMul: 1 + (L - 1) * 0.012,                            // rewards keep up a little better
