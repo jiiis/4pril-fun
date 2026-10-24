@@ -235,10 +235,18 @@ function drawRoad(c, rand, paths) {
         const o = (rand() - 0.5) * (w[i] - 16);
         ellipse(c, p.x + p.nx * o, p.y + p.ny * o + 3, 5 + rand() * 6, 2 + rand() * 2, "rgba(255,230,180,0.12)");
       }
-      if (rand() < 0.3) {
-        const o = (rand() < 0.5 ? 1 : -1) * (half + 2 + rand() * 4);
+      if (rand() < 0.5) {                                                    // grass tufts along the verge
+        const o = (rand() < 0.5 ? 1 : -1) * (half + 2 + rand() * 6);
+        const q = { x: p.x + p.nx * o, y: p.y + p.ny * o }, h = 4 + rand() * 4, shade = rand() < 0.5 ? "#2f6b1f" : "#3e7f2a";
+        if (edgeOk(k, q)) for (let kk = -1; kk <= 1; kk++) line(c, q.x, q.y, q.x + kk * (2.5 + rand()), q.y - h - rand() * 3, shade, 1.5);
+      }
+      if (rand() < 0.1) {                                                    // the odd broad-leaved weed or small flower
+        const o = (rand() < 0.5 ? 1 : -1) * (half + 4 + rand() * 6);
         const q = { x: p.x + p.nx * o, y: p.y + p.ny * o };
-        if (edgeOk(k, q)) for (let kk = -1; kk <= 1; kk++) line(c, q.x, q.y, q.x + kk * 3, q.y - 5 - rand() * 3, "#2f6b1f", 1.5);
+        if (edgeOk(k, q)) {
+          if (rand() < 0.6) { for (let kk = 0; kk < 3; kk++) { const a = -Math.PI / 2 + (kk - 1) * 0.7; ellipse(c, q.x + Math.cos(a) * 3, q.y + Math.sin(a) * 3, 2.6, 1.4, "#4f8a2c", "rgba(30,70,20,0.35)", 0.5); } }
+          else { line(c, q.x, q.y, q.x, q.y - 6, "#4f8a2c", 1); circle(c, q.x, q.y - 7, 1.6, ["#f8bbd0", "#fff59d", "#e1bee7", "#ffffff"][Math.floor(rand() * 4)]); }
+        }
       }
     }
   });
