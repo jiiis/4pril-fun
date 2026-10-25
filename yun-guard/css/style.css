@@ -202,11 +202,6 @@ canvas { display: block; }
   overflow: auto;
   justify-content: safe center;                                 /* centred when it fits, scrollable from the top when it doesn't */
 }
-/* Recreate the backdrop after a new map is painted: iOS can retain the previous canvas under the blur. */
-#heroPick[aria-busy="true"], #heroPick[aria-busy="true"] .card {
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-}
 #heroPick h1 { font-family: Cinzel, Outfit, "Avenir Next", Georgia, serif; font-size: 44px; margin: 0 0 40px; letter-spacing: 2px; font-weight: 500; background: linear-gradient(180deg, #ffffff, #c9ccd6); -webkit-background-clip: text; background-clip: text; color: transparent; }
 #heroPick .cards { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; max-width: 100%; }
 #heroPick .card {
