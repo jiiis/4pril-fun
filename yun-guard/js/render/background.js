@@ -5,6 +5,52 @@ import { rect, circle, ellipse, poly, line, shadow } from "./gfx.js";
 import { addLight } from "./lights.js";
 import { state } from "../state.js";
 
+let canvasBlurSupported;
+function drawBlurredMask(c, source, sigma) {
+  if (canvasBlurSupported === undefined) {
+    const probe = document.createElement("canvas"); probe.width = probe.height = 5;
+    const p = probe.getContext("2d");
+    p.filter = "blur(1px)"; p.fillRect(2, 2, 1, 1);
+    canvasBlurSupported = p.getImageData(1, 2, 1, 1).data[3] > 0;
+  }
+  if (canvasBlurSupported) {
+    c.save(); c.filter = `blur(${sigma}px)`; c.drawImage(source, 0, 0); c.restore();
+    return;
+  }
+  c.drawImage(source, 0, 0);
+  const w = c.canvas.width, h = c.canvas.height, img = c.getImageData(0, 0, w, h);
+  // Only alpha is used by these masks. Three sliding box blurs approximate the native Gaussian
+  // in linear time, even for the wide junction blur. Outside the canvas stays transparent.
+  let a = new Float32Array(w * h), b = new Float32Array(w * h);
+  for (let i = 0; i < a.length; i++) a[i] = img.data[i * 4 + 3];
+  const ideal = Math.sqrt(4 * sigma * sigma + 1);
+  let lower = Math.floor(ideal); if (lower % 2 === 0) lower--;
+  lower = Math.max(1, lower);
+  const upper = lower + 2;
+  const count = Math.round((12 * sigma * sigma - 3 * lower * lower - 12 * lower - 9) / (-4 * lower - 4));
+  const pass = (radius, horizontal) => {
+    const length = horizontal ? w : h, lines = horizontal ? h : w, stride = horizontal ? 1 : w;
+    const divisor = 2 * radius + 1;
+    for (let line = 0; line < lines; line++) {
+      const base = horizontal ? line * w : line;
+      let sum = 0;
+      for (let j = 0; j <= Math.min(radius, length - 1); j++) sum += a[base + j * stride];
+      for (let j = 0; j < length; j++) {
+        b[base + j * stride] = sum / divisor;
+        if (j >= radius) sum -= a[base + (j - radius) * stride];
+        if (j + radius + 1 < length) sum += a[base + (j + radius + 1) * stride];
+      }
+    }
+    [a, b] = [b, a];
+  };
+  for (let i = 0; i < 3; i++) {
+    const radius = ((i < count ? lower : upper) - 1) / 2;
+    pass(radius, true); pass(radius, false);
+  }
+  for (let i = 0; i < a.length; i++) img.data[i * 4 + 3] = a[i];
+  c.putImageData(img, 0, 0);
+}
+
 // The scenery never changes, so we draw it once onto a hidden canvas
 // and then just copy that picture every frame.
 export function buildBackground(res = 1) {                      // res: device pixels per world pixel
@@ -101,7 +147,7 @@ function liftGrass(c) {
   }
   sctx.putImageData(img, 0, 0);
   const M = mk(cv.width, cv.height), mctx = M.getContext("2d");                              // the mask, edges smoothed
-  mctx.filter = `blur(${1.4 * res}px)`; mctx.drawImage(S, 0, 0, cv.width, cv.height); mctx.filter = "none";
+  drawBlurredMask(mctx, S, 1.4 * res);
   { const q = mctx.getImageData(0, 0, cv.width, cv.height), qd = q.data;                       // blur then cut at half: a smooth outline with a crisp, anti-aliased edge
     for (let i = 3; i < qd.length; i += 4) qd[i] = Math.max(0, Math.min(255, (qd[i] - 128) * 6 + 128));
     mctx.putImageData(q, 0, 0); }
@@ -223,7 +269,7 @@ function drawRoad(c, rand, paths) {
       sc.lineWidth = Math.max(2, w[i]); sc.beginPath(); sc.moveTo(pts[i].x, pts[i].y); sc.lineTo(pts[i + 1].x, pts[i + 1].y); sc.stroke();
     }
     fc.setTransform(1, 0, 0, 1, 0, 0); fc.clearRect(0, 0, RP, RP);
-    fc.filter = `blur(${J.sigma * res}px)`; fc.drawImage(strokes, 0, 0); fc.filter = "none";
+    drawBlurredMask(fc, strokes, J.sigma * res);
     const field = fc.getImageData(0, 0, RP, RP);
     fields.set(J, field);
     return field;
