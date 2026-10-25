@@ -2,7 +2,8 @@ import { canvas } from "./render/gfx.js";
 import { state } from "./state.js";
 import { W, H, SPOT_RADIUS, TOWERS, HERO_KINDS } from "./config.js";
 import { dist } from "./util.js";
-import { map, generateMap } from "./map.js";
+import { map } from "./map.js";
+import { requestMap } from "./map-loader.js";
 import { update } from "./update.js";
 import { draw, SPOT_SQUASH, depthScale, invalidateBackground } from "./render/draw.js";
 import { initUi, openMenu, closeMenu, resetUiForLevel } from "./ui.js";
@@ -24,33 +25,55 @@ saveLevel(level);
 const diff = levelConfig(level);
 state.level = level; state.diff = diff; state.totalWaves = diff.waves; state.gold = diff.gold + carryFor(level); state.lives = diff.lives;
 const seedParam = Number(params.get("seed")) || Number(location.hash.replace(/^#/, ""));   // ?seed=123456 or #123456
-generateMap(seedParam > 0 ? seedParam : levelSeed(level), mapOptionsFor(level));
+let loadingMap = true, mapRequest = 0;
 // The address bar always shows the level and map being played, so a browser refresh or bookmark brings back exactly this game
 function showInUrl(heroKind) {
   const q = new URLSearchParams({ level, seed: map.seed });
   if (heroKind) q.set("hero", heroKind);
   history.replaceState(null, "", `${location.pathname}?${q}`);
 }
-showInUrl(params.get("hero"));
 
 // Start a level in this same page (no reload, so full screen and the audio stay as they are):
 // rebuild the world, reset everything that changes while playing, then choose a legend or jump straight in.
-function startLevel({ level: L, seed, hero }) {
+async function startLevel({ level: L, seed, hero }) {
   level = clampLevel(L); saveLevel(level);
+  const request = ++mapRequest;
+  loadingMap = true;
+  state.paused = true;                                           // idle scenery can animate, but the old game cannot advance
+  resetUiForLevel();
+  lvInput.value = level; document.getElementById("lvPrev").disabled = level <= 1; document.getElementById("lvNext").disabled = level >= MAX_LEVEL;
+  if (map.paths.length) heroPick.classList.add("again");
+  heroPick.style.display = "flex";
+  heroPick.setAttribute("aria-busy", "true");
+  heroPick.querySelector("h1").textContent = "Generating map…";
+  for (const button of heroPick.querySelectorAll(".card, #noLegend")) button.disabled = true;
+  document.getElementById("next").disabled = true; pauseBtn.disabled = true;
+  let generated;
+  try { generated = await requestMap(seed > 0 ? seed : levelSeed(level), mapOptionsFor(level)); }
+  catch (error) {
+    if (request !== mapRequest) return;
+    console.error("Map generation failed", error);
+    heroPick.setAttribute("aria-busy", "false");
+    heroPick.querySelector("h1").textContent = "Map generation failed. Try another level.";
+    return;
+  }
+  if (request !== mapRequest) return;                             // a newer selection owns the preview now
+  Object.assign(map, generated);                                 // preserve the map object imported throughout the game
+  loadingMap = false;
+  heroPick.setAttribute("aria-busy", "false");
+  heroPick.querySelector("h1").textContent = "Choose your legend";
+  for (const button of heroPick.querySelectorAll(".card, #noLegend")) button.disabled = false;
   const d = levelConfig(level);
   state.level = level; state.diff = d; state.totalWaves = d.waves; state.gold = d.gold + carryFor(level); state.lives = d.lives;
   state.wave = 0; state.over = false; state.paused = false; state.countdown = null; state.spawnTimer = 0; state.waveTotal = 0;
   for (const k of ["enemies", "towers", "shots", "floaters", "bursts", "bolts", "fires", "smoke", "scorches", "blood", "corpses", "spawnQueue", "fish", "poops", "heroes"]) state[k] = [];
   state.hero = null; state.dog = null; state.eagle = null;
   state.selected = null; state.hover = null; state.rallyFor = null; state.hoverCritter = null; state.preview = null;
-  generateMap(seed > 0 ? seed : levelSeed(level), mapOptionsFor(level));
   invalidateBackground();
   initCritters(); initWeather();
   resetUiForLevel();
   pauseBtn.innerHTML = icon("pause"); pauseBtn.title = "Pause (P)";
-  lvInput.value = level; document.getElementById("lvPrev").disabled = level <= 1; document.getElementById("lvNext").disabled = level >= MAX_LEVEL;
   if (hero === "pick" || !hero) {                                     // the legend screen again (no entrance animation this time)
-    heroPick.classList.add("again");
     heroPick.style.display = "flex";
     showLegendBadge(null);
     document.getElementById("next").disabled = true; document.getElementById("pause").disabled = true;
@@ -67,8 +90,6 @@ window.addEventListener("hashchange", () => {
 
 initUi();
 initTouch();
-initCritters();
-initWeather();
 
 // Pick a hero before the round starts (or pass ?hero=april / ?hero=avril in the URL)
 const heroPick = document.getElementById("heroPick");
@@ -92,6 +113,7 @@ legendBadge.addEventListener("click", () => {
   sfx("select");
 });
 function chooseHero(kind) {
+  if (loadingMap) return;
   initHero(kind);
   showLegendBadge(kind);
   heroPick.style.display = "none";
@@ -101,6 +123,7 @@ function chooseHero(kind) {
 }
 // Or go it alone: towers only, no legend on the field
 function startSolo() {
+  if (loadingMap) return;
   state.heroes = []; state.hero = null; state.dog = null; state.eagle = null;
   showLegendBadge(null);
   heroPick.style.display = "none";
@@ -123,7 +146,7 @@ resetBtn.addEventListener("click", () => {
 // Level picker on the legend screen: arrows or type a number, and the chosen level loads
 const lvInput = document.getElementById("lvInput");
 lvInput.value = level; lvInput.max = MAX_LEVEL;
-const goLevel = (n) => { n = clampLevel(n); if (n !== level) startLevel({ level: n, hero: "pick" }); else lvInput.value = n; };
+const goLevel = (n) => { n = clampLevel(n); if (n !== level || loadingMap) startLevel({ level: n, hero: "pick" }); else lvInput.value = n; };
 document.getElementById("lvPrev").addEventListener("click", () => goLevel(level - 1));
 document.getElementById("lvNext").addEventListener("click", () => goLevel(level + 1));
 lvInput.addEventListener("change", () => goLevel(lvInput.value));
@@ -136,9 +159,7 @@ window.addEventListener("keydown", (ev) => {
 window.addEventListener("keydown", (ev) => { if (ev.code === "KeyW" && !ev.metaKey && !ev.ctrlKey && heroPick.style.display !== "none") startSolo(); });
 document.getElementById("next").disabled = true;          // until a legend is chosen
 document.getElementById("pause").disabled = true;
-if (preset === "none") startSolo();
 for (const card of heroPick.querySelectorAll(".card")) card.addEventListener("click", () => chooseHero(card.dataset.hero));
-if (["april", "avril", "ember", "willow", "meilin", "adrien"].includes(preset)) chooseHero(preset);
 
 // Which build spot is under the point? An empty pad is its foreshortened disc; a tower counts over its
 // whole body, from the pad up to the roof. Where towers overlap, the one in front (lower on screen) wins.
@@ -226,7 +247,7 @@ window.addEventListener("keydown", (ev) => { if (ev.code === "KeyN" && !ev.metaK
 const confirmBox = document.getElementById("confirm");
 const pausedView = document.getElementById("paused");
 function restartLevel() {
-  if (state.over || confirmBox.style.display === "flex") return;
+  if (loadingMap || state.over || confirmBox.style.display === "flex") return;
   document.getElementById("confirmLevel").textContent = level;
   confirmBox.style.display = "flex";
   pausedView.style.display = "none";                                  // the restart prompt takes the pause screen's place
@@ -235,7 +256,7 @@ function restartLevel() {
 const closeConfirm = () => {
   confirmBox.style.display = "none";
   if (state.paused) pausedView.style.display = "flex";
-  pauseBtn.disabled = state.over || heroPick.style.display !== "none";
+  pauseBtn.disabled = loadingMap || state.over || heroPick.style.display !== "none";
 };
 // Either way the legend screen comes back first
 document.getElementById("confirmSame").addEventListener("click", () => { closeConfirm(); startLevel({ level, seed: map.seed, hero: "pick" }); });
@@ -291,8 +312,7 @@ let last = performance.now();
 function frame(now) {
   const dt = Math.min((now - last) / 1000, 0.05);
   last = now;
-  update(dt);
-  draw();
+  if (map.paths.length) { update(dt); draw(); }
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
@@ -309,3 +329,5 @@ function checkOrientation() {
 }
 window.addEventListener("resize", checkOrientation);
 checkOrientation();
+
+startLevel({ level, seed: seedParam, hero: ["none", "april", "avril", "ember", "willow", "meilin", "adrien"].includes(preset) ? preset : "pick" });

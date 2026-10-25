@@ -1,7 +1,7 @@
 import { W, H, ROWS, COLS, CELL, ROAD_WIDTH, ROAD_EDGE, SPOT_RADIUS } from "./config.js";
 import { rng, dist, closestPointOnPath, clamp, arcLengthAt, pointAtArc, pointsAlongPath } from "./util.js";
 
-// The generated world. Filled in by generateMap() before anything else runs.
+// The generated world. Built in the worker, then copied here before gameplay starts.
 export const map = {
   seed: 0,
   path: [],        // the main road's corner points, from off-screen at its entry edge to off-screen at its exit edge
