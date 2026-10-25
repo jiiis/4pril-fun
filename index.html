@@ -46,12 +46,12 @@
       </div>
     </header>
 
-    <div id="paused"><span data-icon="play" title="Resume"></span><small>paused · tap or press P to resume</small></div>
+    <div id="paused"><div class="resumeChoice"><span data-icon="play" title="Resume"></span><small class="overlay-button-label">RESUME</small></div><small>paused · tap or press P to resume</small></div>
 
     <div id="confirm">
       <div class="actions">
-        <button id="confirmSame" class="choice"><span class="big" data-icon="restart"></span><small>same map</small></button>
-        <button id="confirmNew" class="choice alt"><span class="big" data-icon="map"></span><small>new map</small></button>
+        <button id="confirmSame" class="choice"><span class="big" data-icon="restart"></span><small class="overlay-button-label">same map</small></button>
+        <button id="confirmNew" class="choice alt"><span class="big" data-icon="map"></span><small class="overlay-button-label">new map</small></button>
       </div>
       <small class="cap">restart level <span id="confirmLevel">1</span> · tap outside or press Esc to cancel</small>
     </div>

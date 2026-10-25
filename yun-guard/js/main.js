@@ -48,7 +48,7 @@ async function startLevel({ level: L, seed, hero, debounce = false }) {
   if (map.paths.length) heroPick.classList.add("again");
   heroPick.style.display = "flex";
   heroPick.setAttribute("aria-busy", "true");
-  heroPick.querySelector("h1").textContent = "Generating map…";
+  heroPick.querySelector("h1").innerHTML = `${icon("hourglass")}<span>Generating map</span>`;
   for (const button of heroPick.querySelectorAll(".card, #noLegend")) button.disabled = true;
   document.getElementById("next").disabled = true; pauseBtn.disabled = true;
   if (debounce) {
