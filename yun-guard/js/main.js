@@ -59,10 +59,6 @@ async function startLevel({ level: L, seed, hero }) {
   }
   if (request !== mapRequest) return;                             // a newer selection owns the preview now
   Object.assign(map, generated);                                 // preserve the map object imported throughout the game
-  loadingMap = false;
-  heroPick.setAttribute("aria-busy", "false");
-  heroPick.querySelector("h1").textContent = "Choose your legend";
-  for (const button of heroPick.querySelectorAll(".card, #noLegend")) button.disabled = false;
   const d = levelConfig(level);
   state.level = level; state.diff = d; state.totalWaves = d.waves; state.gold = d.gold + carryFor(level); state.lives = d.lives;
   state.wave = 0; state.over = false; state.paused = false; state.countdown = null; state.spawnTimer = 0; state.waveTotal = 0;
@@ -73,6 +69,11 @@ async function startLevel({ level: L, seed, hero }) {
   initCritters(); initWeather();
   resetUiForLevel();
   pauseBtn.innerHTML = icon("pause"); pauseBtn.title = "Pause (P)";
+  draw();                                                       // paint the new map before restoring the home screen's backdrop blur
+  loadingMap = false;
+  heroPick.setAttribute("aria-busy", "false");
+  heroPick.querySelector("h1").textContent = "Choose your legend";
+  for (const button of heroPick.querySelectorAll(".card, #noLegend")) button.disabled = false;
   if (hero === "pick" || !hero) {                                     // the legend screen again (no entrance animation this time)
     heroPick.style.display = "flex";
     showLegendBadge(null);
