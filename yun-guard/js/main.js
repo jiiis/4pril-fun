@@ -25,7 +25,8 @@ saveLevel(level);
 const diff = levelConfig(level);
 state.level = level; state.diff = diff; state.totalWaves = diff.waves; state.gold = diff.gold + carryFor(level); state.lives = diff.lives;
 const seedParam = Number(params.get("seed")) || Number(location.hash.replace(/^#/, ""));   // ?seed=123456 or #123456
-let loadingMap = true, mapRequest = 0;
+let loadingMap = true, mapFailed = false, mapRequest = 0, cancelLevelWait = null;
+const LEVEL_DEBOUNCE_MS = 300;
 // The address bar always shows the level and map being played, so a browser refresh or bookmark brings back exactly this game
 function showInUrl(heroKind) {
   const q = new URLSearchParams({ level, seed: map.seed });
@@ -35,10 +36,12 @@ function showInUrl(heroKind) {
 
 // Start a level in this same page (no reload, so full screen and the audio stay as they are):
 // rebuild the world, reset everything that changes while playing, then choose a legend or jump straight in.
-async function startLevel({ level: L, seed, hero }) {
+async function startLevel({ level: L, seed, hero, debounce = false }) {
+  cancelLevelWait?.(); cancelLevelWait = null;
   level = clampLevel(L); saveLevel(level);
   const request = ++mapRequest;
   loadingMap = true;
+  mapFailed = false;
   state.paused = true;                                           // idle scenery can animate, but the old game cannot advance
   resetUiForLevel();
   lvInput.value = level; document.getElementById("lvPrev").disabled = level <= 1; document.getElementById("lvNext").disabled = level >= MAX_LEVEL;
@@ -48,11 +51,20 @@ async function startLevel({ level: L, seed, hero }) {
   heroPick.querySelector("h1").textContent = "Generating map…";
   for (const button of heroPick.querySelectorAll(".card, #noLegend")) button.disabled = true;
   document.getElementById("next").disabled = true; pauseBtn.disabled = true;
+  if (debounce) {
+    await new Promise((resolve) => {
+      const timer = setTimeout(resolve, LEVEL_DEBOUNCE_MS);
+      cancelLevelWait = () => { clearTimeout(timer); resolve(); };
+    });
+    if (request !== mapRequest) return;
+    cancelLevelWait = null;
+  }
   let generated;
   try { generated = await requestMap(seed > 0 ? seed : levelSeed(level), mapOptionsFor(level), backgroundResolution()); }
   catch (error) {
     if (request !== mapRequest) return;
     console.error("Map generation failed", error);
+    mapFailed = true;
     heroPick.setAttribute("aria-busy", "false");
     heroPick.querySelector("h1").textContent = "Map generation failed. Try another level.";
     return;
@@ -147,10 +159,11 @@ resetBtn.addEventListener("click", () => {
 // Level picker on the legend screen: arrows or type a number, and the chosen level loads
 const lvInput = document.getElementById("lvInput");
 lvInput.value = level; lvInput.max = MAX_LEVEL;
-const goLevel = (n) => { n = clampLevel(n); if (n !== level || loadingMap) startLevel({ level: n, hero: "pick" }); else lvInput.value = n; };
+const goLevel = (n) => { n = clampLevel(n); if (n !== level || mapFailed) startLevel({ level: n, hero: "pick", debounce: true }); else lvInput.value = n; };
 document.getElementById("lvPrev").addEventListener("click", () => goLevel(level - 1));
 document.getElementById("lvNext").addEventListener("click", () => goLevel(level + 1));
 lvInput.addEventListener("change", () => goLevel(lvInput.value));
+lvInput.addEventListener("input", () => { if (lvInput.value !== "" && lvInput.validity.valid) goLevel(lvInput.value); });
 lvInput.addEventListener("keydown", (ev) => { ev.stopPropagation(); if (ev.key === "Enter") goLevel(lvInput.value); });
 document.getElementById("lvPrev").disabled = level <= 1; document.getElementById("lvNext").disabled = level >= MAX_LEVEL;
 window.addEventListener("keydown", (ev) => {

@@ -70,7 +70,7 @@
     <div id="heroPick">
       <div class="levelPick">
         <button id="lvPrev" title="Previous level" data-icon="chevronLeft"></button>
-        <label>Level <input id="lvInput" type="number" min="1" max="100" value="1" /></label>
+        <span class="levelField"><span id="lvLabel">Level</span> <input id="lvInput" aria-labelledby="lvLabel" type="number" min="1" max="100" value="1" /></span>
         <button id="lvNext" title="Next level" data-icon="chevronRight"></button>
         <button id="resetProgress" class="ghost reset" title="Forget the saved level and carried gold, and start from level 1"><span data-icon="eraser"></span><span class="lbl">Reset progress</span></button>
       </div>
