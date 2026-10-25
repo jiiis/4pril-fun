@@ -1,14 +1,14 @@
 import { W, H, ROAD_WIDTH, ROAD_EDGE } from "../config.js";
 import { rng, pointsAlongPath, closestPointOnPath, pointAtArc } from "../util.js";
 import { map } from "../map.js";
-import { rect, circle, ellipse, poly, line, shadow } from "./gfx.js";
+import { createCanvas, rect, circle, ellipse, poly, line, shadow } from "./gfx.js";
 import { addLight } from "./lights.js";
 import { state } from "../state.js";
 
 let canvasBlurSupported;
 function drawBlurredMask(c, source, sigma) {
   if (canvasBlurSupported === undefined) {
-    const probe = document.createElement("canvas"); probe.width = probe.height = 5;
+    const probe = createCanvas(5, 5);
     const p = probe.getContext("2d");
     p.filter = "blur(1px)"; p.fillRect(2, 2, 1, 1);
     canvasBlurSupported = p.getImageData(1, 2, 1, 1).data[3] > 0;
@@ -54,8 +54,7 @@ function drawBlurredMask(c, source, sigma) {
 // The scenery never changes, so we draw it once onto a hidden canvas
 // and then just copy that picture every frame.
 export function buildBackground(res = 1) {                      // res: device pixels per world pixel
-  const off = document.createElement("canvas");
-  off.width = Math.round(W * res); off.height = Math.round(H * res);
+  const off = createCanvas(Math.round(W * res), Math.round(H * res));
   const c = off.getContext("2d");
   c.scale(res, res);
   const rand = rng(1234);
@@ -124,7 +123,7 @@ export function buildBackground(res = 1) {                      // res: device p
 // not green counts as road or water, so rounded corners and ragged edges are followed exactly.
 function liftGrass(c) {
   const res = c.getTransform().a, cv = c.canvas, W1 = cv.width, H1 = cv.height;   // the mask is found at full resolution, then blurred a hair so its edges run smooth
-  const mk = (w, h) => { const k = document.createElement("canvas"); k.width = w; k.height = h; return k; };
+  const mk = createCanvas;
   const S = mk(W1, H1), sctx = S.getContext("2d", { willReadFrequently: true });
   sctx.drawImage(cv, 0, 0, W1, H1);
   const img = sctx.getImageData(0, 0, W1, H1), d = img.data, n = W1 * H1;
@@ -251,7 +250,7 @@ function drawRoad(c, rand, paths) {
   // Around each junction the layer is redrawn as a mask (strokes, blurred, cut at a threshold): that rounds
   // the corners where the roads meet, inside and out, and leaves straight stretches exactly as they were.
   const res = c.getTransform().a, REG = Math.round(ROAD_WIDTH * 3.4), RP = Math.round(REG * res);
-  const strokes = document.createElement("canvas"), soft = document.createElement("canvas");
+  const strokes = createCanvas(), soft = createCanvas();
   strokes.width = soft.width = RP; strokes.height = soft.height = RP;
   const sc = strokes.getContext("2d"), fc = soft.getContext("2d");
   // One blurred field per junction (from the base-width strokes); every layer cuts its own shape from it at a

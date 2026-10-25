@@ -12,24 +12,50 @@ import { drawCritter, drawWaterBird } from "./critters.js";
 import { drawHero, drawDog, drawEagle } from "./hero.js";
 import { drawWeather, drawSnowCover } from "../weather.js";
 import { addLight, beginLights } from "./lights.js";
+import { requestBackground } from "../map-loader.js";
 
-let background = null;   // built on the first frame, after the map has been generated
+let background = null;   // received from the worker along with the generated map
 // Resolution: the canvas keeps its 1440×840 world size on screen, but its pixel buffer follows the
 // device pixel ratio and the current zoom (in quarter steps, capped) so nothing goes soft when zoomed in.
 // The static background is re-rasterized to match, a moment after the zoom settles.
 let res = 0, bgRes = 0, resChangedAt = 0;
+let backgroundRequest = 0, requestedRes = null, workerRendering = false;
 const MAX_RES = 2;                                        // crisp enough on 2× screens; above this the fill cost per frame climbs fast
+export const backgroundResolution = () => Math.min(MAX_RES, Math.ceil((window.devicePixelRatio || 1) * view.k * 4) / 4);
+export function setBackground(image, resolution) {
+  backgroundRequest++; requestedRes = null;
+  background?.close?.();
+  background = image; bgRes = resolution; workerRendering = !!image;
+}
+function refreshBackground() {
+  if (!workerRendering) {
+    const image = buildBackground(res);
+    background?.close?.(); background = image; bgRes = res;
+    return;
+  }
+  if (requestedRes === res) return;
+  const request = ++backgroundRequest, resolution = res;
+  requestedRes = resolution;
+  requestBackground(map, resolution).then(({ background: image }) => {
+    if (request !== backgroundRequest || resolution !== res) { image?.close(); return; }
+    if (!image) { workerRendering = false; return; }
+    background.close(); background = image; bgRes = resolution;
+  }).catch((error) => {
+    if (request !== backgroundRequest) return;
+    console.warn("Worker background refresh failed; using the page renderer", error);
+    workerRendering = false;
+  }).finally(() => { if (request === backgroundRequest) requestedRes = null; });
+}
 function fitResolution() {
-  const want = Math.min(MAX_RES, Math.ceil((window.devicePixelRatio || 1) * view.k * 4) / 4);
+  const want = backgroundResolution();
   if (want !== res) {
     res = want; resChangedAt = performance.now();
     canvas.width = Math.round(W * res); canvas.height = Math.round(H * res);
     canvas.style.width = `${W}px`; canvas.style.height = `${H}px`;
   }
-  if (!background || (bgRes !== res && performance.now() - resChangedAt > 150)) { background = buildBackground(res); bgRes = res; }
+  if (!background || (bgRes !== res && performance.now() - resChangedAt > 150)) refreshBackground();
   ctx.setTransform(res, 0, 0, res, 0, 0);
 }
-export const invalidateBackground = () => { background = null; };
 
 // Living water: glints drifting along the current, and fish leaping out
 function drawWater() {

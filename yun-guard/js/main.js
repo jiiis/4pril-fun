@@ -5,7 +5,7 @@ import { dist } from "./util.js";
 import { map } from "./map.js";
 import { requestMap } from "./map-loader.js";
 import { update } from "./update.js";
-import { draw, SPOT_SQUASH, depthScale, invalidateBackground } from "./render/draw.js";
+import { draw, SPOT_SQUASH, depthScale, backgroundResolution, setBackground } from "./render/draw.js";
 import { initUi, openMenu, closeMenu, resetUiForLevel } from "./ui.js";
 import { startWave, spawnEnemy } from "./waves.js";
 import { createTower, setRally, archerHeight, mageHeight, teslaHeight, ballistaHeight, visLevel } from "./towers.js";
@@ -49,7 +49,7 @@ async function startLevel({ level: L, seed, hero }) {
   for (const button of heroPick.querySelectorAll(".card, #noLegend")) button.disabled = true;
   document.getElementById("next").disabled = true; pauseBtn.disabled = true;
   let generated;
-  try { generated = await requestMap(seed > 0 ? seed : levelSeed(level), mapOptionsFor(level)); }
+  try { generated = await requestMap(seed > 0 ? seed : levelSeed(level), mapOptionsFor(level), backgroundResolution()); }
   catch (error) {
     if (request !== mapRequest) return;
     console.error("Map generation failed", error);
@@ -57,15 +57,15 @@ async function startLevel({ level: L, seed, hero }) {
     heroPick.querySelector("h1").textContent = "Map generation failed. Try another level.";
     return;
   }
-  if (request !== mapRequest) return;                             // a newer selection owns the preview now
-  Object.assign(map, generated);                                 // preserve the map object imported throughout the game
+  if (request !== mapRequest) { generated.background?.close(); return; } // a newer selection owns the preview now
+  Object.assign(map, generated.map);                             // preserve the map object imported throughout the game
   const d = levelConfig(level);
   state.level = level; state.diff = d; state.totalWaves = d.waves; state.gold = d.gold + carryFor(level); state.lives = d.lives;
   state.wave = 0; state.over = false; state.paused = false; state.countdown = null; state.spawnTimer = 0; state.waveTotal = 0;
   for (const k of ["enemies", "towers", "shots", "floaters", "bursts", "bolts", "fires", "smoke", "scorches", "blood", "corpses", "spawnQueue", "fish", "poops", "heroes"]) state[k] = [];
   state.hero = null; state.dog = null; state.eagle = null;
   state.selected = null; state.hover = null; state.rallyFor = null; state.hoverCritter = null; state.preview = null;
-  invalidateBackground();
+  setBackground(generated.background, generated.res);
   initCritters(); initWeather();
   resetUiForLevel();
   pauseBtn.innerHTML = icon("pause"); pauseBtn.title = "Pause (P)";

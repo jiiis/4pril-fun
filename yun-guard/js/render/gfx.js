@@ -2,8 +2,14 @@
 // Every helper takes the context first so the same code can draw to the
 // offscreen background canvas too.
 
-export const canvas = document.getElementById("c");
-export let ctx = canvas.getContext("2d");
+export const canvas = globalThis.document?.getElementById("c") ?? null;
+export let ctx = canvas?.getContext("2d") ?? null;
+// Background drawing uses the same helpers in the page and in its worker.
+export function createCanvas(w = 300, h = 150) {
+  if (!globalThis.document) return new OffscreenCanvas(w, h);
+  const c = document.createElement("canvas"); c.width = w; c.height = h;
+  return c;
+}
 // Temporarily point every drawing helper at another context (used to draw a creature into a small
 // scratch canvas so it can be tinted cheaply). Importers see the change because module bindings are live.
 export function withCtx(c, fn) { const prev = ctx; ctx = c; try { fn(); } finally { ctx = prev; } }
