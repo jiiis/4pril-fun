@@ -115,6 +115,28 @@ export function drawSnowCover(ctx) {
 // the mages' orbs, gold finials. Those are registered by their own drawing code (see render/lights.js).
 // A few fireflies wander the whole map, blinking.
 const nightLayer = document.createElement("canvas"), nctx = nightLayer.getContext("2d");
+const nightGradients = new Map();
+// Unit gradients follow each light's live transform. A fading tint replaces its
+// previous entry, so the cache never grows with time or moving light positions.
+function nightGradient(kind, intensity = 1) {
+  const cached = nightGradients.get(kind);
+  if (cached?.intensity === intensity) return cached.gradient;
+  nctx.save(); nctx.setTransform(1, 0, 0, 1, 0, 0);
+  const g = nctx.createRadialGradient(0, 0, 0, 0, 0, 1);
+  if (kind === "mask") {
+    g.addColorStop(0, "rgba(0,0,0,0.9)"); g.addColorStop(0.3, "rgba(0,0,0,0.6)"); g.addColorStop(0.7, "rgba(0,0,0,0.18)"); g.addColorStop(1, "rgba(0,0,0,0)");
+  } else {
+    const [cr, cg, cb] = LIGHT_TINT[kind] || LIGHT_TINT.flame;
+    g.addColorStop(0, `rgba(${cr},${cg},${cb},${0.16 * intensity})`); g.addColorStop(1, `rgba(${cr},${cg},${cb},0)`);
+  }
+  nctx.restore();
+  nightGradients.set(kind, { intensity, gradient: g });
+  return g;
+}
+function fillNightLight(l, r, gradient) {
+  nctx.setTransform(r, 0, 0, r, l.x, l.y);
+  nctx.fillStyle = gradient; nctx.beginPath(); nctx.ellipse(0, 0, 1, 0.85, 0, 0, Math.PI * 2); nctx.fill();
+}
 function makeFireflies() {
   const out = [];
   for (let i = 0; i < 14; i++) out.push({ x: Math.random() * W, y: H * 0.1 + Math.random() * H * 0.85, a: Math.random() * 6.3, turn: 0, ph: Math.random() * 6.3, rate: 1.6 + Math.random() * 1.4 });
@@ -135,6 +157,7 @@ function drawNight(ctx, k) {
   const cw = ctx.canvas.width, ch = ctx.canvas.height;
   if (nightLayer.width !== cw || nightLayer.height !== ch) { nightLayer.width = cw; nightLayer.height = ch; }
   nctx.setTransform(1, 0, 0, 1, 0, 0);
+  nctx.globalAlpha = 1;
   nctx.globalCompositeOperation = "source-over";
   nctx.clearRect(0, 0, cw, ch);
   nctx.fillStyle = `rgba(6,10,36,${0.62 * k})`;                 // the dark of night, deep blue
@@ -143,18 +166,14 @@ function drawNight(ctx, k) {
   for (const l of lights) {
     const flick = l.kind === "flame" ? 0.97 + 0.03 * Math.sin(state.time * 23 + l.x) : 1;   // flames breathe a little, nothing else moves
     const r = l.r * flick;
-    const g = nctx.createRadialGradient(l.x, l.y, 0, l.x, l.y, r);
-    g.addColorStop(0, "rgba(0,0,0,0.9)"); g.addColorStop(0.3, "rgba(0,0,0,0.6)"); g.addColorStop(0.7, "rgba(0,0,0,0.18)"); g.addColorStop(1, "rgba(0,0,0,0)");
-    nctx.fillStyle = g; nctx.beginPath(); nctx.ellipse(l.x, l.y, r, r * 0.85, 0, 0, Math.PI * 2); nctx.fill();
+    fillNightLight(l, r, nightGradient("mask"));
   }
   // Each light also tints its surroundings with its own colour
   nctx.globalCompositeOperation = "source-over";
   for (const l of lights) {
-    const [cr, cg, cb] = LIGHT_TINT[l.kind] || LIGHT_TINT.flame, r = l.r * 0.8;
-    const g = nctx.createRadialGradient(l.x, l.y, 0, l.x, l.y, r);
-    g.addColorStop(0, `rgba(${cr},${cg},${cb},${0.16 * k})`); g.addColorStop(1, `rgba(${cr},${cg},${cb},0)`);
-    nctx.fillStyle = g; nctx.beginPath(); nctx.ellipse(l.x, l.y, r, r * 0.85, 0, 0, Math.PI * 2); nctx.fill();
+    fillNightLight(l, l.r * 0.8, nightGradient(l.kind, k));
   }
+  nctx.globalAlpha = 1;
   ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(nightLayer, 0, 0); ctx.restore();
   // Fireflies: a tiny spark with a faint halo, blinking on and off as it drifts
   for (const f of state.weather.fireflies || []) {
