@@ -192,6 +192,7 @@ function handleMenuClick(ev) {
 // The board always fills the screen: shown at its natural size, or scaled up (never down) when the window is
 // larger than it. Whatever sticks out past the screen is reached by dragging (see touch.js).
 export const view = { k: 1, fit: 1, panX: 0, panY: 0, mobile: false };
+export const viewport = { left: 0, top: 0, right: W, bottom: H };
 const MAX_ZOOM = 2, MIN_ZOOM = 0.6;                              // small screens may shrink the board to see more of it; pads stay tappable
 const hudH = () => 0;                                           // the HUD floats over the board, so the whole window is for the map
 // The page (html/body) is sized to the dynamic viewport; measure it rather than window.innerHeight, which
@@ -218,8 +219,13 @@ export function zoomTo(k, sx, sy) {
 export const canPan = () => W * view.k > pageW() + 1 || H * view.k > pageH() - hudH() + 1;
 export function panBy(dx, dy) { view.panX += dx; view.panY += dy; applyView(); }
 function applyView() {
-  const maxX = Math.max(0, (W * view.k - pageW()) / 2), maxY = Math.max(0, (H * view.k - (pageH() - hudH())) / 2);   // never pan past the board's edge
+  const width = pageW(), height = pageH() - hudH();
+  const maxX = Math.max(0, (W * view.k - width) / 2), maxY = Math.max(0, (H * view.k - height) / 2);   // never pan past the board's edge
   view.panX = clamp(view.panX, -maxX, maxX); view.panY = clamp(view.panY, -maxY, maxY);
+  viewport.left = W / 2 - (width / 2 + view.panX) / view.k;
+  viewport.top = H / 2 - (height / 2 + view.panY) / view.k;
+  viewport.right = viewport.left + width / view.k;
+  viewport.bottom = viewport.top + height / view.k;
   $("wrap").style.transform = `translate(calc(-50% + ${view.panX}px), calc(-50% + ${view.panY}px)) scale(${view.k})`;
   placeMenu();                                                  // the open menu follows its spot as the view moves
 }

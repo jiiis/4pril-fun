@@ -1,6 +1,6 @@
 import { canvas, ctx, circle, ellipse, rect, line, poly } from "./gfx.js";
 import { state } from "../state.js";
-import { view } from "../ui.js";
+import { view, viewport } from "../ui.js";
 import { map } from "../map.js";
 import { SPOT_RADIUS, W, H, TOWERS } from "../config.js";
 import { towerRange, abilityDef } from "../towers.js";
@@ -23,6 +23,17 @@ let background = null;   // received from the worker along with the generated ma
 let res = 0, bgRes = 0, resChangedAt = 0;
 let backgroundRequest = 0, requestedRes = null, workerRendering = false;
 let sceneryCache = null, sceneryActors = [];
+const drawBounds = { left: 0, top: 0, right: W, bottom: H };
+let fullMapVisible = true;
+function updateDrawBounds() {
+  const margin = 128 / view.k;                              // screen-pixel margin for scenery entering the view
+  drawBounds.left = viewport.left - margin; drawBounds.top = viewport.top - margin;
+  drawBounds.right = viewport.right + margin; drawBounds.bottom = viewport.bottom + margin;
+  fullMapVisible = drawBounds.left <= 0 && drawBounds.top <= 0 && drawBounds.right >= W && drawBounds.bottom >= H;
+}
+function inView(left, top, right, bottom) {
+  return right >= drawBounds.left && bottom >= drawBounds.top && left <= drawBounds.right && top <= drawBounds.bottom;
+}
 const MAX_RES = 2;                                        // crisp enough on 2× screens; above this the fill cost per frame climbs fast
 export const backgroundResolution = () => Math.min(MAX_RES, Math.ceil((window.devicePixelRatio || 1) * view.k * 4) / 4);
 export function setBackground(image, resolution, scenery = null) {
@@ -34,6 +45,10 @@ export function setBackground(image, resolution, scenery = null) {
 function setScenery(cache) {
   sceneryCache?.image.close(); sceneryCache = cache;
   const entries = new Map(cache?.entries.map(e => [`${e.kind}:${e.index}`, e]));
+  const bounds = (kind, index) => {
+    const e = entries.get(`${kind}:${index}`);
+    return e ? [e.x - 2, e.y - 2, e.x + e.w / cache.res + 2, e.y + e.h / cache.res + 2] : null;
+  };
   const cached = (kind, index, paint, after = null) => {
     const entry = entries.get(`${kind}:${index}`);
     return () => {
@@ -43,7 +58,7 @@ function setScenery(cache) {
       after?.();
     };
   };
-  sceneryActors = map.deco.map((d, i) => ({ y: d.y, draw: cached("deco", i, () => {
+  sceneryActors = map.deco.map((d, i) => ({ y: d.y, bounds: bounds("deco", i), draw: cached("deco", i, () => {
     ctx.save(); ctx.translate(d.x, d.y); ctx.scale(depthScale(d.y), depthScale(d.y)); ctx.translate(-d.x, -d.y);
     drawDecoItem(ctx, d); ctx.restore();
   }) }));
@@ -218,6 +233,7 @@ function drawSpot(s, i, occupied, hovered) {
 
 export function draw() {
   fitResolution();
+  updateDrawBounds();
   beginLights();
   ctx.drawImage(background, 0, 0, W, H);
   // Arrows worn into the dirt at the map edges: soft filled wedges, no outlines. A gentle wave
@@ -424,7 +440,8 @@ export function draw() {
   // Towers, soldiers, monsters and animals, sorted so things lower on screen are drawn in front.
   // A tower's "feet" are the bottom of its stone pad, so monsters walking above it go behind it.
   // Everything standing on the ground is scaled about its feet by depthScale (buildings excepted)
-  const actors = [...sceneryActors];
+  // Raw scenery may change drawing state; cull only cached sprites. Keep castle damage and effects live.
+  const actors = fullMapVisible || sceneryCache?.res !== res ? [...sceneryActors] : sceneryActors.filter(a => !a.bounds || inView(...a.bounds));
   const scaled = (x, y, fn) => () => { const ds = depthScale(y); ctx.save(); ctx.translate(x, y); ctx.scale(ds, ds); ctx.translate(-x, -y); fn(); ctx.restore(); };
   map.entries.forEach((e, i) => { for (const p of lairParts(e)) actors.push({ y: p.y, draw: () => p.draw(ctx, state.time + i * 1.7) }); });   // stakes and dead tree sort separately
   for (const e of map.entries) actors.push({ y: e.y + 12, draw: scaled(e.x, e.y, () => { drawSign(ctx, e.x, e.y, e.face); flag(e.x, e.y - 40, 20, "#c62828", 2 + e.y); }) });
