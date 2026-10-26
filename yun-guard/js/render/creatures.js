@@ -22,7 +22,14 @@ function drawTinted(size, tint, drawFn) {
 
 // Monster outlines stay subtle: every shape helper used here softens its outline colour to ~45% and thins it,
 // so the drawings below can keep naming plain colours.
-const soft = (c) => (typeof c === "string" && /^#[0-9a-f]{6}$/i.test(c) ? `rgba(${parseInt(c.slice(1, 3), 16)},${parseInt(c.slice(3, 5), 16)},${parseInt(c.slice(5, 7), 16)},0.45)` : c);
+const outlineColors = new Map();
+function soft(c) {
+  if (outlineColors.has(c)) return outlineColors.get(c);
+  if (typeof c !== "string" || !/^#[0-9a-f]{6}$/i.test(c)) return c;
+  const color = `rgba(${parseInt(c.slice(1, 3), 16)},${parseInt(c.slice(3, 5), 16)},${parseInt(c.slice(5, 7), 16)},0.45)`;
+  outlineColors.set(c, color);
+  return color;
+}
 const rect = (c, x, y, w, h, fill, stroke, lw = 2) => rect0(c, x, y, w, h, fill, soft(stroke), lw * 0.7);
 const circle = (c, x, y, r, fill, stroke, lw = 1.5) => circle0(c, x, y, r, fill, soft(stroke), lw * 0.7);
 const ellipse = (c, x, y, rx, ry, fill, stroke, lw = 1.5) => ellipse0(c, x, y, rx, ry, fill, soft(stroke), lw * 0.7);
@@ -196,10 +203,19 @@ function drawFlames(e) {
 
 // ---------- Shared helpers ----------
 // Rounded body with a highlight on the top-left so it looks solid instead of flat.
-function body(x, y, rx, ry, light, dark, stroke) {
-  const g = ctx.createRadialGradient(x - rx * 0.35, y - ry * 0.45, 1, x, y, Math.max(rx, ry) * 1.25);
-  g.addColorStop(0, light);
-  g.addColorStop(1, dark);
+const bodyGradients = new WeakMap();
+function body(x, y, rx, ry, light, dark, stroke, animated = false) {
+  let gradients = bodyGradients.get(ctx);
+  if (!gradients) { gradients = new Map(); bodyGradients.set(ctx, gradients); }
+  // Only fixed geometry is retained. Breathing, swaying and stretching keep their exact live shading.
+  const key = animated ? null : `${x},${y},${rx},${ry},${light},${dark}`;
+  let g = key === null ? null : gradients.get(key);
+  if (!g) {
+    g = ctx.createRadialGradient(x - rx * 0.35, y - ry * 0.45, 1, x, y, Math.max(rx, ry) * 1.25);
+    g.addColorStop(0, light);
+    g.addColorStop(1, dark);
+    if (key !== null) gradients.set(key, g);
+  }
   ellipse(ctx, x, y, rx, ry, g, stroke, 1.2);
 }
 // Eyes blink every few seconds.
@@ -232,7 +248,7 @@ const CREATURES = {
     line(ctx, 3, 6, 3 - sw, 14, "#2e7d32", 3);
     ellipse(ctx, -1 + sw, 14.5, 3.5, 1.6, "#4e342e");              // pointy shoes
     ellipse(ctx, 5 - sw, 14.5, 3.5, 1.6, "#4e342e");
-    body(0, 2, 7, 8 + breathe, "#81c784", "#2e7d32", "#1b5e20");   // body
+    body(0, 2, 7, 8 + breathe, "#81c784", "#2e7d32", "#1b5e20", true);   // body
     poly(ctx, [[-6.5, -3], [-3, -5], [-2, 3], [-4, 9], [-6.5, 7]], "#6d4c41", "#3e2723", 1);   // vest
     poly(ctx, [[6.5, -3], [3, -5], [2, 3], [4, 9], [6.5, 7]], "#6d4c41", "#3e2723", 1);
     line(ctx, -5, -1, -4, 7, "#8d6e63", 0.8); line(ctx, 5, -1, 4, 7, "#8d6e63", 0.8);   // stitching
@@ -270,7 +286,7 @@ const CREATURES = {
       line(ctx, lx, 3, lx + sw * d, 12, "#616161", 3);
       ellipse(ctx, lx + sw * d + 1, 12.5, 2.5, 1.3, "#424242");
     }
-    body(0, 0, 13 + stretch, 7 - stretch * 0.3, "#9e9e9e", "#616161", "#424242");
+    body(0, 0, 13 + stretch, 7 - stretch * 0.3, "#9e9e9e", "#616161", "#424242", true);
     ellipse(ctx, -1, -3, 11, 3.5, "#5c5c5c");                       // dark back
     ellipse(ctx, 1, 3, 9, 3, "#bdbdbd");                            // pale belly
     for (const bx of [-8, -4, 0, 4]) line(ctx, bx, -6, bx - 1.5, -9.5, "#424242", 1.5);   // bristles
@@ -412,12 +428,12 @@ const CREATURES = {
     line(ctx, 5, 9, 5 - sw, 19, "#33691e", 5);
     rect(ctx, -8 + sw, 17, 7, 4, "#616161", "#37474f", 1);          // iron boots
     rect(ctx, 2 - sw, 17, 7, 4, "#616161", "#37474f", 1);
-    body(sway * 0.3, 2, 11, 12 + heave, "#8bc34a", "#33691e", "#33691e");   // body
+    body(sway * 0.3, 2, 11, 12 + heave, "#8bc34a", "#33691e", "#33691e", true);   // body
     line(ctx, -8, -6, 6, 10, "#4e342e", 3);                         // chest strap
     for (const [bx, by] of [[-5, -2.5], [-1, 2], [3, 6.5]]) circle(ctx, bx, by, 1, "#bdbdbd");
     rect(ctx, -11, 8, 22, 4, "#4e342e");                            // belt
     rect(ctx, -2, 7.5, 4, 5, "#9e9e9e", "#424242", 1);
-    body(-8 + sway, -8, 7, 5, "#b0bec5", "#546e7a", "#37474f");     // spiked pauldron
+    body(-8 + sway, -8, 7, 5, "#b0bec5", "#546e7a", "#37474f", true);     // spiked pauldron
     for (const [px, py] of [[-12, -11], [-8, -13], [-4, -11]]) poly(ctx, [[px + sway - 1.5, py], [px + sway + 1.5, py], [px + sway, py - 4]], "#b0bec5", "#37474f", 0.5);
     line(ctx, -6, -1, -13, 6, "#558b2f", 4);                        // back arm
     circle(ctx, -13, 7, 2.5, "#558b2f");
@@ -450,7 +466,7 @@ const CREATURES = {
       ellipse(ctx, fx + 1, 33, 5, 2.2, "#546e7a");
       for (const t of [-3, 0, 3]) line(ctx, fx + 1 + t, 34, fx + 1.5 + t, 36.5, "#eceff1", 1.2);   // claws
     }
-    body(lean * 0.4, 4, 16, 17 + heave, "#b0bec5", "#607d8b", "#455a64");   // body
+    body(lean * 0.4, 4, 16, 17 + heave, "#b0bec5", "#607d8b", "#455a64", true);   // body
     ellipse(ctx, 2, 8, 9, 9 + heave * 0.5, "#cfd8dc");              // belly
     for (const [wx, wy] of [[-10, -2], [-12, 6], [11, -4], [9, 12]]) circle(ctx, wx, wy, 1.6, "#607d8b");   // warts
     poly(ctx, [[-11, 14], [11, 14], [9, 22], [3, 19], [-3, 22], [-9, 19]], "#6d4c41", "#3e2723", 1);   // loincloth
@@ -465,7 +481,7 @@ const CREATURES = {
       const px = 38 + Math.cos(a) * 7.5, py = -15 + Math.sin(a) * 7.5;
       poly(ctx, [[px - 1.5, py], [px + 1.5, py], [px + Math.cos(a) * 4.5, py + Math.sin(a) * 4.5]], "#b0bec5", "#37474f", 0.5);
     }
-    body(2 + lean * 0.5, -18, 11, 11, "#cfd8dc", "#78909c", "#455a64");   // head
+    body(2 + lean * 0.5, -18, 11, 11, "#cfd8dc", "#78909c", "#455a64", true);   // head
     ellipse(ctx, 3, -12, 8, 5, "#a7b7bf");                          // jaw
     ellipse(ctx, 2, -24, 9, 3.5, "#78909c");                        // brow ridge
     for (let i = -8; i <= 8; i += 3) line(ctx, 2 + i, -28, 2 + i * 1.3, -36 - Math.abs(i) * 0.3, "#558b2f", 2.5);   // mossy hair
@@ -485,9 +501,9 @@ const CREATURES = {
     const wob = Math.sin(phase * 2) * 0.6;
     ctx.save(); ctx.translate(0, 13 - hop * 6); ctx.scale(sq, 1 / sq);
     ctx.globalAlpha = 0.55; ellipse(ctx, 0, 0.5, 13, 3, "#64327f"); ctx.globalAlpha = 1;                // the slick it leaves
-    body(-9.5, -4, 5.5 + wob * 0.3, 5, "#c59bcf", "#8e4ba2", "#4d2773");                                 // side lumps
-    body(10, -3, 5, 4.6 - wob * 0.3, "#c59bcf", "#8e4ba2", "#4d2773");
-    body(0, -9, 12, 10.5 + wob * 0.4, "#dabee0", "#8e4ba2", "#4d2773");                                  // body
+    body(-9.5, -4, 5.5 + wob * 0.3, 5, "#c59bcf", "#8e4ba2", "#4d2773", true);                                 // side lumps
+    body(10, -3, 5, 4.6 - wob * 0.3, "#c59bcf", "#8e4ba2", "#4d2773", true);
+    body(0, -9, 12, 10.5 + wob * 0.4, "#dabee0", "#8e4ba2", "#4d2773", true);                                  // body
     body(-5, -19, 3.6, 3.2, "#dabee0", "#8e4ba2", "#4d2773");                                            // a bud, about to split off
     for (const [dx, dy, dr] of [[-7, -12, 1.5], [7, -14, 1.2], [-3, -4, 1.1], [8, -5, 1.4]]) circle(ctx, dx, dy, dr, "#a667b3");   // blotches
     ctx.globalAlpha = 0.55; ellipse(ctx, -5, -14, 3.4, 1.5, "#fff"); ctx.globalAlpha = 1;                // shine
@@ -594,7 +610,7 @@ const CREATURES = {
     }
     // Long neck and horned head
     ctx.strokeStyle = "#e53935"; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(9, -2); ctx.quadraticCurveTo(15, -8, 17, -14 + flap * 1.5); ctx.stroke();
-    body(19, -16 + flap * 1.5, 7, 5.5, "#ef5350", "#b71c1c", "#4a0000");                    // head
+    body(19, -16 + flap * 1.5, 7, 5.5, "#ef5350", "#b71c1c", "#4a0000", true);                    // head
     poly(ctx, [[24, -17 + flap * 1.5], [31, -14 + flap * 1.5], [24, -13 + flap * 1.5]], "#ef5350", "#4a0000", 1);   // snout
     line(ctx, 24.5, -13.5 + flap * 1.5, 30, -14 + flap * 1.5, "#4a0000", 1);
     fang(27, -13.5 + flap * 1.5, 2, false); fang(29, -13.8 + flap * 1.5, 1.5, false);
