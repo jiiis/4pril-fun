@@ -1,5 +1,6 @@
 import { map, generateMap } from "./map.js";
 import { buildBackground } from "./render/background.js";
+import { buildScenery } from "./render/scenery.js";
 
 let canRender = typeof OffscreenCanvas !== "undefined";
 function renderBackground(res) {
@@ -13,12 +14,18 @@ function renderBackground(res) {
 }
 
 self.onmessage = ({ data: { id, type, seed, opts, res, map: suppliedMap } }) => {
+  let background = null, scenery = null;
   try {
     if (type === "map") generateMap(seed, opts);
     else Object.assign(map, suppliedMap);
-    const background = renderBackground(res);
-    self.postMessage({ id, map: type === "map" ? map : undefined, background, res }, background ? [background] : []);
+    background = renderBackground(res);
+    if (background) {
+      try { scenery = buildScenery(res); }
+      catch (error) { console.warn("Scenery cache unavailable; drawing scenery directly", error); }
+    }
+    self.postMessage({ id, map: type === "map" ? map : undefined, background, scenery, res }, [background, scenery?.image].filter(Boolean));
   } catch (error) {
+    background?.close(); scenery?.image.close();
     self.postMessage({ id, error: error.message });
   }
 };

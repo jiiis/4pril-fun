@@ -825,19 +825,28 @@ function battleWear(c, seed, regions, count) {
     }
   }
 }
-export function drawCastleAt(c, k) {
+function castleRegions(k) {
+  const S = CASTLE_STYLES[k.style] || CASTLE_STYLES[0];
+  return S.pagoda ? [[-38, -34, 76, 20], [-28, -60, 56, 10]]
+    : S.palace ? [[-44, -36, 88, 40], [-18, -60, 36, 26]]
+    : [[-44, -36, 88, 40], [-16, -70, 32, 36], [-52, -64, 24, 68], [28, -64, 24, 68]];
+}
+export function drawCastleAt(c, k, damage = true) {
   castShadow(c, k.x, k.y, 50 * k.scale, 90 * k.scale);
   c.save(); c.translate(k.x, k.y); c.scale(k.scale, k.scale);
   drawCastle(c, 0, 0, k.style);
   const r = rng(Math.floor(k.x * 13 + k.y * 7));
-  const S = CASTLE_STYLES[k.style] || CASTLE_STYLES[0];
-  const regions = S.pagoda ? [[-38, -34, 76, 20], [-28, -60, 56, 10]]
-    : S.palace ? [[-44, -36, 88, 40], [-18, -60, 36, 26]]
-    : [[-44, -36, 88, 40], [-16, -70, 32, 36], [-52, -64, 24, 68], [28, -64, 24, 68]];
+  const regions = castleRegions(k);
   wearOut(c, r, regions);                                                              // lightly weathered to begin with ...
+  c.restore();
+  if (damage) drawCastleDamage(c, k);
+}
+export function drawCastleDamage(c, k) {
   const lost = state.diff ? 1 - state.lives / (state.diff.lives || 20) : 0;              // ... then worse with every monster that gets through
   const count = Math.round(Math.max(0, Math.min(1, lost)) * 70);
-  if (count) battleWear(c, Math.floor(k.x * 13 + k.y * 7), regions, count);
+  if (!count) return;
+  c.save(); c.translate(k.x, k.y); c.scale(k.scale, k.scale);
+  battleWear(c, Math.floor(k.x * 13 + k.y * 7), castleRegions(k), count);
   c.restore();
 }
 

@@ -4,7 +4,7 @@ import { view } from "../ui.js";
 import { map } from "../map.js";
 import { SPOT_RADIUS, W, H, TOWERS } from "../config.js";
 import { towerRange, abilityDef } from "../towers.js";
-import { buildBackground, drawSign, CASTLE_STYLES, gatePillars, lairStakes, drawDecoItem, drawCastleAt, drawGateStructure, gateAnchorY, drawLairStructure, lairAnchorY, lairParts, cherryToneOf } from "./background.js";
+import { buildBackground, drawSign, CASTLE_STYLES, gatePillars, lairStakes, drawDecoItem, drawCastleAt, drawCastleDamage, drawGateStructure, gateAnchorY, drawLairStructure, lairAnchorY, lairParts, cherryToneOf } from "./background.js";
 import { drawTower, flag } from "./towers.js";
 import { drawEnemy, drawCorpse } from "./creatures.js";
 import { drawSoldier } from "./soldiers.js";
@@ -13,6 +13,8 @@ import { drawHero, drawDog, drawEagle } from "./hero.js";
 import { drawWeather, drawSnowCover } from "../weather.js";
 import { addLight, beginLights } from "./lights.js";
 import { requestBackground } from "../map-loader.js";
+import { depthScale } from "./scenery.js";
+export { depthScale } from "./scenery.js";
 
 let background = null;   // received from the worker along with the generated map
 // Resolution: the canvas keeps its 1440×840 world size on screen, but its pixel buffer follows the
@@ -20,12 +22,33 @@ let background = null;   // received from the worker along with the generated ma
 // The static background is re-rasterized to match, a moment after the zoom settles.
 let res = 0, bgRes = 0, resChangedAt = 0;
 let backgroundRequest = 0, requestedRes = null, workerRendering = false;
+let sceneryCache = null, sceneryActors = [];
 const MAX_RES = 2;                                        // crisp enough on 2× screens; above this the fill cost per frame climbs fast
 export const backgroundResolution = () => Math.min(MAX_RES, Math.ceil((window.devicePixelRatio || 1) * view.k * 4) / 4);
-export function setBackground(image, resolution) {
+export function setBackground(image, resolution, scenery = null) {
   backgroundRequest++; requestedRes = null;
   background?.close?.();
   background = image; bgRes = resolution; workerRendering = !!image;
+  setScenery(scenery);
+}
+function setScenery(cache) {
+  sceneryCache?.image.close(); sceneryCache = cache;
+  const entries = new Map(cache?.entries.map(e => [`${e.kind}:${e.index}`, e]));
+  const cached = (kind, index, paint, after = null) => {
+    const entry = entries.get(`${kind}:${index}`);
+    return () => {
+      if (!entry || cache.res !== res) { paint(); return; }
+      const { sx, sy, w, h, x, y } = entry;
+      ctx.drawImage(cache.image, sx, sy, w, h, x, y, w / res, h / res);
+      after?.();
+    };
+  };
+  sceneryActors = map.deco.map((d, i) => ({ y: d.y, draw: cached("deco", i, () => {
+    ctx.save(); ctx.translate(d.x, d.y); ctx.scale(depthScale(d.y), depthScale(d.y)); ctx.translate(-d.x, -d.y);
+    drawDecoItem(ctx, d); ctx.restore();
+  }) }));
+  map.castles.forEach((k, i) => sceneryActors.push({ y: k.y + 8 * k.scale, draw: cached("castle", i, () => drawCastleAt(ctx, k), () => drawCastleDamage(ctx, k)) }));
+  map.exits.forEach(g => sceneryActors.push({ y: gateAnchorY(g), draw: () => drawGateStructure(ctx, g) }));
 }
 function refreshBackground() {
   if (!workerRendering) {
@@ -36,10 +59,11 @@ function refreshBackground() {
   if (requestedRes === res) return;
   const request = ++backgroundRequest, resolution = res;
   requestedRes = resolution;
-  requestBackground(map, resolution).then(({ background: image }) => {
-    if (request !== backgroundRequest || resolution !== res) { image?.close(); return; }
+  requestBackground(map, resolution).then(({ background: image, scenery }) => {
+    if (request !== backgroundRequest || resolution !== res) { image?.close(); scenery?.image.close(); return; }
     if (!image) { workerRendering = false; return; }
     background.close(); background = image; bgRes = resolution;
+    setScenery(scenery);
   }).catch((error) => {
     if (request !== backgroundRequest) return;
     console.warn("Worker background refresh failed; using the page renderer", error);
@@ -132,8 +156,6 @@ function drawRallyFlag(p, moving) {
 // An empty build spot: a weathered stone pad half-sunk in the grass, kept muted so it reads as
 // scenery until the mouse is over it. Once a tower stands there, the pad is gone.
 export const SPOT_SQUASH = 0.62;   // how much the build pads are foreshortened (1 = seen straight from above)
-// A light sense of depth: things lower on the map (nearer the viewer) are drawn a little larger
-export const depthScale = (y) => 0.82 + 0.36 * Math.min(1, Math.max(0, y / H));
 function drawSpot(s, i, occupied, hovered) {
   if (occupied) return;
   const { x, y } = s, R = SPOT_RADIUS;
@@ -402,11 +424,8 @@ export function draw() {
   // Towers, soldiers, monsters and animals, sorted so things lower on screen are drawn in front.
   // A tower's "feet" are the bottom of its stone pad, so monsters walking above it go behind it.
   // Everything standing on the ground is scaled about its feet by depthScale (buildings excepted)
-  const actors = [];
+  const actors = [...sceneryActors];
   const scaled = (x, y, fn) => () => { const ds = depthScale(y); ctx.save(); ctx.translate(x, y); ctx.scale(ds, ds); ctx.translate(-x, -y); fn(); ctx.restore(); };
-  for (const d of map.deco) actors.push({ y: d.y, draw: scaled(d.x, d.y, () => drawDecoItem(ctx, d)) });   // trees, bushes, rocks, flowers...
-  for (const k of map.castles) actors.push({ y: k.y + 8 * k.scale, draw: () => drawCastleAt(ctx, k) });
-  for (const g of map.exits) actors.push({ y: gateAnchorY(g), draw: () => drawGateStructure(ctx, g) });
   map.entries.forEach((e, i) => { for (const p of lairParts(e)) actors.push({ y: p.y, draw: () => p.draw(ctx, state.time + i * 1.7) }); });   // stakes and dead tree sort separately
   for (const e of map.entries) actors.push({ y: e.y + 12, draw: scaled(e.x, e.y, () => { drawSign(ctx, e.x, e.y, e.face); flag(e.x, e.y - 40, 20, "#c62828", 2 + e.y); }) });
   for (const t of state.towers) actors.push({ y: t.y + 12, draw: scaled(t.x, t.y, () => {

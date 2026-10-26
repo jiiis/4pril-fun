@@ -69,7 +69,7 @@ async function startLevel({ level: L, seed, hero, debounce = false }) {
     heroPick.querySelector("h1").textContent = "Map generation failed. Try another level.";
     return;
   }
-  if (request !== mapRequest) { generated.background?.close(); return; } // a newer selection owns the preview now
+  if (request !== mapRequest) { generated.background?.close(); generated.scenery?.image.close(); return; } // a newer selection owns the preview now
   Object.assign(map, generated.map);                             // preserve the map object imported throughout the game
   const d = levelConfig(level);
   state.level = level; state.diff = d; state.totalWaves = d.waves; state.gold = d.gold + carryFor(level); state.lives = d.lives;
@@ -77,7 +77,7 @@ async function startLevel({ level: L, seed, hero, debounce = false }) {
   for (const k of ["enemies", "towers", "shots", "floaters", "bursts", "bolts", "fires", "smoke", "scorches", "blood", "corpses", "spawnQueue", "fish", "poops", "heroes"]) state[k] = [];
   state.hero = null; state.dog = null; state.eagle = null;
   state.selected = null; state.hover = null; state.rallyFor = null; state.hoverCritter = null; state.preview = null;
-  setBackground(generated.background, generated.res);
+  setBackground(generated.background, generated.res, generated.scenery);
   initCritters(); initWeather();
   resetUiForLevel();
   pauseBtn.innerHTML = icon("pause"); pauseBtn.title = "Pause (P)";

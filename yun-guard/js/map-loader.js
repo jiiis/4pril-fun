@@ -11,7 +11,7 @@ function request(message) {
       worker = new Worker(new URL("./map-worker.js", import.meta.url), { type: "module" });
       worker.onmessage = ({ data }) => {
         const request = pending.get(data.id);
-        if (!request) { data.background?.close(); return; }
+        if (!request) { data.background?.close(); data.scenery?.image.close(); return; }
         pending.delete(data.id);
         if (data.error) request.reject(new Error(data.error));
         else request.resolve(data);
