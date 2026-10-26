@@ -23,6 +23,29 @@ let background = null;   // received from the worker along with the generated ma
 let res = 0, bgRes = 0, resChangedAt = 0;
 let backgroundRequest = 0, requestedRes = null, workerRendering = false;
 let sceneryCache = null, sceneryActors = [];
+const actors = [], actorPool = [];
+const byDepth = (a, b) => a.y - b.y;
+function addActor(item, x, y, depth, paint) {
+  const i = actors.length, actor = actorPool[i] || (actorPool[i] = {});
+  actor.item = item; actor.x = x; actor.y = depth; actor.anchorY = y; actor.paint = paint;
+  actors.push(actor);
+}
+function drawActor(actor) {
+  const x = actor.x, y = actor.anchorY, ds = depthScale(y);
+  ctx.save(); ctx.translate(x, y); ctx.scale(ds, ds); ctx.translate(-x, -y);
+  actor.paint(actor.item); ctx.restore();
+  actor.item = null;                                      // the pool must not keep removed units alive
+}
+function drawTowerWithLevel(t) {
+  drawTower(t);
+  if (t.level > 1) {
+    ctx.fillStyle = "#ffd54f"; ctx.font = "11px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText("★".repeat(t.level), t.x, t.y + 34);
+  }
+}
+function drawScenery(actor) {
+  if (fullMapVisible || sceneryCache?.res !== res || !actor.bounds || inView(...actor.bounds)) actor.draw();
+}
 const drawBounds = { left: 0, top: 0, right: W, bottom: H };
 let fullMapVisible = true;
 function updateDrawBounds() {
@@ -64,6 +87,13 @@ function setScenery(cache) {
   }) }));
   map.castles.forEach((k, i) => sceneryActors.push({ y: k.y + 8 * k.scale, draw: cached("castle", i, () => drawCastleAt(ctx, k), () => drawCastleDamage(ctx, k)) }));
   map.exits.forEach(g => sceneryActors.push({ y: gateAnchorY(g), draw: () => drawGateStructure(ctx, g) }));
+  map.entries.forEach((e, i) => { for (const p of lairParts(e)) sceneryActors.push({ y: p.y, draw: () => p.draw(ctx, state.time + i * 1.7) }); });
+  for (const e of map.entries) sceneryActors.push({ y: e.y + 12, draw: () => {
+    const ds = depthScale(e.y); ctx.save(); ctx.translate(e.x, e.y); ctx.scale(ds, ds); ctx.translate(-e.x, -e.y);
+    drawSign(ctx, e.x, e.y, e.face); flag(e.x, e.y - 40, 20, "#c62828", 2 + e.y); ctx.restore();
+  } });
+  sceneryActors.sort(byDepth);                             // their depths stay fixed for the lifetime of the map
+  actors.length = 0; actorPool.length = 0;
 }
 function refreshBackground() {
   if (!workerRendering) {
@@ -440,24 +470,24 @@ export function draw() {
   // Towers, soldiers, monsters and animals, sorted so things lower on screen are drawn in front.
   // A tower's "feet" are the bottom of its stone pad, so monsters walking above it go behind it.
   // Everything standing on the ground is scaled about its feet by depthScale (buildings excepted)
-  // Raw scenery may change drawing state; cull only cached sprites. Keep castle damage and effects live.
-  const actors = fullMapVisible || sceneryCache?.res !== res ? [...sceneryActors] : sceneryActors.filter(a => !a.bounds || inView(...a.bounds));
-  const scaled = (x, y, fn) => () => { const ds = depthScale(y); ctx.save(); ctx.translate(x, y); ctx.scale(ds, ds); ctx.translate(-x, -y); fn(); ctx.restore(); };
-  map.entries.forEach((e, i) => { for (const p of lairParts(e)) actors.push({ y: p.y, draw: () => p.draw(ctx, state.time + i * 1.7) }); });   // stakes and dead tree sort separately
-  for (const e of map.entries) actors.push({ y: e.y + 12, draw: scaled(e.x, e.y, () => { drawSign(ctx, e.x, e.y, e.face); flag(e.x, e.y - 40, 20, "#c62828", 2 + e.y); }) });
-  for (const t of state.towers) actors.push({ y: t.y + 12, draw: scaled(t.x, t.y, () => {
-    drawTower(t);
-    if (t.level > 1) {
-      ctx.fillStyle = "#ffd54f"; ctx.font = "11px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-      ctx.fillText("★".repeat(t.level), t.x, t.y + 34);
-    }
-  }) });
-  for (const t of state.towers) for (const s of t.soldiers) if (s.hp > 0) actors.push({ y: s.y, draw: scaled(s.x, s.y, () => drawSoldier(s)) });
-  for (const e of state.enemies) actors.push({ y: e.y, draw: scaled(e.x, e.y, () => drawEnemy(e)) });
-  for (const c of state.critters) actors.push({ y: c.y, draw: scaled(c.x, c.y, () => drawCritter(c)) });
-  for (const h of state.heroes) actors.push({ y: h.hp > 0 ? h.y : h.spawn.y, draw: scaled(h.hp > 0 ? h.x : h.spawn.x, h.hp > 0 ? h.y : h.spawn.y, () => drawHero(h)) });
-  if (state.dog && state.dog.hp > 0) actors.push({ y: state.dog.y, draw: scaled(state.dog.x, state.dog.y, drawDog) });
-  actors.sort((a, b) => a.y - b.y).forEach((a) => a.draw());
+  actors.length = 0;
+  for (const t of state.towers) addActor(t, t.x, t.y, t.y + 12, drawTowerWithLevel);
+  for (const t of state.towers) for (const s of t.soldiers) if (s.hp > 0) addActor(s, s.x, s.y, s.y, drawSoldier);
+  for (const e of state.enemies) addActor(e, e.x, e.y, e.y, drawEnemy);
+  for (const c of state.critters) addActor(c, c.x, c.y, c.y, drawCritter);
+  for (const h of state.heroes) {
+    const x = h.hp > 0 ? h.x : h.spawn.x, y = h.hp > 0 ? h.y : h.spawn.y;
+    addActor(h, x, y, y, drawHero);
+  }
+  if (state.dog && state.dog.hp > 0) addActor(state.dog, state.dog.x, state.dog.y, state.dog.y, drawDog);
+  actors.sort(byDepth);
+  // Merge fixed scenery with moving units. Scenery wins equal depths, matching the original stable sort.
+  let sceneryIndex = 0;
+  for (const actor of actors) {
+    while (sceneryIndex < sceneryActors.length && sceneryActors[sceneryIndex].y <= actor.y) drawScenery(sceneryActors[sceneryIndex++]);
+    drawActor(actor);
+  }
+  while (sceneryIndex < sceneryActors.length) drawScenery(sceneryActors[sceneryIndex++]);
   // Falling blossom and leaves: cherry trees shed petals, autumn trees shed leaves. Both loosen from the
   // canopy, flutter down on the breeze with a tumbling spin and fade as they reach the grass.
   const AUTUMN = ["#e65100", "#f9a825", "#bf360c", "#ffb300", "#d84315"];
