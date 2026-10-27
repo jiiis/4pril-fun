@@ -1,6 +1,6 @@
 // Dragging the view. Touch: one finger pans, a quick tap clicks. Mouse: press and drag on the board pans,
 // and a drag swallows the click that would otherwise follow. Native pinch zoom and scrolling are suppressed.
-import { panBy, canPan, zoomTo, view } from "./ui.js";
+import { panBy, canPan, zoomTo, view, hasPageOverflow } from "./ui.js";
 
 let start = null, last = null, dragged = false, pinch = null;
 const touchDist = (ev) => Math.hypot(ev.touches[0].clientX - ev.touches[1].clientX, ev.touches[0].clientY - ev.touches[1].clientY);
@@ -10,7 +10,7 @@ const DRAG = 8;   // pixels of movement before a press counts as a drag
 export function initTouch() {
   const interactive = (ev) => ev.target.closest && ev.target.closest("input, button, a, select, textarea, #menu, #heroPick, #overlay, #confirm, #rotate");
   window.addEventListener("touchstart", (ev) => {
-    if (interactive(ev)) { start = null; pinch = null; return; }     // real controls get real taps (and the keyboard for inputs)
+    if (interactive(ev) || hasPageOverflow()) { start = null; pinch = null; return; } // narrow pages use native scrolling and taps
     ev.preventDefault();
     if (ev.touches.length === 2) { pinch = { d: touchDist(ev), k: view.k, mid: touchMid(ev) }; start = null; return; }   // two fingers: pinch to zoom
     pinch = null;
@@ -19,7 +19,7 @@ export function initTouch() {
     start = { x: t.clientX, y: t.clientY, time: performance.now() }; last = { x: t.clientX, y: t.clientY }; dragged = false;
   }, { passive: false });
   window.addEventListener("touchmove", (ev) => {
-    if (interactive(ev)) return;
+    if (interactive(ev) || hasPageOverflow()) return;
     ev.preventDefault();
     if (pinch && ev.touches.length === 2) {
       const mid = touchMid(ev);
@@ -34,7 +34,7 @@ export function initTouch() {
     last = { x: t.clientX, y: t.clientY };
   }, { passive: false });
   window.addEventListener("touchend", (ev) => {
-    if (interactive(ev)) return;
+    if (interactive(ev) || hasPageOverflow()) return;
     ev.preventDefault();
     if (ev.touches.length < 2) pinch = null;
     if (!start) return;
@@ -52,10 +52,17 @@ export function initTouch() {
 
   // Scrolling pans too: two-finger swipes on a trackpad or Magic Mouse glide the view in any direction
   window.addEventListener("wheel", (ev) => {
+    const k = ev.deltaMode === 1 ? 16 : 1;
+    if (hasPageOverflow() && !ev.ctrlKey) {
+      const picker = ev.target.closest?.("#heroPick");
+      if (!ev.deltaX && picker && picker.scrollHeight > picker.clientHeight) return;
+      ev.preventDefault();
+      window.scrollBy((ev.deltaX || ev.deltaY) * k, 0);
+      return;
+    }
     ev.preventDefault();                                         // never scroll or pinch-zoom the page itself
     if (ev.ctrlKey) { zoomTo(view.k * Math.exp(-ev.deltaY * 0.01), ev.clientX, ev.clientY); return; }   // ctrl+wheel is a trackpad pinch: zoom
     if (!canPan()) return;
-    const k = ev.deltaMode === 1 ? 16 : 1;                       // line-based wheels report in lines
     panBy(-ev.deltaX * k, -ev.deltaY * k);
   }, { passive: false });
 

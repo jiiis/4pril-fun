@@ -141,8 +141,8 @@ export function placeMenu() {
   const menu = $("menu");
   const s = state.inspectedEnemy || map.spots[state.selected];
   if (!s || menu.style.display === "none") return;
-  const r = $("c").getBoundingClientRect(), k = r.width / W;
-  const sx = r.left + s.x * k, sy = r.top + s.y * k, mw = menu.offsetWidth, mh = menu.offsetHeight;
+  const r = $("c").getBoundingClientRect(), origin = document.body.getBoundingClientRect(), k = r.width / W;
+  const sx = r.left - origin.left + s.x * k, sy = r.top - origin.top + s.y * k, mw = menu.offsetWidth, mh = menu.offsetHeight;
   const vw = pageW(), vh = pageH();
   // Prefer below the spot; flip above if that runs off the screen; always stay on screen
   let top = sy + 30 * k;
@@ -216,6 +216,7 @@ const hudH = () => 0;                                           // the HUD float
 // phones report late and inconsistently while their toolbars slide
 export const pageW = () => document.body.clientWidth || window.innerWidth;
 export const pageH = () => document.body.clientHeight || window.innerHeight;
+export const hasPageOverflow = () => pageW() > document.documentElement.clientWidth;
 export function fitToWindow() {
   view.mobile = window.matchMedia("(pointer: coarse)").matches || navigator.maxTouchPoints > 1;
   document.documentElement.style.setProperty("--hud", `${hudH()}px`);
@@ -227,6 +228,8 @@ export function fitToWindow() {
 // Zoom so the board point under the screen position (sx, sy) stays put: pinch on a phone, ctrl+wheel on a trackpad
 export function zoomTo(k, sx, sy) {
   if (document.fullscreenElement) return;                        // full screen is the fixed, fitted view: no zooming
+  const origin = document.body.getBoundingClientRect();
+  sx -= origin.left; sy -= origin.top;                          // pointer coordinates stay correct when the wider page is scrolled
   k = clamp(k, Math.max(MIN_ZOOM, view.fit * 0.8), Math.min(MAX_ZOOM, view.fit * 1.8));   // only a little out, a fair bit in, from the natural fit
   const cx = pageW() / 2, cy = (pageH() - hudH()) / 2;
   const ux = (sx - cx - view.panX) / view.k, uy = (sy - cy - view.panY) / view.k;   // board offset (from its centre) under the finger
