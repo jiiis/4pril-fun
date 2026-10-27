@@ -16,7 +16,7 @@
 }
 #confirm .cap, #paused > small, #overlay p {
   max-width: 100%;
-  padding-inline: 20px;
+  padding-inline: 18px;
   text-align: center;
 }
 .overlay-button-label {
