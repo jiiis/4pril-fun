@@ -36,6 +36,8 @@ Open http://127.0.0.1:4173/. Preview serves the actual `dist/` output; it is for
 
 The build bundles and minifies JavaScript/CSS, hashes processed asset filenames, and builds the map/background worker separately. Source maps and additional obfuscation are disabled. Browser compatibility syntax targets include Safari/iOS 15 and ES2020; this does not polyfill missing browser APIs or replace device testing. Existing worker/rendering fallbacks remain in the game.
 
+Write WebKit-prefixed backdrop filters before their standard declarations. The production CSS optimizer can discard the standard declaration when the prefixed version comes last, removing glass/blur effects in Chrome. Verify both declarations survive in built CSS and check effects in production preview, not only the development server.
+
 All four HTML pages are explicit build entries. Original game directories and source URLs remain available when serving the source tree. The built site retains stable manifest, app-icon, brand-image, and custom-domain files for installed apps and existing links. The HTML manifest links use `vite-ignore` to preserve the manifest's original URL, launch scope, and relative icon paths. A static-assets Vite hook copies only the explicit public files and `brand/` files; it does not copy source code or project metadata into `dist/`.
 
 ## GitHub Pages deployment
