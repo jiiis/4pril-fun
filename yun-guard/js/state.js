@@ -32,6 +32,7 @@ export const state = {
   spawnTimer: 0,
   countdown: null,   // seconds until next wave auto-starts (null = waiting for player)
   selected: null,    // spot index with the menu open
+  inspectedEnemy: null, // snapshot of the enemy whose armor information is open
   hover: null,       // spot index under the mouse
   rallyFor: null,    // barracks waiting for the player to click a new rally point
   hoverCritter: null,// animal under the mouse while a hero is selected

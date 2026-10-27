@@ -181,6 +181,7 @@ canvas { display: block; }
 #menu .tile .cost { color: var(--accent); font-size: 14px; font-weight: 700; }
 #menu .tile .cost::before { content: "◆ "; font-size: 8px; vertical-align: 1px; }
 #menu .hint { min-height: 18px; margin-top: 10px; padding: 0 2px; color: var(--muted); font-size: 13px; text-align: center; }
+#menu .damage-profile { padding: 0 2px 10px; color: var(--muted); font-size: 13px; line-height: 1.4; }
 
 #menu .row { display: flex; gap: 8px; }
 #menu .pill {

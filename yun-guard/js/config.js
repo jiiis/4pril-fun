@@ -23,18 +23,46 @@ export const CELL = 60;                 // grid cell size in pixels
 export const COLS = W / CELL;           // 24
 export const ROWS = H / CELL;           // 14
 
-// Tower types. "physical" damage is reduced by armour, "magic" is not.
+// Armor class determines matchups; armor amount then mitigates the attack according to its penetration.
+// Keep these values and all balance changes documented in ../BALANCE.md.
+export const DAMAGE_TYPES = {
+  physical: { name: "Steel", armorFactor: 1 },
+  arrow:    { name: "Piercing", armorFactor: 1 },
+  pierce:   { name: "Heavy piercing", armorFactor: 0.5 },
+  siege:    { name: "Siege", armorFactor: 0.25 },
+  magic:    { name: "Arcane", armorFactor: 0 },
+};
+export const ARMOR_CLASSES = {
+  light: {
+    name: "Light", desc: "Piercing attacks excel. No class resistance.",
+    multipliers: { physical: 1, arrow: 1.2, pierce: 1.2, siege: 1, magic: 1 },
+  },
+  plated: {
+    name: "Plated", desc: "Resists arrows and blades. Counter with arcane attacks.",
+    multipliers: { physical: 0.85, arrow: 0.8, pierce: 0.8, siege: 1, magic: 1.4 },
+  },
+  fortified: {
+    name: "Fortified", desc: "Resists projectiles and arcane attacks. Counter with siege damage.",
+    multipliers: { physical: 0.8, arrow: 0.65, pierce: 0.65, siege: 1.5, magic: 0.65 },
+  },
+  warded: {
+    name: "Warded", desc: "Resists arcane attacks. Counter with steel or piercing attacks.",
+    multipliers: { physical: 1.2, arrow: 1.2, pierce: 1.2, siege: 1.1, magic: 0.6 },
+  },
+};
+
+// Tower attack patterns and armor matchups are separate: splash and chains do not bypass class resistance.
 export const TOWERS = {
-  archer:   { name: "Archer Tower", short: "Archer", icon: "bow", cost: 70,  range: 150, damage: 10, rate: 1.7,  type: "physical", color: "#8bc34a", desc: "Fast arrows. Weak vs armour." },
-  mage:     { name: "Mage Tower",   short: "Mage", icon: "sparkles", cost: 100, range: 136, damage: 26, rate: 0.85, type: "magic",    color: "#b388ff", desc: "Magic ignores armour." },
-  cannon:   { name: "Cannon",       short: "Cannon", icon: "bomb", cost: 125, range: 162, damage: 36, rate: 0.5,  type: "physical", color: "#6d4c41", desc: "Slow, but hits a whole group.", splash: 48 },
+  archer:   { name: "Archer Tower", short: "Archer", icon: "bow", cost: 70,  range: 150, damage: 10, rate: 1.7,  type: "arrow", color: "#8bc34a", desc: "Fast piercing arrows. Strong vs light and warded; weak vs plating." },
+  mage:     { name: "Mage Tower",   short: "Mage", icon: "sparkles", cost: 100, range: 136, damage: 26, rate: 0.85, type: "magic",    color: "#b388ff", desc: "Arcane bolts counter plating. Warded and fortified enemies resist." },
+  cannon:   { name: "Cannon",       short: "Cannon", icon: "bomb", cost: 125, range: 162, damage: 36, rate: 0.5,  type: "siege", color: "#6d4c41", desc: "Siege blasts counter fortified groups. Cannot hit flyers.", splash: 48 },
   // Lightning Spire: chain lightning leaps from the first monster to the next few nearby (one more hop per level). Reaches flyers.
-  tesla:    { name: "Lightning Spire", short: "Spire", icon: "zap", cost: 140, range: 143, damage: 24, rate: 0.6, type: "magic", color: "#4fc3f7", desc: "Chain lightning jumps between monsters.", chain: 3, chainRange: 70, chainFalloff: 0.75 },
+  tesla:    { name: "Lightning Spire", short: "Spire", icon: "zap", cost: 140, range: 143, damage: 24, rate: 0.6, type: "magic", color: "#4fc3f7", desc: "Arcane lightning chains through groups. Warded and fortified enemies resist.", chain: 3, chainRange: 70, chainFalloff: 0.75 },
   // Ballista: slow and very long-ranged. One huge bolt flies through the target and on, hitting every monster along the line,
   // and punches through most armour. Reaches flyers.
-  ballista: { name: "Ballista",     short: "Ballista", icon: "ballista", cost: 170, range: 192, damage: 62, rate: 0.25, type: "pierce", color: "#a1887f", desc: "Huge bolt pierces a whole line. Slow. Ignores some armour.", line: true, lineWidth: 9 },
+  ballista: { name: "Ballista",     short: "Ballista", icon: "ballista", cost: 170, range: 192, damage: 62, rate: 0.25, type: "pierce", color: "#a1887f", desc: "Heavy piercing bolts hit a line and ignore half of armor amount. Slow.", line: true, lineWidth: 9 },
   // Barracks: range = how far away the soldiers' rally point can be. damage/rate = each soldier's attack.
-  barracks: { name: "Barracks",     short: "Barracks", icon: "shield", cost: 90,  range: 117,  damage: 6,  rate: 1,    type: "physical", color: "#ef9a9a", desc: "Soldiers block the road.", soldiers: 2, soldierHp: 80 },
+  barracks: { name: "Barracks",     short: "Barracks", icon: "shield", cost: 90,  range: 117,  damage: 6,  rate: 1,    type: "physical", color: "#ef9a9a", desc: "Soldiers block ground enemies. Steel counters wards; plating resists.", soldiers: 2, soldierHp: 80 },
 };
 export const MAX_LEVEL = 4;
 // Level 4 is a specialisation: at level 3 you pick one of two abilities. Each tower type has its own pair.
@@ -42,7 +70,7 @@ export const ABILITY_COST_FACTOR = 1.2;   // ability price = tower cost × this
 export const ABILITIES = {
   archer: {
     volley: { name: "Rapid Volley", icon: "chevrons", desc: "Every archer looses two arrows at once." },
-    poison: { name: "Venom Arrows", icon: "skull", desc: "Arrows poison: 7 dmg/s for 4s, ignores armour, slows 15%.", poison: { time: 4, dps: 7, slow: 0.15 } },
+    poison: { name: "Venom Arrows", icon: "skull", desc: "Arcane poison: 7 dmg/s for 4s and 15% slow. Warded and fortified enemies resist.", poison: { time: 4, dps: 7, slow: 0.15 } },
   },
   mage: {
     storm:  { name: "Arcane Storm", icon: "tornado", desc: "Bolts burst on impact, hitting everything within 36.", splash: 36 },
@@ -212,31 +240,32 @@ export const DOG = {
 BEAR.kind = "bear";
 DRAGON.kind = "dragon";
 
-// Monster types. armour 0.4 = blocks 40% of physical damage. attack = damage to soldiers per hit.
+// Monster types. armor is mitigation amount before attack penetration; armorClass supplies the matchup multiplier.
+// attack = damage to soldiers per hit.
 // Special traits:
-//   flying      - soars over soldiers and heroes; only archers, mages and the eagle can reach it
-//   magicWeak   - takes that many times damage from magic; frostImmune - cannot be chilled
+//   flying      - soars over soldiers and heroes; cannon and ground melee cannot reach it
+//   armorClass  - class matchup, separate from armor amount; frostImmune - cannot be chilled
 //   healAura    - heals other monsters within healRange by that much per second
 export const ENEMIES = {
   // Every monster is the same on every level and in every wave: these numbers never scale (and they are
   // tough: with slow, sparse waves the challenge comes from each monster taking real punishment).
   // Speeds are slow (a goblin takes a long while to cross the map); the kinds still differ a lot.
-  goblin:   { hp: 362,  speed: 30,  armor: 0,   gold: 10,  lives: 1, attack: 19,  size: 18 },
-  wolf:     { hp: 273,  speed: 52,  armor: 0,   gold: 13,  lives: 1, attack: 25,  size: 20 },
-  bat:      { hp: 254,  speed: 42,  armor: 0,   gold: 13,  lives: 1, attack: 12,  size: 18, flying: true },
-  orc:      { hp: 1269, speed: 20,  armor: 0.4, gold: 26, lives: 2, attack: 46, size: 25 },
-  skeleton: { hp: 815,  speed: 24,  armor: 0.6, gold: 23,  lives: 1, attack: 32, size: 20, magicWeak: 1.8, frostImmune: true },
-  shaman:   { hp: 998, speed: 22,  armor: 0.1, gold: 36, lives: 1, attack: 24,  size: 20, healAura: 6, healRange: 70 },
-  golem:    { hp: 4712, speed: 12,  armor: 0.7, gold: 90, lives: 3, attack: 90, size: 31, frostImmune: true, magicWeak: 1.4 },
-  troll:    { hp: 8156, speed: 16,  armor: 0.3, gold: 153, lives: 5, attack: 113, size: 38 },
+  goblin:   { hp: 362,  speed: 30,  armor: 0,   armorClass: "light", gold: 10,  lives: 1, attack: 19,  size: 18 },
+  wolf:     { hp: 273,  speed: 52,  armor: 0,   armorClass: "light", gold: 13,  lives: 1, attack: 25,  size: 20 },
+  bat:      { hp: 254,  speed: 42,  armor: 0,   armorClass: "light", gold: 13,  lives: 1, attack: 12,  size: 18, flying: true },
+  orc:      { hp: 1269, speed: 20,  armor: 0.4, armorClass: "plated", gold: 26, lives: 2, attack: 46, size: 25 },
+  skeleton: { hp: 815,  speed: 24,  armor: 0.6, armorClass: "plated", gold: 23, lives: 1, attack: 32, size: 20, frostImmune: true },
+  shaman:   { hp: 998, speed: 22,  armor: 0.1, armorClass: "warded", gold: 36, lives: 1, attack: 24,  size: 20, healAura: 6, healRange: 70 },
+  golem:    { hp: 4712, speed: 12,  armor: 0.7, armorClass: "fortified", gold: 90, lives: 3, attack: 90, size: 31, frostImmune: true },
+  troll:    { hp: 8156, speed: 16,  armor: 0.3, armorClass: "light", gold: 153, lives: 5, attack: 113, size: 38 },
   //   split       - when killed, bursts into that many smaller monsters
   //   steals      - instead of costing lives, it runs off with this much gold if it reaches the castle
   //   raise       - necromancers turn a nearby corpse into a skeleton every few seconds
-  slime:      { hp: 635,  speed: 25,  armor: 0,   gold: 13,  lives: 1, attack: 17,  size: 19, split: { type: "slimeling", count: 2 }, noCorpse: true },
-  slimeling:  { hp: 200,  speed: 38,  armor: 0,   gold: 5,  lives: 1, attack: 10,  size: 11, noCorpse: true },
-  thief:      { hp: 500,  speed: 48,  armor: 0,   gold: 36, lives: 0, attack: 17,  size: 18, steals: 25 },
-  necromancer:{ hp: 1450, speed: 18,  armor: 0.1, gold: 62, lives: 2, attack: 29,  size: 22, raise: { every: 5, range: 90 } },
-  wyvern:     { hp: 2538, speed: 27,  armor: 0.2, gold: 82, lives: 3, attack: 58, size: 30, flying: true },
+  slime:      { hp: 635,  speed: 25,  armor: 0,   armorClass: "light", gold: 13,  lives: 1, attack: 17,  size: 19, split: { type: "slimeling", count: 2 }, noCorpse: true },
+  slimeling:  { hp: 200,  speed: 38,  armor: 0,   armorClass: "light", gold: 5,  lives: 1, attack: 10,  size: 11, noCorpse: true },
+  thief:      { hp: 500,  speed: 48,  armor: 0,   armorClass: "light", gold: 36, lives: 0, attack: 17,  size: 18, steals: 25 },
+  necromancer:{ hp: 1450, speed: 18,  armor: 0.1, armorClass: "warded", gold: 62, lives: 2, attack: 29,  size: 22, raise: { every: 5, range: 90 } },
+  wyvern:     { hp: 2538, speed: 27,  armor: 0.2, armorClass: "plated", gold: 82, lives: 3, attack: 58, size: 30, flying: true },
 };
 
 // What appears in each wave, weakest kinds first and the nastiest last. n = wave number (1, 2, 3 ...).

@@ -1,14 +1,13 @@
 import { state } from "./state.js";
 import { CORPSE_TIME } from "./config.js";
 import { sfx } from "./audio.js";
+import { damageMultiplier } from "./damage.js";
 
-// Deal damage to a monster. Physical damage is reduced by its armour.
+// Deal damage through the shared armor-class and penetration rules.
 // source = the hero who struck the blow (or whose dog did); kills earn that hero XP.
 export function hurt(e, dmg, type, flash = true, source = null) {
   if (e.dead) return;
-  if (type === "physical") dmg *= 1 - e.def.armor;
-  if (type === "pierce") dmg *= 1 - e.def.armor * 0.5;                     // ballista bolts slip past some of the armour
-  if (type === "magic" && e.def.magicWeak) dmg *= e.def.magicWeak;
+  dmg *= damageMultiplier(e.def, type);
   if (e.cursed > 0) dmg *= e.curseFactor || 1.4;
   e.hp -= dmg;
   if (flash) e.hitFlash = 0.12;

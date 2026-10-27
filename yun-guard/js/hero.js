@@ -251,7 +251,7 @@ function updateCharge(h, dt) {
 }
 
 // ---------- Ranged attacks: Avril's frost arrows, Candice's fireballs ----------
-const ARROW = { type: "physical" }, BOLT = { type: "magic" };
+const ARROW = { type: "arrow" }, BOLT = { type: "magic" };
 function rangedAttack(h) {
   const r = h.def.ranged;
   let best = null;

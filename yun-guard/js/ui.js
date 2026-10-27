@@ -1,5 +1,5 @@
 import { state } from "./state.js";
-import { TOWERS, W, H } from "./config.js";
+import { TOWERS, ARMOR_CLASSES, DAMAGE_TYPES, W, H } from "./config.js";
 import { MAX_LEVEL, saveLevel, saveCarry } from "./levels.js";
 import { map } from "./map.js";
 import { towerRange, towerDamage, towerRate, upgradeCost, sellValue, canUpgrade, canSpecialise, abilityCost, abilityDef, soldierCount, soldierHp, soldierDamage, createTower } from "./towers.js";
@@ -76,6 +76,7 @@ let endTimer = null;
 
 // ---------- Build / upgrade menu ----------
 export function openMenu(spotIndex) {
+  state.inspectedEnemy = null;
   state.selected = spotIndex;
   const s = map.spots[spotIndex];
   const tower = state.towers.find((t) => t.spot === spotIndex);
@@ -87,7 +88,7 @@ export function openMenu(spotIndex) {
     html += `<div class="stats">` + (tower.def.soldiers
       ? stat("Damage", soldierDamage(tower)) + stat("Health", soldierHp(tower)) + stat("Soldiers", soldierCount(tower))
       : stat("Damage", towerDamage(tower)) + stat("Range", towerRange(tower)) + (tower.def.chain ? stat("Hops", tower.def.chain + tower.level - 1) : tower.def.splash ? stat("Splash", tower.def.splash) : stat("Rate", `${towerRate(tower).toFixed(1)}/s`)))
-      + `</div>`;
+      + `</div><div class="damage-profile">${DAMAGE_TYPES[tower.def.type].name} damage · ${tower.def.desc}</div>`;
     html += `<div class="row">`;
     if (canUpgrade(tower)) {
       const c = upgradeCost(tower);
@@ -121,11 +122,26 @@ export function openMenu(spotIndex) {
   state.preview = null;
   placeMenu();
 }
+
+// Tap a monster to learn its defenses. Use a snapshot so this panel needs no per-frame DOM updates.
+export function openEnemyInfo(enemy) {
+  closeMenu();
+  state.inspectedEnemy = { x: enemy.x, y: enemy.y, def: enemy.def };
+  const def = enemy.def, armorClass = ARMOR_CLASSES[def.armorClass] || ARMOR_CLASSES.light;
+  const name = enemy.type[0].toUpperCase() + enemy.type.slice(1);
+  const menu = $("menu");
+  menu.innerHTML = `<div class="head"><span class="title">${name}</span><span class="lv">${armorClass.name} · ${def.flying ? "Air" : "Ground"}</span></div>
+    <div class="stats"><span class="stat"><small>Base HP</small><b>${def.hp}</b></span><span class="stat"><small>Armor amount</small><b>${Math.round(def.armor * 100)}%</b></span><span class="stat"><small>Speed</small><b>${def.speed}</b></span></div>
+    <div class="hint">${armorClass.desc}</div>`;
+  menu.style.display = "block";
+  placeMenu();
+}
 // The menu floats over the page in screen pixels (so it never scales with the board), next to its spot
 export function placeMenu() {
   const menu = $("menu");
-  if (state.selected === null || menu.style.display === "none") return;
-  const s = map.spots[state.selected], r = $("c").getBoundingClientRect(), k = r.width / W;
+  const s = state.inspectedEnemy || map.spots[state.selected];
+  if (!s || menu.style.display === "none") return;
+  const r = $("c").getBoundingClientRect(), k = r.width / W;
   const sx = r.left + s.x * k, sy = r.top + s.y * k, mw = menu.offsetWidth, mh = menu.offsetHeight;
   const vw = pageW(), vh = pageH();
   // Prefer below the spot; flip above if that runs off the screen; always stay on screen
@@ -137,6 +153,7 @@ export function placeMenu() {
 
 export function closeMenu() {
   state.selected = null;
+  state.inspectedEnemy = null;
   state.preview = null;
   state.previewUpgrade = false;
   $("menu").style.display = "none";

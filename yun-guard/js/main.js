@@ -1,12 +1,12 @@
 import { canvas } from "./render/gfx.js";
 import { state } from "./state.js";
-import { W, H, SPOT_RADIUS, TOWERS, HERO_KINDS } from "./config.js";
+import { W, H, SPOT_RADIUS, ENEMY_SCALE, TOWERS, HERO_KINDS } from "./config.js";
 import { dist } from "./util.js";
 import { map } from "./map.js";
 import { requestMap } from "./map-loader.js";
 import { update } from "./update.js";
 import { draw, SPOT_SQUASH, depthScale, backgroundResolution, setBackground } from "./render/draw.js";
-import { initUi, openMenu, closeMenu, resetUiForLevel } from "./ui.js";
+import { initUi, openMenu, openEnemyInfo, closeMenu, resetUiForLevel } from "./ui.js";
 import { startWave, spawnEnemy } from "./waves.js";
 import { createTower, setRally, archerHeight, mageHeight, teslaHeight, ballistaHeight, visLevel } from "./towers.js";
 import { initCritters } from "./critters.js";
@@ -213,7 +213,13 @@ canvas.addEventListener("click", (ev) => {
     sfx("order");
   } else {
     const i = spotAt(p);
-    if (i >= 0) { if (state.selected === i) closeMenu(); else { openMenu(i); sfx("click"); } } else closeMenu();   // clicking the open tower again closes its menu
+    if (i >= 0) { if (state.selected === i) closeMenu(); else { openMenu(i); sfx("click"); } }
+    else {
+      const enemy = state.enemies.find((e) => !e.dead && !e.reached
+        && dist(p, { x: e.x, y: e.y - (e.def.flying ? 18 : 0) }) <= Math.max(12, e.def.size * ENEMY_SCALE));
+      if (enemy) openEnemyInfo(enemy);
+      else closeMenu();
+    }
   }
   canvas.style.cursor = selectedHero() || state.rallyFor ? "crosshair" : state.hover !== null ? "pointer" : "default";
 });
