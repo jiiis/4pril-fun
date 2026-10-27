@@ -1,19 +1,19 @@
 # Yun Guard 🐉
 
-A Kingdom Rush style tower defense game in plain HTML, CSS and JavaScript. No frameworks, no build step.
+A Kingdom Rush style tower defense game in plain HTML, CSS and JavaScript. No game framework; Vite handles development and production builds.
 
 See [BALANCE.md](BALANCE.md) for current stats, armor matchups, upgrade rules, balance changes, and the proposed specialization roadmap. Update it whenever gameplay balance changes.
 
 ## How to run
 
-The game uses JavaScript modules, so it needs a tiny local web server (opening the file directly won't work).
+From the repository root:
 
 ```bash
-cd yun-guard
-python3 -m http.server 8123
+npm ci
+npm run dev
 ```
 
-Then open http://localhost:8123 in your browser.
+Then open http://127.0.0.1:5173/yun-guard/ (or `/` for the same game). See the [site README](../README.md) for production builds, preview, deployment, and changing ports. JavaScript modules need HTTP serving; opening the HTML directly is unsupported.
 
 ## How to play
 
