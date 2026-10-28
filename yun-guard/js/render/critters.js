@@ -45,7 +45,7 @@ export function drawWaterBird(kind, x, y, dir, t) {
   ctx.restore();
 }
 
-const CRITTER_SCALE = { bunny: 0.7, chicken: 0.8, fox: 0.9, deer: 0.86, cow: 1.2, duck: 0.8 };
+const CRITTER_SCALE = { bunny: 0.7, chicken: 0.8, fox: 0.72, deer: 0.86, cow: 1.2, duck: 0.8 };
 
 const DRAW = {
   bunny(phase, moving) {
