@@ -383,25 +383,25 @@ function drawMeiLin(h, a) {
   const fy = -18 - breathe;
   // Thin side locks (鬓发) framing the face, swaying gently
   const lk = Math.sin(T * 2.2) * 0.5;
-  poly(ctx, [[-3, fy - 1], [-3.4 + lk, fy + 3.1], [-2.7 + lk, fy + 3.5], [-2.5, fy + 0.5]], "#1b1b1b");
-  poly(ctx, [[3, fy - 0.5], [3.2 - lk, fy + 2.9], [2.6 - lk, fy + 3.2], [2.5, fy + 0.5]], "#1b1b1b");
+  poly(ctx, [[-4.8, fy - 1], [-5.2 + lk, fy + 3.8], [-4.4 + lk, fy + 4.2], [-4.2, fy + 0.5]], "#1b1b1b");
+  poly(ctx, [[4.8, fy - 0.5], [5 - lk, fy + 3.6], [4.3 - lk, fy + 4], [4.2, fy + 0.5]], "#1b1b1b");
   // Back of the head is covered in hair: a dark mass behind and slightly left of the face, running down into the ponytail
-  ellipse(ctx, -0.9, fy - 0.2, 3.4, 4, "#1b1b1b");
-  poly(ctx, [[-4, fy - 1], [-3.8, fy + 2.6], [-2.7, fy + 3.5], [-2.5, fy + 1]], "#1b1b1b");
+  ellipse(ctx, -1, fy - 0.2, 5.3, 6, "#1b1b1b");
+  poly(ctx, [[-5.5, fy - 1], [-5.3, fy + 3.2], [-4.3, fy + 4.2], [-4.1, fy + 1]], "#1b1b1b");
   // Face: fair porcelain skin, simple and clean like the other heroes
-  ellipse(ctx, 0, fy + 0.2, 3, 3.7, "#ffeadb");                                                                       // small oval face
-  ctx.fillStyle = "#1b1b1b"; ctx.beginPath(); ctx.ellipse(0, fy - 0.4, 3.2, 3.9, 0, Math.PI * 1.03, Math.PI * 1.97); ctx.fill(); // hairline
-  line(ctx, -3, fy - 1.1, -0.8, fy - 2.8, "#546e7a", 0.8);                                                            // a glossy sweep in the fringe
-  ellipse(ctx, -0.7, fy - 4.6, 2.2, 1.6, "#1b1b1b");                                                                   // high ponytail knot
-  circle(ctx, -1.1, fy - 5, 0.55, "#455a64");
-  rect(ctx, -1.8, fy - 3.8, 2.1, 0.8, "#eceff1");                                                                       // silver hair tie
+  circle(ctx, 0, fy, 5, "#ffeadb");                                                                               // same round face size as April, Candice and Willow
+  ctx.fillStyle = "#1b1b1b"; ctx.beginPath(); ctx.arc(0, fy - 0.5, 5.2, Math.PI * 1.03, Math.PI * 1.97); ctx.fill(); // hairline
+  line(ctx, -4.3, fy - 1.1, -1.1, fy - 4.2, "#546e7a", 0.8);                                                       // a glossy sweep in the fringe
+  ellipse(ctx, -0.7, fy - 6.2, 2.2, 1.6, "#1b1b1b");                                                              // high ponytail knot
+  circle(ctx, -1.1, fy - 6.6, 0.55, "#455a64");
+  rect(ctx, -1.8, fy - 5.4, 2.1, 0.8, "#eceff1");                                                                 // silver hair tie
   // Small silver hairpin with two dangling blue beads
-  line(ctx, -2, fy - 5, 2.6, fy - 6.3, "#f5f7f8", 0.8);
-  circle(ctx, 2.7, fy - 6.4, 0.65, "#b2ebf2", "#4dd0e1", 0.5);
-  for (let i = 0; i < 2; i++) { const bx = 1.5 + i * 0.9, by = fy - 5.2 + i * 1.3 + Math.sin(T * 4 + i) * 0.4; line(ctx, 1.2 + i * 0.9, fy - 5.6, bx, by, "#eceff1", 0.5); circle(ctx, bx, by, 0.45, "#80deea"); }
+  line(ctx, -2, fy - 6.6, 2.6, fy - 7.9, "#f5f7f8", 0.8);
+  circle(ctx, 2.7, fy - 8, 0.65, "#b2ebf2", "#4dd0e1", 0.5);
+  for (let i = 0; i < 2; i++) { const bx = 1.5 + i * 0.9, by = fy - 6.8 + i * 1.3 + Math.sin(T * 4 + i) * 0.4; line(ctx, 1.2 + i * 0.9, fy - 7.2, bx, by, "#eceff1", 0.5); circle(ctx, bx, by, 0.45, "#80deea"); }
   // A clean, featureless face like the other legends; only the tiny blue huadian (花钿) ornament on the brow
   circle(ctx, 0.35, fy - 1.2, 0.4, "#4dd0e1");
-  ctx.globalAlpha = 0.08; ellipse(ctx, 0, fy + 2, 2.5, 1.5, "#000"); ctx.globalAlpha = 1;             // soft shade under the chin
+  ctx.globalAlpha = 0.08; ellipse(ctx, 0, fy + 2.5, 4.2, 2.2, "#000"); ctx.globalAlpha = 1;         // soft shade under the chin
   // Jian (剑): a slender straight double-edged Chinese sword with a silver blade, a dark wrapped grip,
   // a flared guard and an ice-blue tassel at the pommel. Held upright; thrusts forward on a strike.
   const armSwing = -sw * 0.8;
