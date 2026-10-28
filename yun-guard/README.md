@@ -21,7 +21,7 @@ Then open http://127.0.0.1:5173/yun-guard/ (or `/` for the same game). See the [
 - The UI has a minimum layout width of 360px. Narrower windows scroll horizontally instead of squeezing the controls and legend cards; swipe sideways or use the mouse wheel/trackpad. Rotate a phone for more room. The legend picker can still scroll vertically when needed.
 - Below 420px viewport width, the map hash and corner logo are hidden to leave room for the controls.
 - Every game starts on a brand new random map. Roads can enter and leave from any edge of the map, not just left to right. Most maps have two routes: a side road that forks off and rejoins, a second entrance that merges in, a fork that leads to its own exit, or a completely separate road with its own entrance and exit. Monsters pick a route when they appear, so cover both. When the routes leave by different exits, each exit has its own castle to defend (a grey stone keep and a sandstone palace). The map number is shown in the top bar; add `?seed=NUMBER` to the URL (for example `http://localhost:8123/?seed=234833`) to play that same map again.
-- Click a stone build spot to place a tower. Click a tower to upgrade or sell it. Towers go up to level 3 normally; at level 3 you choose one of two **level 4 abilities** that change how the tower fights (see the table).
+- Click a stone build spot to place a tower. Click a tower to upgrade or sell it. Towers go up to level 3 normally, then choose a **level 4 ability**. Barracks instead has three specializations with independently upgradeable skills (see the tables).
 - Each round starts by choosing one of six heroes (or add `?hero=april`, `?hero=avril`, `?hero=ember`, `?hero=willow`, `?hero=meilin` or `?hero=adrien` to the URL). Press `1` (or click the hero) to select them, then click anywhere to send them there. They are deselected after the order; clicking again or pressing `Esc` also deselects.
   - **Lady April** is a knight: sword and shield, tough, and her dog Max follows her and bites anything that gets close.
   - **Princess Avril** is an archer princess: she shoots frost arrows that slow monsters from a distance, fights only weakly up close, and slowly heals friends standing near her. Her eagle Sky circles above her and dives on nearby monsters, including flying ones.
@@ -50,15 +50,24 @@ Then open http://127.0.0.1:5173/yun-guard/ (or `/` for the same game). See the [
 | Archer | **Rapid Volley**: two arrows per shot. | **Venom Arrows**: Arcane poison and slowing; Warded and Fortified enemies resist. |
 | Mage | **Arcane Storm**: bolts burst and hit the whole crowd. | **Curse**: cursed monsters take 40% more damage from everything. |
 | Cannon | **Cluster Bombs**: three bomblets scatter from every shell. | **Napalm**: shells leave burning ground. |
-| Barracks | **Paladins**: tougher, armoured soldiers who heal in battle. | **Berserkers**: harder, faster hits that cleave nearby monsters. |
 | Lightning Spire | **Overcharge**: three more hops, longer leaps. | **Static Field**: everything in range is slowed and zapped. |
 | Ballista | **Executioner**: double damage below 25% target health. | **Harpoons**: pierced enemies are slowed, with a stronger pin on the first. |
+
+Barracks instead chooses one of three specializations at level 3. Each has **2–3 independent skills with three purchasable ranks**; prices differ, and skills are not included in the specialization price. Sell returns 70% of all gold invested, including skills.
+
+| Barracks specialization | Role | Skills |
+|---|---|---|
+| **Cloud Monastery** | Two fragile spear spirits intercept ground and air, then retreat to recover. Never blocks; Piercing attacks struggle with plating. | **Cloudstep:** faster interception and recovery. **Sky Spears:** extra damage to flyers. |
+| **Brood Nursery** | Two armored beetles block ground enemies and hatch temporary helpers, with a strict population cap. Cannot hit flyers. | **Chitin:** adult durability. **Hatchery:** faster hatching and a larger cap. **Last Brood:** hatchlings released when adults fall. |
+| **Jade Colossus** | One slow guardian crushes groups with Siege damage, countering Fortified enemies. Cannot cover scattered runners or flyers. | **Stoneheart:** health, rest healing and respawn. **Earthbreaker:** wider, harder, slower crushing attacks. |
+
+Specializations replace the original squad; rally orders still work. Skills can be purchased in any order. Exact costs, ranks and initial balance values are in [BALANCE.md](BALANCE.md).
 
 | Monster | What makes it different |
 |---|---|
 | Goblin | Weak and plentiful. |
 | Wolf | Very fast. |
-| Bat | Light flyer; passes over soldiers and heroes. Archers, mages, spires, ballistas and aerial companions can hit it. |
+| Bat | Light flyer; passes over ground blockers. Archers, mages, spires, ballistas, Cloud Monastery spirits and aerial companions can hit it. |
 | Orc | Armoured: arrows and cannonballs do less. |
 | Skeleton | Heavily armoured but crumbles to magic. Can't be chilled. |
 | Shaman | Warded healer; physical attacks counter it. |
@@ -67,7 +76,7 @@ Then open http://127.0.0.1:5173/yun-guard/ (or `/` for the same game). See the [
 | Slime | Bursts into two bouncy slimelings when killed. |
 | Thief | Very fast. Costs no lives, but runs off with 25 gold if it reaches the castle. Drops good loot when caught. |
 | Necromancer | Warded; raises a skeleton from a nearby fallen monster every few seconds. Physical attacks counter it. |
-| Wyvern | A big Plated flying dragon; archers, mages, spires, ballistas and aerial companions can hit it. Arcane counters its plating. |
+| Wyvern | A big Plated flying dragon; ranged towers, Cloud Monastery spirits and aerial companions can hit it. Arcane counters its plating; Cloud spears remain resisted. |
 
 ## Project layout
 

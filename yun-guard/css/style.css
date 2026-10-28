@@ -204,6 +204,24 @@ canvas { display: block; }
 #menu .pill.sell { flex: 0 0 auto; }
 #menu .pill:disabled { opacity: 0.4; }
 
+/* Detailed choices stay readable on touch screens, without relying on hover. */
+#menu { max-height: calc(100vh - 12px); max-height: calc(100dvh - 12px); overflow-y: auto; touch-action: pan-y; overscroll-behavior: contain; }
+#menu .head { gap: 6px; }
+#menu .title { min-width: 0; }
+#menu .lv { flex-shrink: 0; }
+#menu .specializations, #menu .skills { display: grid; gap: 6px; margin: 12px 0; }
+#menu .specialization, #menu .skill {
+  width: 100%; padding: 12px; border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12); background: rgba(255, 255, 255, 0.06);
+  text-align: left; text-transform: none; letter-spacing: 0; color: var(--text);
+}
+#menu .specialization:hover, #menu .skill:hover { border-color: var(--accent); filter: none; }
+#menu .specialization:disabled, #menu .skill:disabled { opacity: 0.55; }
+#menu .skill-heading { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+#menu .skill-heading strong { flex: 1; }
+#menu .skill-heading b { color: var(--accent); }
+#menu .skill-desc { display: block; margin-top: 6px; color: var(--muted); font-size: 12px; line-height: 1.4; font-weight: 400; }
+
 /* ---------- Legend pick (start of each round) ---------- */
 #heroPick {
   position: fixed;

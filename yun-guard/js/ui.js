@@ -2,7 +2,8 @@ import { state } from "./state.js";
 import { TOWERS, ARMOR_CLASSES, DAMAGE_TYPES, W, H } from "./config.js";
 import { MAX_LEVEL, saveLevel, saveCarry } from "./levels.js";
 import { map } from "./map.js";
-import { towerRange, towerDamage, towerRate, upgradeCost, sellValue, canUpgrade, canSpecialise, abilityCost, abilityDef, soldierCount, soldierHp, soldierDamage, createTower } from "./towers.js";
+import { towerRange, towerDamage, towerRate, upgradeCost, sellValue, canUpgrade, canSpecialise, abilityCost, abilityDef, soldierCount, soldierHp, soldierDamage, createTower, specializationDef, skillRank, skillCost, specialize, trainSkill } from "./towers.js";
+import { SPECIALIZATIONS } from "./specializations.js";
 import { ABILITIES } from "./config.js";
 import { icon, applyIcons } from "./icons.js";
 import { clamp } from "./util.js";
@@ -82,17 +83,24 @@ export function openMenu(spotIndex) {
   const tower = state.towers.find((t) => t.spot === spotIndex);
   let html = "";
   if (tower) {
-    const ab = abilityDef(tower);
+    const spec = specializationDef(tower), ab = spec || abilityDef(tower);
     html += `<div class="head"><span class="title">${icon(tower.def.icon)} ${ab ? ab.name : tower.def.name}</span><span class="lv">${ab ? icon(ab.icon) + " " : ""}Lv ${tower.level}</span></div>`;
     const stat = (label, value) => `<span class="stat"><small>${label}</small><b>${value}</b></span>`;
     html += `<div class="stats">` + (tower.def.soldiers
-      ? stat("Damage", soldierDamage(tower)) + stat("Health", soldierHp(tower)) + stat("Soldiers", soldierCount(tower))
+      ? stat("Damage", soldierDamage(tower)) + stat("Health", soldierHp(tower)) + stat(spec ? tower.specialization === "brood" ? "Adults" : "Units" : "Soldiers", soldierCount(tower))
       : stat("Damage", towerDamage(tower)) + stat("Range", towerRange(tower)) + (tower.def.chain ? stat("Hops", tower.def.chain + tower.level - 1) : tower.def.splash ? stat("Splash", tower.def.splash) : stat("Rate", `${towerRate(tower).toFixed(1)}/s`)))
-      + `</div><div class="damage-profile">${DAMAGE_TYPES[tower.def.type].name} damage · ${tower.def.desc}</div>`;
+      + `</div><div class="damage-profile">${DAMAGE_TYPES[spec?.type || tower.def.type].name} damage · ${spec?.desc || tower.def.desc}</div>`;
     html += `<div class="row">`;
     if (canUpgrade(tower)) {
       const c = upgradeCost(tower);
       html += `<button class="pill primary" data-action="upgrade" data-cost="${c}" ${state.gold < c ? "disabled" : ""}>Upgrade <b>${c}</b></button>`;
+    } else if (canSpecialise(tower) && SPECIALIZATIONS[tower.type]) {
+      html += `</div><div class="hint">Choose one specialization. Skills are purchased separately.</div><div class="specializations">`;
+      for (const [key, a] of Object.entries(SPECIALIZATIONS[tower.type])) {
+        html += `<button class="specialization" data-action="specialize" data-specialization="${key}" data-cost="${a.cost}" ${state.gold < a.cost ? "disabled" : ""}>
+          <span class="skill-heading">${icon(a.icon)} <strong>${a.name}</strong><b>${a.cost}</b></span><span class="skill-desc">${a.desc}</span></button>`;
+      }
+      html += `</div><div class="row">`;
     } else if (canSpecialise(tower)) {
       const c = abilityCost(tower);
       html += `</div><div class="hint">Choose a level 4 ability</div><div class="grid two">`;
@@ -102,6 +110,15 @@ export function openMenu(spotIndex) {
           <span class="big">${icon(a.icon)}</span><span class="nm">${a.name}</span><span class="cost">${c}</span></button>`;
       }
       html += `</div><div class="hint">Hover an ability to see what it does</div><div class="row">`;
+    } else if (spec) {
+      html += `</div><div class="skills">`;
+      for (const [key, skill] of Object.entries(spec.skills)) {
+        const rank = skillRank(tower, key), cost = skillCost(tower, key), maxed = cost === null;
+        html += `<button class="skill" data-action="skill" data-skill="${key}" ${maxed ? "" : `data-cost="${cost}"`} ${maxed || state.gold < cost ? "disabled" : ""}>
+          <span class="skill-heading"><strong>${skill.name}</strong><span>${rank}/${skill.costs.length}</span><b>${maxed ? "MAX" : cost}</b></span>
+          <span class="skill-desc">${maxed ? skill.descriptions[rank - 1] : `Next: ${skill.descriptions[rank]}`}</span></button>`;
+      }
+      html += `</div><div class="row">`;
     } else html += `<button class="pill" disabled>Max level</button>`;
     if (tower.def.soldiers) html += `<button class="pill" data-action="rally" title="Move rally point">${icon("flag")}</button>`;
     html += `<button class="pill sell" data-action="sell">Sell <b>+${sellValue(tower)}</b></button>`;
@@ -142,13 +159,16 @@ export function placeMenu() {
   const s = state.inspectedEnemy || map.spots[state.selected];
   if (!s || menu.style.display === "none") return;
   const r = $("c").getBoundingClientRect(), origin = document.body.getBoundingClientRect(), k = r.width / W;
-  const sx = r.left - origin.left + s.x * k, sy = r.top - origin.top + s.y * k, mw = menu.offsetWidth, mh = menu.offsetHeight;
   const vw = pageW(), vh = pageH();
+  const topGutter = Math.max(6, Math.ceil($("hud").querySelector(".hud-left").getBoundingClientRect().bottom - origin.top) + 6);
+  const bottomGutter = Math.max(6, Math.ceil(vh - ($("hud").querySelector(".hud-right").getBoundingClientRect().top - origin.top)) + 6);
+  menu.style.maxHeight = `${Math.max(72, vh - topGutter - bottomGutter)}px`;
+  const sx = r.left - origin.left + s.x * k, sy = r.top - origin.top + s.y * k, mw = menu.offsetWidth, mh = menu.offsetHeight;
   // Prefer below the spot; flip above if that runs off the screen; always stay on screen
   let top = sy + 30 * k;
   if (top + mh > vh - 6) top = sy - mh - 34 * k;
   menu.style.left = `${clamp(sx - mw / 2, 6, vw - mw - 6)}px`;
-  menu.style.top = `${clamp(top, 6, vh - mh - 6)}px`;
+  menu.style.top = `${clamp(top, topGutter, Math.max(topGutter, vh - mh - bottomGutter))}px`;
 }
 
 export function closeMenu() {
@@ -161,7 +181,7 @@ export function closeMenu() {
 
 function handleMenuClick(ev) {
   const btn = ev.target.closest("button");
-  if (!btn) return;
+  if (!btn || btn.disabled) return;
   const spot = state.selected;
   const tower = state.towers.find((t) => t.spot === spot);
   const action = btn.dataset.action;
@@ -180,11 +200,19 @@ function handleMenuClick(ev) {
       sfx("build");
     }
     closeMenu();
-  } else if (action === "upgrade" && tower) {
+  } else if (action === "upgrade" && tower && canUpgrade(tower)) {
     const c = upgradeCost(tower);
     if (state.gold >= c) { state.gold -= c; tower.spent += c; tower.level++; sfx("upgrade"); }
     openMenu(spot);
-  } else if (action === "ability" && tower) {
+  } else if (action === "specialize" && tower && canSpecialise(tower)) {
+    const key = btn.dataset.specialization, spec = SPECIALIZATIONS[tower.type]?.[key];
+    if (spec && state.gold >= spec.cost && specialize(tower, key)) { state.gold -= spec.cost; sfx("upgrade"); }
+    openMenu(spot);
+  } else if (action === "skill" && tower) {
+    const cost = skillCost(tower, btn.dataset.skill);
+    if (cost !== null && state.gold >= cost && trainSkill(tower, btn.dataset.skill)) { state.gold -= cost; sfx("upgrade"); }
+    openMenu(spot);
+  } else if (action === "ability" && tower && canSpecialise(tower) && ABILITIES[tower.type]?.[btn.dataset.ability]) {
     const c = abilityCost(tower);
     if (state.gold >= c) { state.gold -= c; tower.spent += c; tower.level++; tower.ability = btn.dataset.ability; sfx("upgrade"); }
     openMenu(spot);

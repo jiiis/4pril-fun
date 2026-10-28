@@ -1,67 +1,107 @@
 import { state } from "./state.js";
 import { SOLDIER_RESPAWN, ENGAGE_RANGE } from "./config.js";
-import { hurt } from "./combat.js";
-import { soldierDamage, soldierRate, soldierCount, soldierHp, abilityDef } from "./towers.js";
+import { hurt, addBurst } from "./combat.js";
+import { soldierDamage, soldierRate, soldierCount, soldierHp, specializationDef, skillRank } from "./towers.js";
 import { dist } from "./util.js";
 import { sfx } from "./audio.js";
 
-const SOLDIER_SPEED = 90;
+function makeSoldier(t, hp, extra = {}) {
+  return { x: t.x, y: t.y, hp, maxHp: hp, cd: 0, respawn: 0, target: null, phase: Math.random() * 6, dir: 1, moving: false, swing: 0, recovery: 0, ...extra };
+}
+
+// Hatchlings expire permanently and share a strict living-population cap per tower.
+function hatch(t, spec, count, origin) {
+  const cap = spec.skills.hatchery.cap[skillRank(t, "hatchery")];
+  let living = t.soldiers.filter((s) => s.hatchling && s.hp > 0 && s.life > 0).length;
+  for (let i = 0; i < count && living < cap; i++, living++) {
+    t.soldiers.push(makeSoldier(t, spec.hatchling.hp, { x: origin.x, y: origin.y, hatchling: true, life: spec.hatchling.lifetime }));
+    addBurst(origin.x, origin.y, 10, "rgba(174,213,129,0.65)");
+  }
+}
 
 export function updateSoldiers(t, dt) {
-  const n = soldierCount(t);
-  while (t.soldiers.length < n) {
-    t.soldiers.push({ x: t.x, y: t.y, hp: soldierHp(t), maxHp: soldierHp(t), cd: 0, respawn: 0, target: null, phase: Math.random() * 6, dir: 1, moving: false, swing: 0 });
+  const spec = specializationDef(t), n = soldierCount(t), hp = soldierHp(t);
+  const cloud = t.specialization === "cloud", brood = t.specialization === "brood", colossus = t.specialization === "colossus";
+  const stepRank = skillRank(t, "cloudstep"), heartRank = skillRank(t, "stoneheart"), earthRank = skillRank(t, "earthbreaker");
+  const engage = cloud ? spec.skills.cloudstep.engage[stepRank] : spec?.engage ?? ENGAGE_RANGE;
+  let adults = 0;
+  for (const s of t.soldiers) if (!s.hatchling) adults++;
+  while (adults < n) { t.soldiers.push(makeSoldier(t, hp)); adults++; }
+  if (brood) {
+    t.soldiers = t.soldiers.filter((s) => !s.hatchling || (s.hp > 0 && s.life > 0));
+    const interval = spec.skills.hatchery.interval[skillRank(t, "hatchery")];
+    t.hatchCd = Math.min(t.hatchCd ?? interval, interval);
+    const adult = t.soldiers.find((s) => !s.hatchling && s.hp > 0);
+    if (adult && (t.hatchCd -= dt) <= 0) { hatch(t, spec, 1, adult); t.hatchCd = interval; }
   }
-
-  t.soldiers.forEach((s, i) => {
-    // Upgrades make soldiers tougher
-    const mh = soldierHp(t);
-    if (s.maxHp !== mh) { s.hp += mh - s.maxHp; s.maxHp = mh; }
-    s.level = Math.min(t.level, 3);                       // better armour at higher levels (drawing only)
-    s.ability = t.ability || null;
-    const ab = abilityDef(t);
-
-    // Each soldier has a spot in the formation around the rally point
-    const off = (i - (n - 1) / 2) * 16;
-    s.home = { x: t.rally.x + off, y: t.rally.y + off * 0.4 };
-
-    if (s.hp <= 0) {                                      // fallen: wait to respawn at the barracks
+  let adultIndex = 0, hatchIndex = 0;
+  for (const s of t.soldiers) {
+    if (s.hatchling && (s.life -= dt) <= 0) { s.hp = 0; s.target = null; continue; }
+    // Preserve wounds when upgrading; fallen units still wait for their respawn.
+    const maxHp = s.hatchling ? spec.hatchling.hp : hp;
+    if (s.maxHp !== maxHp) { if (s.hp > 0) s.hp += maxHp - s.maxHp; s.maxHp = maxHp; }
+    s.level = Math.min(t.level, 3);
+    s.specialization = t.specialization || null;
+    const off = s.hatchling ? (hatchIndex++ - 2) * 10 : (adultIndex++ - (n - 1) / 2) * 16;
+    s.home = { x: t.rally.x + off, y: t.rally.y + off * 0.4 + (s.hatchling ? 12 : 0) };
+    if (s.hp <= 0) {
+      if (s.hatchling) continue;
       s.respawn -= dt;
-      if (s.respawn <= 0) { s.hp = s.maxHp; s.x = t.x; s.y = t.y; }
-      return;
+      if (s.respawn <= 0) { s.hp = s.maxHp; s.x = t.x; s.y = t.y; s.target = null; s.cd = 0; s.recovery = 0; }
+      continue;
     }
-
-    // Choose a monster near the rally point, preferring one no squadmate is already fighting
-    if (!s.target || s.target.dead || s.target.reached || dist(s.target, s.home) > ENGAGE_RANGE) {
-      const near = state.enemies
-        .filter((e) => !e.dead && !e.def.flying && dist(e, s.home) <= ENGAGE_RANGE)   // can't reach flying monsters
-        .sort((a, b) => b.travelled - a.travelled);
+    if (spec) s.cd = Math.max(0, s.cd - dt);
+    s.recovery = Math.max(0, s.recovery - dt);
+    if (!s.target || s.target.dead || s.target.reached || dist(s.target, s.home) > engage) {
+      const near = state.enemies.filter((e) => !e.dead && !e.reached && (cloud || !e.def.flying) && dist(e, s.home) <= engage);
+      near.sort((a, b) => (cloud ? Number(!!b.def.flying) - Number(!!a.def.flying) : 0) || b.travelled - a.travelled);
       s.target = near.find((e) => !t.soldiers.some((o) => o !== s && o.hp > 0 && o.target === e)) || near[0] || null;
     }
-
-    const dest = s.target || s.home;
+    const recovering = cloud && s.recovery > 0;
+    const dest = recovering ? s.home : s.target || s.home;
     const d = dist(s, dest);
     s.moving = false;
-    if (s.swing > 0) s.swing -= dt;
+    s.swing = Math.max(0, s.swing - dt);
 
-    if (s.target && d <= 16) {                            // in melee: block and trade blows
-      s.target.blocked = true;
-      s.dir = s.target.x >= s.x ? 1 : -1;
-      s.cd -= dt;
+    if (!recovering && s.target && d <= 16) {
+      if (!spec) s.cd -= dt;
+      const target = s.target;
+      if (!cloud) target.blocked = true;
+      s.dir = target.x >= s.x ? 1 : -1;
       if (s.cd <= 0) {
-        hurt(s.target, soldierDamage(t), t.def.type);
-        if (ab?.cleave) for (const e of state.enemies) if (e !== s.target && !e.dead && !e.def.flying && dist(e, s) <= ab.cleave) hurt(e, soldierDamage(t) * 0.6, t.def.type);   // berserkers cleave
-        s.cd = 1 / soldierRate(t); s.swing = 0.2; sfx("clash", 0.12);
+        const damage = s.hatchling ? spec.hatchling.damage : soldierDamage(t);
+        const airBonus = cloud && target.def.flying ? spec.skills.skyspears.airDamage[skillRank(t, "skyspears")] : 0;
+        hurt(target, damage + airBonus, spec?.type || t.def.type);
+        if (colossus) {
+          const earth = spec.skills.earthbreaker, radius = earth.radius[earthRank];
+          let hits = 1;
+          for (const e of state.enemies) {
+            if (hits >= earth.targets[earthRank]) break;
+            if (e !== target && !e.dead && !e.reached && !e.def.flying && dist(e, target) <= radius) { hurt(e, damage, spec.type); hits++; }
+          }
+          addBurst(target.x, target.y, radius, "rgba(128,203,166,0.65)");
+        }
+        s.cd = 1 / (s.hatchling ? spec.hatchling.rate : soldierRate(t));
+        s.swing = colossus ? 0.45 : 0.2;
+        if (cloud) { s.recovery = spec.skills.cloudstep.recovery[stepRank]; addBurst(target.x, target.y - (target.def.flying ? 18 : 0), 12, "rgba(179,229,252,0.7)"); }
+        sfx("clash", 0.12);
       }
-      if (ab?.regen) s.hp = Math.min(s.maxHp, s.hp + ab.regen * dt);   // paladins heal even while fighting
-      s.target.atkCd = (s.target.atkCd ?? 0.5) - dt;
-      if (s.target.atkCd <= 0) {
-        s.hp -= s.target.def.attack * (1 - (ab?.armor || 0));
-        s.target.atkCd = 1;
-        if (s.hp <= 0) { s.respawn = SOLDIER_RESPAWN; s.target = null; }
+      if (!target.dead) {
+        target.atkCd = (target.atkCd ?? 0.5) - dt;
+        if (target.atkCd <= 0) {
+          const armor = s.hatchling ? 0 : brood ? spec.skills.chitin.armor[skillRank(t, "chitin")] : spec?.armor || 0;
+          s.hp -= target.def.attack * (1 - armor);
+          target.atkCd = 1;
+          if (s.hp <= 0) {
+            s.respawn = colossus ? spec.skills.stoneheart.respawn[heartRank] : spec?.respawn ?? SOLDIER_RESPAWN;
+            s.target = null;
+            if (brood && !s.hatchling) hatch(t, spec, spec.skills.lastbrood.count[skillRank(t, "lastbrood")], s);
+          }
+        }
       }
     } else if (d > 1) {                                   // walk to the fight or back home
-      const step = Math.min(SOLDIER_SPEED * dt, d);
+      const speed = s.hatchling ? spec.hatchling.speed : cloud ? spec.skills.cloudstep.speed[stepRank] : spec?.speed ?? 90;
+      const step = Math.min(speed * dt, d);
       const dx = dest.x - s.x;
       s.x += (dx / d) * step;
       s.y += ((dest.y - s.y) / d) * step;
@@ -69,7 +109,8 @@ export function updateSoldiers(t, dt) {
       s.moving = true;
       s.phase += dt * 12;
     } else if (s.hp < s.maxHp) {                          // resting at home: slowly heal
-      s.hp = Math.min(s.maxHp, s.hp + 6 * dt);
+      const regen = colossus ? spec.skills.stoneheart.regen[heartRank] : spec?.regen ?? 6;
+      s.hp = Math.min(s.maxHp, s.hp + regen * dt);
     }
-  });
+  }
 }

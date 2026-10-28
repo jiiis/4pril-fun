@@ -1,6 +1,7 @@
 import { TOWERS, MAX_LEVEL, UPGRADE_COST_FACTOR, ABILITIES, ABILITY_COST_FACTOR, W, H } from "./config.js";
 import { closestPointOnPath, clamp } from "./util.js";
 import { map } from "./map.js";
+import { SPECIALIZATIONS } from "./specializations.js";
 
 // Each upgrade adds range, damage and fire rate; the level-4 speciality is a big jump on top
 const FINAL = (t) => (t.level >= MAX_LEVEL ? 1 : 0);
@@ -10,9 +11,27 @@ export const towerRate = (t) => t.def.rate * (1 + 0.08 * (t.level - 1)) * (1 + 0
 export const upgradeCost = (t) => Math.round(t.def.cost * UPGRADE_COST_FACTOR * t.level);
 export const sellValue = (t) => Math.round(t.spent * 0.7);
 export const canUpgrade = (t) => t.level < MAX_LEVEL - 1;               // plain upgrades up to level 3 ...
-export const canSpecialise = (t) => t.level === MAX_LEVEL - 1;         // ... then choose one of two abilities for level 4
+export const canSpecialise = (t) => t.level === MAX_LEVEL - 1;         // ... then choose an ability or specialization for level 4
 export const abilityCost = (t) => Math.round(t.def.cost * ABILITY_COST_FACTOR);
-export const abilityDef = (t) => (t.ability ? ABILITIES[t.type][t.ability] : null);
+export const specializationDef = (t) => SPECIALIZATIONS[t.type]?.[t.specialization] || null;
+export const abilityDef = (t) => (t.ability ? ABILITIES[t.type]?.[t.ability] : null);
+export const skillRank = (t, key) => t.skills?.[key] || 0;
+export const skillCost = (t, key) => specializationDef(t)?.skills[key]?.costs[skillRank(t, key)] ?? null;
+export function specialize(t, key) {
+  const def = SPECIALIZATIONS[t.type]?.[key];
+  if (!def || !canSpecialise(t)) return false;
+  t.specialization = key; t.skills = {}; t.level = MAX_LEVEL;
+  t.soldiers = []; t.hatchCd = null;
+  t.spent += def.cost;
+  return true;
+}
+export function trainSkill(t, key) {
+  const cost = skillCost(t, key);
+  if (cost === null) return false;
+  t.skills[key] = skillRank(t, key) + 1;
+  t.spent += cost;
+  return true;
+}
 export const visLevel = (t) => Math.min(t.level, 3);                   // the artwork has three tiers; level 4 adds ability ornaments
 
 // How tall the ranged towers are (used for drawing and for where shots start).
@@ -48,10 +67,14 @@ export function setRally(t, p) {
   t.rally = { x: clamp(t.x + dx * k, 12, W - 12), y: clamp(t.y + dy * k, 16, H - 8) };
 }
 
-export const soldierCount = (t) => t.def.soldiers + (t.level >= 3 ? 1 : 0);
-export const soldierHp = (t) => Math.round(t.def.soldierHp * (1 + 0.6 * (t.level - 1)) * (abilityDef(t)?.hpFactor || 1));
-export const soldierDamage = (t) => Math.round(towerDamage(t) * (abilityDef(t)?.damageFactor || 1));
-export const soldierRate = (t) => towerRate(t) * (abilityDef(t)?.rateFactor || 1);
+export const soldierCount = (t) => specializationDef(t)?.count ?? t.def.soldiers + (t.level >= 3 ? 1 : 0);
+export const soldierHp = (t) => {
+  const spec = specializationDef(t);
+  if (spec) return spec.skills.chitin?.hp[skillRank(t, "chitin")] ?? spec.skills.stoneheart?.hp[skillRank(t, "stoneheart")] ?? spec.hp;
+  return Math.round(t.def.soldierHp * (1 + 0.6 * (t.level - 1)));
+};
+export const soldierDamage = (t) => specializationDef(t)?.skills.earthbreaker?.damage[skillRank(t, "earthbreaker")] ?? specializationDef(t)?.damage ?? towerDamage(t);
+export const soldierRate = (t) => specializationDef(t)?.skills.earthbreaker?.rate[skillRank(t, "earthbreaker")] ?? specializationDef(t)?.rate ?? towerRate(t);
 
 export function createTower(spotIndex, type) {
   const s = map.spots[spotIndex];

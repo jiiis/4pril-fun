@@ -70,7 +70,7 @@ Tap/click a monster to inspect its armor class, amount, base health, speed, and 
 
 ## Implemented: current tower progression
 
-The 16 specializations below are **not implemented yet**. The playable game still has the original two level-four abilities per tower and no separately ranked skill purchases.
+Barracks now has three playable specializations with separately ranked skills. The other five tower families still use their original two level-four abilities; their 13 proposed replacements are not implemented.
 
 | Tower | Attack profile / pattern | Build cost | Total cost at level 4 | Current level-4 choices | Weakness |
 |---|---|---:|---:|---|---|
@@ -79,9 +79,9 @@ The 16 specializations below are **not implemented yet**. The playable game stil
 | Cannon | Siege, ground-area blast | 125 | 500 | Cluster Bombs / Napalm | Cannot hit flyers; slow against dispersed enemies |
 | Spire | Arcane, diminishing chain | 140 | 560 | Overcharge / Static Field | Isolated targets; Warded and Fortified enemies |
 | Ballista | Heavy piercing, line | 170 | 680 | Executioner / Harpoons | Slow; needs alignment; Fortified class resistance remains |
-| Barracks | Steel, blocking ground units | 90 | 360 | Paladins / Berserkers | Cannot reach flyers; vulnerable to strong melee attacks |
+| Barracks | Steel, blocking ground units before specialization | 90 | 462–552 before skills | Cloud Monastery / Brood Nursery / Jade Colossus | Specialization determines targeting, damage profile and coverage |
 
-Upgrade prices: level 1→2 = 0.6× build cost; 2→3 = 1.2×; specialization = 1.2×. Total fully developed cost = 4× build cost. Selling returns 70% of spent gold, rounded. All prices are rounded to integer gold.
+Upgrade prices: level 1→2 = 0.6× build cost; 2→3 = 1.2×. Barracks costs 252 total at level 3, then pays its chosen specialization's price below. Other towers' level-four ability costs 1.2× build cost, for a fully developed total of 4× build cost. Selling returns 70% of all spent gold, including specialization and skill purchases, rounded. All prices are integer gold.
 
 | Tower | Base damage per hit | Base attacks/s | Base range | Extra pattern values |
 |---|---:|---:|---:|---|
@@ -92,7 +92,7 @@ Upgrade prices: level 1→2 = 0.6× build cost; 2→3 = 1.2×; specialization = 
 | Ballista | 62 | 0.25 | 192 | Line half-width 9 plus target-size allowance; bolt reach adds 50 |
 | Barracks | 6 per soldier | 1 per soldier | 117 rally range | 2 soldiers, 80 HP each, 8s respawn; engagement range 50 |
 
-Per level: range adds 18; damage grows by 60% of base; attack rate grows by 8% of base. Level 4 additionally adds 20 range, multiplies damage by 1.2 and attack rate by 1.15. Damage is rounded. Barracks gain a third soldier at level 3; their range is rally range, not attack reach.
+Per level: range adds 18; damage grows by 60% of base; attack rate grows by 8% of base. Level 4 additionally adds 20 range, multiplies damage by 1.2 and attack rate by 1.15 for the original abilities. Damage is rounded. Barracks gain a third soldier at level 3; their range is rally range, not attack reach. New specialized units instead use the explicit stats below; the ordinary level-four damage multipliers do not apply to them. All three specializations retain the level-four rally radius of 191.
 
 | Tower | Current skills and numbers |
 |---|---|
@@ -101,19 +101,56 @@ Per level: range adds 18; damage grows by 60% of base; attack rate grows by 8% o
 | Cannon | Cluster: 3 bomblets, each 45% shell damage, radius 30. Napalm: radius 40, 10 Arcane DPS for 4s. |
 | Spire | Base chain hits up to 3 targets, +1 per level; range 70 between targets; each jump retains 75% damage. Overcharge: +3 targets and 40% jump range. Field: 25% slow and 4 Arcane DPS to enemies in tower range. |
 | Ballista | Executioner: double damage below 25% target HP. Harpoons: 50% slow for 3s; first enemy along the bolt instead gets 85% slow for 1.6s. |
-| Barracks | Paladins: +50% HP, 30% armor, 5 HP/s combat healing. Berserkers: +60% damage, +30% rate, cleave radius 26 at 60% damage. |
+| Barracks | Replaced Paladins/Berserkers with the three specializations documented below. |
+
+## Implemented: Barracks specializations — first playable iteration
+
+Initial numbers for playtesting, not final balance. Level 3 offers one permanent specialization; purchasing it replaces the existing squad with the new units at the building. No mid-level respec; selling and rebuilding is available at the normal 70% refund. Each skill starts at rank zero and has three independent purchases. Buying a specialization does not include trained skills. Skill upgrades preserve wounds and do not revive fallen units. Timers and unit actions stop while gameplay is paused.
+
+| Specialization | Purchase / total before skills | Base units and attack | Strength | Deliberate weakness |
+|---|---:|---|---|---|
+| Cloud Monastery | 210 / 462 | 2 spirits; 110 HP each; 34 Piercing damage; 0.9 attacks/s; speed 180; interception radius 90 around each formation position; 10s respawn | Intercepts ground and air, prefers flyers when acquiring a new target; Light and Warded counters | Never blocks; fragile; retreats toward rally for 0.9s after striking; travel costs damage uptime; Plated/Fortified resistance |
+| Brood Nursery | 260 / 512 | 2 adults; 250 HP each; 25% armor; 16 Steel damage; 0.85 attacks/s; speed 75; interception radius 50; 10s respawn | Several ground blockers; physical counter to Warded support enemies | No air attacks; plating resists bites; weak individual hatchlings and a strict population cap |
+| Jade Colossus | 300 / 552 | 1 guardian; 900 HP; 15% armor; 70 Siege damage; 0.45 attacks/s; speed 60; interception radius 50; 12s respawn | Counters Fortified ground groups; each strike hits its primary and up to 2 additional targets within 30 of it at full damage | Blocks only its current target; slow movement and attacks; flyers and dispersed runners pass it |
+
+Attacks connect within 16 world units. Spirits can take retaliation while in contact, including from flyers, but never hold an enemy still. Their cooldown runs during travel/recovery; actual attack frequency cannot exceed the listed rate. Cloudstep reduces downtime, not the 0.9 attacks/s ceiling. Spear damage remains Piercing even against armored flyers; anti-air does not bypass armor.
+
+Brood uses one shared hatch timer per tower: one hatchling every 8s while at least one adult lives, up to 2 living hatchlings initially. No adult means the timer waits. Hatchlings have 45 HP, no armor, 7 Steel damage, 1.2 attacks/s, speed 120, interception radius 50, and a 10s lifetime; they block ground targets, do not respawn, and count toward the same cap whether hatched normally or released on death. At maximum Hatchery, at most 2 adults plus 5 living hatchlings exist per tower. Expired/dead hatchlings are removed; selling removes the entire brood. Existing monsters have no area attacks against soldiers: area vulnerability remains a future monster-design consideration, not an implemented counter.
+
+Idle healing: spirits/adults 6 HP/s; guardian 8 HP/s before Stoneheart. No innate combat healing. Existing allied healing can still help living summons. Dead adults/spirits/guardians respawn at their building after their timer; hatchlings expire permanently. Siege crushes hit only ground targets, with a hard target cap and no stun or displacement.
+
+| Specialization / skill | Rank prices (1 / 2 / 3) | Rank 0 → 1 → 2 → 3 values |
+|---|---|---|
+| Cloud / Cloudstep | 120 / 180 / 240 | Speed 180 / 210 / 240 / 270; recovery 0.9 / 0.75 / 0.6 / 0.45s; interception radius 90 / 100 / 110 / 120 |
+| Cloud / Sky Spears | 150 / 220 / 300 | Extra damage against flyers 0 / 12 / 26 / 42; total 34 / 46 / 60 / 76 before defenses |
+| Brood / Chitin | 155 / 210 / 280 | Adult HP 250 / 320 / 400 / 490; armor 25 / 30 / 35 / 40%; hatchlings unaffected |
+| Brood / Hatchery | 140 / 210 / 290 | Shared hatch interval 8 / 7 / 6 / 5s; living hatchling cap 2 / 3 / 4 / 5 |
+| Brood / Last Brood | 120 / 180 / 250 | Hatchlings released per adult death 0 / 1 / 2 / 3, always within Hatchery's cap; expiry and hatchling deaths do not trigger this |
+| Colossus / Stoneheart | 190 / 260 / 340 | HP 900 / 1100 / 1350 / 1650; respawn on subsequent deaths 12 / 11 / 10 / 9s; idle healing 8 / 12 / 16 / 20 HP/s |
+| Colossus / Earthbreaker | 200 / 280 / 360 | Damage 70 / 90 / 115 / 145; radius 30 / 36 / 42 / 48; total targets 3 / 4 / 5 / 6; attacks/s 0.45 / 0.43 / 0.41 / 0.39 |
+
+Total build + upgrades + specialization + all skills: Cloud **1,672**, Brood **2,347**, Colossus **2,182**. These create additional spending choices; they do not by themselves solve the high-level gold surplus. Last Brood competes with keeping adults alive, Sky Spears buys no extra ground damage, and Earthbreaker's wider/harder attacks become slower. Every skill is optional; no purchased branch grants missing anti-air to Brood/Colossus or blocking to Cloud.
+
+## Progression contract for the remaining tower work
+
+- Three ordinary tiers establish each family's role. Specializing changes its fighting pattern; skills deepen that pattern rather than all adding generic damage/range/rate.
+- Every specialization has 2–3 independent skills, initially three ranks per skill. Rank count may change after playtesting; no equal-price requirement between skills or specializations.
+- Specialization prices, baseline damage, activation intervals, targeting, caps and skill values must be specified in this document before each family ships. Remaining designs below are proposals, not promises of finalized numbers.
+- Compare equal-gold builds: several modest towers versus one developed tower, and different skill orders. A branch must have a useful scenario and an explicit opportunity cost; no branch should erase all weaknesses.
+- Control skills need duration/stacking caps and boss resistance; summons need population limits. Mixed builds should exploit complementary counters without creating permanent trapping.
+- Implement and playtest Barracks first, then Archer, Mage, Cannon, Spire and Ballista. Add the eight new monster designs after tower identities settle; then tune the full matchup matrix, economy, wave pacing and map fairness together.
 
 ## Audit: progression and economy concerns
 
 Starting gold = 360 + 7× level. Kill reward multiplier = 1 + 0.012× (level − 1), with individual rewards rounded. Winning carries 75% of remaining gold plus 10 per remaining life to the next level, capped at 600. Early wave calls also award gold. Waves rise from 9 to 15; enemy stats do not scale.
 
-Potential starting gold plus all scheduled kill rewards, including Slimelings but excluding carryover, early calls, hunting, and resurrected monsters: level 1 ≈2,375; level 30 ≈12,485; level 100 ≈49,526. Actual earned gold depends on kills and escapes. Twenty fully upgraded towers cost 5,600–13,600. This mismatch is a major candidate explanation for reaching full development long before a level ends.
+Potential starting gold plus all scheduled kill rewards, including Slimelings but excluding carryover, early calls, hunting, and resurrected monsters: level 1 ≈2,375; level 30 ≈12,485; level 100 ≈49,526. Actual earned gold depends on kills and escapes. Before the new Barracks progression, twenty fully upgraded towers cost 5,600–13,600; the other five families still have that original spending ceiling. This mismatch is a major candidate explanation for reaching full development long before a level ends.
 
 Other concerns: specialization power spikes; insufficiently distinct roles; map routes with very different lengths/exposure; concentration at shared entrances; opening overload; and long late-wave cleanup. Browser observations are a small sample, not proof of global tower or hero rankings. Economy, waves, enemy HP, costs, and skills have not been retuned in this armor pass.
 
 ## Proposed: specialization roadmap
 
-Design direction only. Costs, ranks, durations, caps, targeting rules, attack profiles, visuals, and exact counter interactions still need definition and review before implementation. Each specialization has 2–3 independently upgradeable skills. Prices and rank counts may differ. Buying, specializing, adding a skill, and ranking up an existing skill must compete for gold throughout a level.
+The three Barracks designs are now playable as specified above. The other 13 remain design direction only: costs, durations, caps, targeting rules, attack profiles, visuals, and exact counter interactions need definition before implementation. Each specialization has 2–3 independently upgradeable skills. Prices and rank counts may differ. Buying, specializing, adding a skill, and ranking up an existing skill must compete for gold throughout a level.
 
 | Specialization | Fighting identity | Upgradeable skills | Deliberate weakness |
 |---|---|---|---|
@@ -130,13 +167,20 @@ Design direction only. Costs, ranks, durations, caps, targeting rules, attack pr
 | **Thunderheart** · Spire | Stores energy between powerful radial pulses | **Capacitor:** stronger pulses. **Storm Warning:** a weaker preliminary pulse slows enemies. | Long gaps between attacks; fast enemies may escape |
 | **Dragonbone Rail** · Ballista | Fires heavy bolts through enemies aligned along a corridor | **Borehead:** penetrate fortified defenses. **Follow-through:** preserve damage through additional targets. | Alignment-dependent; slow firing and overkill |
 | **Skyhook** · Ballista | Anchors a priority enemy to a temporary tether point | **Barbed Anchor:** stronger restraint. **Grounding Chain:** temporarily ground eligible flyers. **Winch:** briefly pull eligible targets backward. | Limited simultaneous tethers; bosses resist displacement |
-| **Cloud Monastery** · Barracks | Summons fragile spear spirits that leap between ground and aerial targets | **Cloudstep:** faster interception. **Sky Spears:** stronger anti-air attacks. | Poor blocking; vulnerable during recovery |
-| **Brood Nursery** · Barracks | Armored beetles hold enemies while producing temporary hatchlings | **Chitin:** tougher adults. **Hatchery:** more hatchlings. **Last Brood:** release hatchlings when adults die. | Area attacks destroy the brood; strict population cap |
-| **Jade Colossus** · Barracks | One massive guardian holds a chokepoint and crushes groups | **Stoneheart:** durability and recovery. **Earthbreaker:** wider, slower crushing attacks. | Cannot cover scattered enemies or attack flyers |
+| **Cloud Monastery** · Barracks · playable | Summons fragile spear spirits that leap between ground and aerial targets | **Cloudstep:** faster interception. **Sky Spears:** stronger anti-air attacks. | Never blocks; fragile; retreats to recover |
+| **Brood Nursery** · Barracks · playable | Armored beetles hold enemies while producing temporary hatchlings | **Chitin:** tougher adults. **Hatchery:** more hatchlings. **Last Brood:** release hatchlings when adults die. | No air attacks; plating; strict population cap; future area attackers threaten the brood |
+| **Jade Colossus** · Barracks · playable | One massive guardian holds a chokepoint and crushes groups | **Stoneheart:** durability and recovery. **Earthbreaker:** wider, slower crushing attacks. | Cannot cover scattered enemies or attack flyers |
 
 Future control mechanics require resistance, cooldowns, and stacking limits; summons require population caps. Skills must reinforce identities without removing every weakness. Candidate combinations: Colossus + Faultline; Rift + Ember Orchard; Skyhook + Prism. Eight new monster designs are a later workstream; none are added by this pass.
 
 ## Change record
+
+### 2026-10-28 — First tower-family prototype
+
+- Replaced Barracks' Paladin/Berserker choices with Cloud Monastery, Brood Nursery and Jade Colossus; added seven independently purchasable three-rank skills, detailed above.
+- Added shared specialization/rank/cost helpers for subsequent families, purchase validation, skill-inclusive sale refunds and a scrollable touch-readable upgrade menu. New units/buildings have distinct artwork and attack feedback.
+- Preserved existing armor matchups, monster stats, ordinary tower costs, other five families, waves and income. Ordinary Barracks health upgrades no longer revive fallen soldiers; wound differences are retained on living units.
+- Reason: validate a deeper progression system with genuinely different roles before rolling out the remaining families. Broader balancing and a full-game playtest remain required; a longer spending ladder is not proof of fair difficulty.
 
 ### 2026-10-27 — Armor foundation
 

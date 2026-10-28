@@ -2,7 +2,7 @@ import { ctx, rect, circle, ellipse, poly, line, shadow } from "./gfx.js";
 import { TOWERS } from "../config.js";
 import { state } from "../state.js";
 import { addLight } from "./lights.js";
-import { archerHeight, mageHeight, teslaHeight, ballistaHeight, archerSlots, visLevel, abilityDef } from "../towers.js";
+import { archerHeight, mageHeight, teslaHeight, ballistaHeight, archerSlots, visLevel } from "../towers.js";
 
 // Each tower is drawn with simple shapes and looks different at every level.
 // (x, y) is the centre of its build spot, t.angle points at the last target,
@@ -58,17 +58,6 @@ function drawAbility(t, x, y) {
       break;
     case "napalm":                                                                       // braziers burning on the corners
       for (const bx of [-16, 16]) { rect(ctx, x + bx - 3, y - 4, 6, 5, "#424242", "#212121", 1); fire(x + bx, y - 4, 4, bx); }
-      break;
-    case "paladin":                                                                      // a tall white-and-gold banner and a soft holy light
-      ctx.globalAlpha = 0.16 + Math.sin(T * 1.5) * 0.05; circle(ctx, x, y - 14, 30, "#fff8e1"); ctx.globalAlpha = 1;
-      addLight(ctx, x, y - 14, 30, "gold");
-      line(ctx, x + 16, y + 4, x + 16, y - 36, "#ffd54f", 2);
-      poly(ctx, [[x + 17, y - 36], [x + 28, y - 33 + Math.sin(T * 5) * 2], [x + 17, y - 22]], "#ffffff", "#ffd54f", 1);
-      line(ctx, x + 21, y - 33, x + 21, y - 26, "#ffd54f", 1.2); line(ctx, x + 19, y - 30.5, x + 23, y - 30.5, "#ffd54f", 1.2);
-      break;
-    case "berserk":                                                                      // red war banners and spiked palisade
-      for (const bx of [-18, 18]) flag(x + bx, y - 30, 14, "#c62828", bx);
-      for (let i = -12; i <= 12; i += 6) poly(ctx, [[x + i - 2, y + 6], [x + i + 2, y + 6], [x + i, y - 4]], "#5d4037", "#3e2723", 1);
       break;
     case "executioner": {                                                                // skulls hung on the fascia and a black banner above
       const fy = y - ballistaHeight(3) + 8 + 8.5;
@@ -495,6 +484,7 @@ function drawCannon(t, x, y, lv) {
 //  BARRACKS
 // =====================================================================
 function drawBarracks(t, x, y, lv) {
+  if (t.specialization) { drawSummoningHall(t, x, y); return; }
   if (lv === 1) {
     rect(ctx, x - 18, y - 14, 36, 24, "#8d6e63", "#4e342e");
     for (const xx of [-12, -6, 0, 6, 12]) line(ctx, x + xx, y - 14, x + xx, y + 10, "#6d4c41", 1.2);
@@ -533,4 +523,40 @@ function drawBarracks(t, x, y, lv) {
     ctx.restore();
   }
   if (lv === 3) for (const px of [-22, 22]) flag(x + px, y - 50, 16, "#ffd54f", x + px);
+}
+
+function drawSummoningHall(t, x, y) {
+  const T = state.time, cloud = t.specialization === "cloud", brood = t.specialization === "brood";
+  if (cloud) {
+    rect(ctx, x - 22, y - 12, 44, 22, "#b0bec5", "#455a64", 1.5);
+    for (const dx of [-16, 16]) rect(ctx, x + dx - 3, y - 35, 6, 28, "#e0f7fa", "#607d8b", 1);
+    poly(ctx, [[x - 30, y - 33], [x, y - 49], [x + 30, y - 33], [x + 19, y - 29], [x, y - 38], [x - 19, y - 29]], "#4f83a0", "#263238", 1.5);
+    circle(ctx, x, y - 21, 8, "#263238", "#ffd54f", 1.5);
+    for (let i = 0; i < 3; i++) ellipse(ctx, x + Math.sin(T + i * 2) * 18, y + 4 + i * 2, 12, 3, "rgba(224,247,250,0.5)");
+    flag(x + 24, y - 37, 25, "#b3e5fc", x);
+  } else if (brood) {
+    ellipse(ctx, x, y + 3, 30, 13, "#5d4037", "#3e2723", 2);
+    ellipse(ctx, x, y - 10, 23, 22, "#557c30", "#263c18", 2);
+    for (const dx of [-12, 0, 12]) line(ctx, x + dx, y - 26, x + dx * 1.5, y + 1, "#8aa65a", 2);
+    ellipse(ctx, x, y, 9, 8, "#263c18");
+    for (const dx of [-19, 19]) {
+      ellipse(ctx, x + dx, y + 6, 6, 8, "#dce8ab", "#829b56", 1);
+      circle(ctx, x + dx, y + 4 + Math.sin(T * 2 + dx), 2, "#aed581");
+    }
+  } else {
+    ellipse(ctx, x, y + 5, 28, 12, "#347566", "#235b50", 2);
+    for (const dx of [-19, 19]) {
+      rect(ctx, x + dx - 5, y - 29, 10, 33, "#68ad91", "#235b50", 2);
+      rect(ctx, x + dx - 7, y - 32, 14, 5, "#a3d4bd", "#235b50", 1);
+    }
+    poly(ctx, [[x - 27, y - 32], [x, y - 46], [x + 27, y - 32]], "#347566", "#235b50", 2);
+    const pulse = 0.45 + Math.sin(T * 1.8) * 0.15;
+    ctx.globalAlpha = pulse;
+    circle(ctx, x, y - 8, 11, "#a3d4bd", "#ffe082", 1.5);
+    ctx.globalAlpha = 1;
+    poly(ctx, [[x, y - 19], [x + 5, y - 10], [x, y - 1], [x - 5, y - 10]], "#ffe082");
+  }
+  // Purchased ranks remain visible on the building without adding another UI panel.
+  const ranks = Object.values(t.skills).reduce((sum, rank) => sum + rank, 0);
+  for (let i = 0; i < ranks; i++) circle(ctx, x - (ranks - 1) * 2 + i * 4, y + 13, 1.4, "#ffd54f");
 }

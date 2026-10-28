@@ -65,7 +65,7 @@ export const TOWERS = {
   barracks: { name: "Barracks",     short: "Barracks", icon: "shield", cost: 90,  range: 117,  damage: 6,  rate: 1,    type: "physical", color: "#ef9a9a", desc: "Soldiers block ground enemies. Steel counters wards; plating resists.", soldiers: 2, soldierHp: 80 },
 };
 export const MAX_LEVEL = 4;
-// Level 4 is a specialisation: at level 3 you pick one of two abilities. Each tower type has its own pair.
+// Level 4 offers an ability, or a specialization with independently ranked skills (Barracks first).
 export const ABILITY_COST_FACTOR = 1.2;   // ability price = tower cost × this
 export const ABILITIES = {
   archer: {
@@ -79,10 +79,6 @@ export const ABILITIES = {
   cannon: {
     cluster:{ name: "Cluster Bombs", icon: "burst", desc: "Each shell scatters 3 bomblets around the impact.", bomblets: 3, bombletDamage: 0.45, bombletSplash: 30 },
     napalm: { name: "Napalm", icon: "flame", desc: "Shells leave burning ground for 4s: 10 dmg/s to anything walking through.", fire: { time: 4, dps: 10, radius: 40 } },
-  },
-  barracks: {
-    paladin:{ name: "Paladins", icon: "shieldCheck", desc: "Soldiers get +50% health, 30% armour and heal 5/s even in battle.", hpFactor: 1.5, armor: 0.3, regen: 5 },
-    berserk:{ name: "Berserkers", icon: "axe", desc: "Soldiers hit 60% harder, 30% faster, and every swing cleaves nearby monsters.", damageFactor: 1.6, rateFactor: 1.3, cleave: 26 },
   },
   ballista: {
     execute: { name: "Executioner", icon: "skull", desc: "Bolts deal double damage to any monster below 25% health.", execute: { below: 0.25, factor: 2 } },
