@@ -290,6 +290,11 @@ export function zoomTo(k, sx, sy) {
 }
 export const canPan = () => W * view.k > pageW() + 1 || H * view.k > pageH() - hudH() + 1;
 export function panBy(dx, dy) { view.panX += dx; view.panY += dy; applyView(); }
+export function centerOn(point) {
+  view.panX = (W / 2 - point.x) * view.k;
+  view.panY = (H / 2 - point.y) * view.k;
+  applyView();
+}
 function applyView() {
   const width = pageW(), height = pageH() - hudH();
   const maxX = Math.max(0, (W * view.k - width) / 2), maxY = Math.max(0, (H * view.k - height) / 2);   // never pan past the board's edge
@@ -309,6 +314,7 @@ export function resetUiForLevel() {
   $("overlay").style.display = "none";
   $("paused").style.display = "none";
   closeMenu();
+  applyView();
   setWaveButton("start");
   $("totalWaves").textContent = state.totalWaves;
   $("lvl").textContent = state.level;

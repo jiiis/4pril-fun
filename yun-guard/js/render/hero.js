@@ -6,6 +6,15 @@ import { addLight } from "./lights.js";
 const ACCENT = { april: "#9fa8da", avril: "#f48fb1", ember: "#ffab91", willow: "#aed581", meilin: "#b2ebf2", adrien: "#ffe082" };
 const RING = { april: "rgba(159,168,218,0.28)", avril: "rgba(244,143,177,0.25)", ember: "rgba(255,171,145,0.25)", willow: "rgba(174,213,129,0.25)", meilin: "rgba(178,235,242,0.28)", adrien: "rgba(255,224,130,0.28)" };
 const BAR = { april: "#5c6bc0", avril: "#f06292", ember: "#ff7043", willow: "#8bc34a", meilin: "#4dd0e1", adrien: "#ffca28" };
+const LEGEND_SCALE = 0.8;
+
+// Scale artwork around its anchor without changing movement, attack ranges or hit areas.
+function scaleLegendAt(x, y) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(LEGEND_SCALE, LEGEND_SCALE);
+  ctx.translate(-x, -y);
+}
 
 // Draws whichever hero is in play. Shared: selection ring, movement animation, bars and badges.
 export function drawHero(h) {
@@ -43,6 +52,7 @@ export function drawHero(h) {
     for (const p of h.charge.trail) { ctx.globalAlpha = (1 - p.t / 0.25) * 0.35; circle(ctx, p.x, p.y - 8, 9 * (1 - p.t / 0.25) + 2, "#ffe082"); }
     ctx.globalAlpha = 1;
   }
+  scaleLegendAt(h.x, h.y + 12);
   const run = Math.min(1, h.speedNow / h.def.speed);
   const anim = {
     run,
@@ -66,13 +76,14 @@ export function drawHero(h) {
   ctx.rotate(anim.lean);
   ({ april: drawApril, avril: drawAvril, ember: drawEmber, willow: drawWillow, meilin: drawMeiLin, adrien: drawAdrien }[h.kind] || drawApril)(h, anim);
   ctx.restore();
+  ctx.restore();
 
   if (h.levelFlash > 0) {
     ctx.globalAlpha = h.levelFlash / 1.2 * 0.6;
     circle(ctx, h.x, h.y - 5, 22 + (1.2 - h.levelFlash) * 20, null, "#80deea", 3);
     ctx.globalAlpha = 1;
   }
-  const w = 30, x = h.x - w / 2, y = h.y - 42;                                  // well above the head, clear of the face
+  const w = 30, x = h.x - w / 2, y = h.y - 42 * LEGEND_SCALE;                   // keep bars readable above the smaller artwork
   rect(ctx, x, y, w, 4, "#222");
   rect(ctx, x, y, w * (h.hp / h.maxHp), 4, BAR[h.kind] || "#42a5f5");
   rect(ctx, x, y + 5, w, 2, "#222");
@@ -476,9 +487,11 @@ export function drawEagle() {
   const groundY = g.owner.hp > 0 ? g.owner.y : g.owner.spawn.y;
   const height = Math.max(0, groundY - g.y);
   ctx.globalAlpha = 0.22 * Math.max(0.3, 1 - height / 80);
-  ellipse(ctx, g.x, groundY + 10, (g.def.kind === "loong" ? 16 : 9) * Math.max(0.5, 1 - height / 120), 2.5, "#000");
+  ellipse(ctx, g.x, groundY + 10, (g.def.kind === "loong" ? 16 : 9) * Math.max(0.5, 1 - height / 120) * LEGEND_SCALE, 2.5 * LEGEND_SCALE, "#000");
   ctx.globalAlpha = 1;
+  scaleLegendAt(g.x, g.y);
   if (g.def.kind === "dragon") drawDragon(g); else if (g.def.kind === "loong") drawLoong(g); else drawBird(g);
+  ctx.restore();
 }
 
 // Yun: a serpentine Chinese loong, jade green with a gold belly, a flowing mane, antlers, whiskers and a pearl
@@ -620,6 +633,12 @@ function drawDragon(g) {
 export function drawDog() {
   const d = state.dog;
   if (!d || d.hp <= 0) return;
+  scaleLegendAt(d.x, d.y + (d.def.kind === "bear" ? 10 : 8));
+  drawGroundPet(d);
+  ctx.restore();
+}
+
+function drawGroundPet(d) {
   if (d.def.kind === "bear") { drawBear(d); return; }
   if (d.def.kind === "lion") { drawLion(d); return; }
   const run = Math.min(1, d.speedNow / d.def.speed);

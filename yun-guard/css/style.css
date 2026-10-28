@@ -683,7 +683,7 @@ canvas { display: block; }
 
 
 /* The chosen legend, shown beside the controls while a level is on: her icon in her colour, as on the home page */
-#legendBadge { --tint: var(--accent); width: 46px; height: 46px; border-radius: 50%; display: none; align-items: center; justify-content: center;
+#legendBadge { --tint: var(--accent); width: 46px; height: 46px; padding: 0; border-radius: 50%; display: none; align-items: center; justify-content: center;
   color: var(--tint); background: color-mix(in srgb, var(--tint) 18%, rgba(22, 25, 33, 0.7)); border: 1.5px solid color-mix(in srgb, var(--tint) 55%, transparent);
   box-shadow: 0 0 18px color-mix(in srgb, var(--tint) 30%, transparent), 0 6px 16px rgba(0, 0, 0, 0.4); }
 #legendBadge.on { display: inline-flex; cursor: pointer; transition: background 0.15s; }

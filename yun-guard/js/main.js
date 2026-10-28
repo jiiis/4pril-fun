@@ -6,7 +6,7 @@ import { map } from "./map.js";
 import { requestMap } from "./map-loader.js";
 import { update } from "./update.js";
 import { draw, SPOT_SQUASH, depthScale, backgroundResolution, setBackground } from "./render/draw.js";
-import { initUi, openMenu, openEnemyInfo, closeMenu, resetUiForLevel } from "./ui.js";
+import { initUi, openMenu, openEnemyInfo, closeMenu, resetUiForLevel, centerOn } from "./ui.js";
 import { startWave, spawnEnemy } from "./waves.js";
 import { createTower, setRally, archerHeight, mageHeight, teslaHeight, ballistaHeight, visLevel } from "./towers.js";
 import { initCritters } from "./critters.js";
@@ -110,18 +110,26 @@ const preset = new URLSearchParams(location.search).get("hero");
 const LEGEND_ICON = { april: "sword", avril: "bow", adrien: "shieldCheck", ember: "flame", willow: "leaf", meilin: "snowflake" };
 const LEGEND_TINT = { april: "#7986cb", avril: "#f06292", adrien: "#ffd54f", ember: "#ff7043", willow: "#8bc34a", meilin: "#80deea" };
 const legendBadge = document.getElementById("legendBadge");
+let lastLegendClick = -Infinity;
 function showLegendBadge(kind) {
+  lastLegendClick = -Infinity;
   if (!kind || !LEGEND_ICON[kind]) { legendBadge.classList.remove("on"); return; }
   legendBadge.innerHTML = icon(LEGEND_ICON[kind]); legendBadge.style.setProperty("--tint", LEGEND_TINT[kind]);
-  legendBadge.title = `Find ${HERO_KINDS[kind].name} (click to select her)`;
+  legendBadge.title = `${HERO_KINDS[kind].name}: click to select; double-click or double-tap to center`;
+  legendBadge.setAttribute("aria-label", legendBadge.title);
   legendBadge.classList.add("on");
 }
-// Clicking the badge selects the legend, ready for an order (the view stays put)
+// Keep single-click selection immediate. Timing also recognizes touch clicks without native dblclick events.
 legendBadge.addEventListener("click", () => {
   const h = state.hero;
   if (!h || heroPick.style.display !== "none") return;
   if (h.hp > 0 && !h.selected) selectHero(h);
   closeMenu();
+  const now = performance.now();
+  if (now - lastLegendClick <= 350) {
+    centerOn(h.hp > 0 ? h : h.spawn);
+    lastLegendClick = -Infinity;
+  } else lastLegendClick = now;
   canvas.style.cursor = selectedHero() ? "crosshair" : "default";
   sfx("select");
 });
