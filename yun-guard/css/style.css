@@ -687,7 +687,7 @@ canvas { display: block; }
   color: var(--tint); background: color-mix(in srgb, var(--tint) 18%, rgba(22, 25, 33, 0.7)); border: 1.5px solid color-mix(in srgb, var(--tint) 55%, transparent);
   box-shadow: 0 0 18px color-mix(in srgb, var(--tint) 30%, transparent), 0 6px 16px rgba(0, 0, 0, 0.4); }
 #legendBadge.on { display: inline-flex; cursor: pointer; transition: background 0.15s; }
-#legendBadge.on:hover { background: color-mix(in srgb, var(--tint) 32%, rgba(22, 25, 33, 0.7)); }
+#legendBadge.on:hover, #legendBadge.on[aria-pressed="true"] { background: color-mix(in srgb, var(--tint) 32%, rgba(22, 25, 33, 0.7)); }
 #legendBadge.on:active { transform: translateY(1px); }
 #legendBadge .ico { width: 24px; height: 24px; display: block; }
 

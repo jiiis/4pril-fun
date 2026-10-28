@@ -6,7 +6,7 @@ import { map } from "./map.js";
 import { requestMap } from "./map-loader.js";
 import { update } from "./update.js";
 import { draw, SPOT_SQUASH, depthScale, backgroundResolution, setBackground } from "./render/draw.js";
-import { initUi, openMenu, openEnemyInfo, closeMenu, resetUiForLevel, centerOn } from "./ui.js";
+import { initUi, openMenu, openEnemyInfo, closeMenu, resetUiForLevel, centerOn, updateCamera } from "./ui.js";
 import { startWave, spawnEnemy } from "./waves.js";
 import { createTower, setRally, archerHeight, mageHeight, teslaHeight, ballistaHeight, visLevel } from "./towers.js";
 import { initCritters } from "./critters.js";
@@ -111,6 +111,7 @@ const LEGEND_ICON = { april: "sword", avril: "bow", adrien: "shieldCheck", ember
 const LEGEND_TINT = { april: "#7986cb", avril: "#f06292", adrien: "#ffd54f", ember: "#ff7043", willow: "#8bc34a", meilin: "#80deea" };
 const legendBadge = document.getElementById("legendBadge");
 let lastLegendClick = -Infinity;
+let legendBadgeSelected = false;
 function showLegendBadge(kind) {
   lastLegendClick = -Infinity;
   if (!kind || !LEGEND_ICON[kind]) { legendBadge.classList.remove("on"); return; }
@@ -340,7 +341,16 @@ let last = performance.now();
 function frame(now) {
   const dt = Math.min((now - last) / 1000, 0.05);
   last = now;
-  if (map.paths.length) { update(dt); draw(); }
+  if (map.paths.length) {
+    updateCamera(now);
+    update(dt);
+    const selected = !!(state.hero?.selected && state.hero.hp > 0);
+    if (selected !== legendBadgeSelected) {
+      legendBadgeSelected = selected;
+      legendBadge.setAttribute("aria-pressed", String(selected));
+    }
+    draw();
+  }
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);

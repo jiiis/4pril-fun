@@ -261,6 +261,8 @@ function handleMenuClick(ev) {
 // The board always fills the screen: shown at its natural size, or scaled up (never down) when the window is
 // larger than it. Whatever sticks out past the screen is reached by dragging (see touch.js).
 export const view = { k: 1, fit: 1, panX: 0, panY: 0, mobile: false };
+let cameraMove = null;
+const CAMERA_FOCUS_MS = 240;
 export const viewport = { left: 0, top: 0, right: W, bottom: H };
 const MAX_ZOOM = 2, MIN_ZOOM = 0.6;                              // small screens may shrink the board to see more of it; pads stay tappable
 const hudH = () => 0;                                           // the HUD floats over the board, so the whole window is for the map
@@ -270,6 +272,7 @@ export const pageW = () => document.body.clientWidth || window.innerWidth;
 export const pageH = () => document.body.clientHeight || window.innerHeight;
 export const hasPageOverflow = () => pageW() > document.documentElement.clientWidth;
 export function fitToWindow() {
+  cameraMove = null;
   view.mobile = window.matchMedia("(pointer: coarse)").matches || navigator.maxTouchPoints > 1;
   document.documentElement.style.setProperty("--hud", `${hudH()}px`);
   // The board is scaled to the window's height (never below natural size, never more than 2×); the width
@@ -280,6 +283,7 @@ export function fitToWindow() {
 // Zoom so the board point under the screen position (sx, sy) stays put: pinch on a phone, ctrl+wheel on a trackpad
 export function zoomTo(k, sx, sy) {
   if (document.fullscreenElement) return;                        // full screen is the fixed, fitted view: no zooming
+  cameraMove = null;
   const origin = document.body.getBoundingClientRect();
   sx -= origin.left; sy -= origin.top;                          // pointer coordinates stay correct when the wider page is scrolled
   k = clamp(k, Math.max(MIN_ZOOM, view.fit * 0.8), Math.min(MAX_ZOOM, view.fit * 1.8));   // only a little out, a fair bit in, from the natural fit
@@ -289,11 +293,27 @@ export function zoomTo(k, sx, sy) {
   applyView();
 }
 export const canPan = () => W * view.k > pageW() + 1 || H * view.k > pageH() - hudH() + 1;
-export function panBy(dx, dy) { view.panX += dx; view.panY += dy; applyView(); }
+export function panBy(dx, dy) { cameraMove = null; view.panX += dx; view.panY += dy; applyView(); }
 export function centerOn(point) {
-  view.panX = (W / 2 - point.x) * view.k;
-  view.panY = (H / 2 - point.y) * view.k;
+  const maxX = Math.max(0, (W * view.k - pageW()) / 2), maxY = Math.max(0, (H * view.k - pageH() + hudH()) / 2);
+  const x = clamp((W / 2 - point.x) * view.k, -maxX, maxX);
+  const y = clamp((H / 2 - point.y) * view.k, -maxY, maxY);
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    cameraMove = null;
+    view.panX = x; view.panY = y;
+    applyView();
+    return;
+  }
+  cameraMove = { start: performance.now(), fromX: view.panX, fromY: view.panY, x, y };
+}
+export function updateCamera(now) {
+  if (!cameraMove) return;
+  const progress = clamp((now - cameraMove.start) / CAMERA_FOCUS_MS, 0, 1);
+  const eased = 1 - (1 - progress) ** 3;
+  view.panX = cameraMove.fromX + (cameraMove.x - cameraMove.fromX) * eased;
+  view.panY = cameraMove.fromY + (cameraMove.y - cameraMove.fromY) * eased;
   applyView();
+  if (progress === 1) cameraMove = null;
 }
 function applyView() {
   const width = pageW(), height = pageH() - hudH();
@@ -309,6 +329,7 @@ function applyView() {
 
 // A fresh level in the same page (no reload, so full screen survives): clear the end screen, reset the HUD
 export function resetUiForLevel() {
+  cameraMove = null;
   clearTimeout(endTimer);
   waveBtnKey = "";
   $("overlay").style.display = "none";
