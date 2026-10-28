@@ -1,6 +1,14 @@
 // A small set of clean line icons (inline SVG, stroke follows the text colour). Used instead of emoji
 // in the HUD, hero cards and build menus so everything looks consistent on every device.
 const P = {
+  radial: '<circle cx="12" cy="12" r="2.5"/><circle cx="7.5" cy="4.2" r="1.8"/><circle cx="16.5" cy="4.2" r="1.8"/><circle cx="21" cy="12" r="1.8"/><circle cx="16.5" cy="19.8" r="1.8"/><circle cx="7.5" cy="19.8" r="1.8"/><circle cx="3" cy="12" r="1.8"/>',
+  panel: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M14 4v16M17 8h1M17 12h1"/>',
+  floating: '<path d="M7 4H3v16h18v-4"/><rect x="10" y="3" width="12" height="10" rx="2"/><path d="M13 6h6M13 9h3"/>',
+  check: '<path d="M5 12l4 4L19 6"/>',
+  armorLight: '<path d="M20 3C10 3 5 9 4 20c10-1 16-7 16-17z"/><path d="M4 20L15 8M8 15l-1-5M11 12l5 1"/>',
+  armorPlated: '<path d="M12 3l8 3v6c0 5-4 8-8 9-4-1-8-4-8-9V6z"/><path d="M5 9h14M5 13h14M8 17h8"/>',
+  armorFortified: '<path d="M3 21V4h4v4h3V4h4v4h3V4h4v17z"/><path d="M9 21v-6a3 3 0 0 1 6 0v6"/>',
+  armorWarded: '<path d="M12 3l8 3v6c0 5-4 8-8 9-4-1-8-4-8-9V6z"/><path d="M12 7l1.5 3.5L17 12l-3.5 1.5L12 17l-1.5-3.5L7 12l3.5-1.5z"/>',
   coins:     '<ellipse cx="12" cy="7" rx="8" ry="3"/><path d="M4 7v5c0 1.7 3.6 3 8 3s8-1.3 8-3V7"/><path d="M4 12v5c0 1.7 3.6 3 8 3s8-1.3 8-3v-5"/>',
   heart:     '<path d="M12 20s-7-4.4-9-9a5 5 0 0 1 9-3 5 5 0 0 1 9 3c-2 4.6-9 9-9 9z"/>',
   volume:    '<path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16 9a4 4 0 0 1 0 6"/><path d="M18.5 6.5a8 8 0 0 1 0 11"/>',

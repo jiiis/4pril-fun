@@ -53,6 +53,8 @@ export function initTouch() {
   // Scrolling pans too: two-finger swipes on a trackpad or Magic Mouse glide the view in any direction
   window.addEventListener("wheel", (ev) => {
     if (!ev.ctrlKey && ev.target.closest?.("#menu")) return;       // long upgrade menus scroll instead of panning the map
+    const picker = ev.target.closest?.("#heroPick");
+    if (!ev.ctrlKey && !ev.deltaX && picker && picker.scrollHeight > picker.clientHeight) return;
     const k = ev.deltaMode === 1 ? 16 : 1;
     if (hasPageOverflow() && !ev.ctrlKey) {
       const picker = ev.target.closest?.("#heroPick");
