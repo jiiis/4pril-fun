@@ -4,6 +4,7 @@ import { map } from "./map.js";
 import { addFloater } from "./combat.js";
 import { setWaveButton, endGame } from "./ui.js";
 import { sfx } from "./audio.js";
+import { t } from "./i18n.js";
 
 // Between waves there is a breather: once every monster of a wave has entered the road, a countdown (shown on the
 // round button) runs down to the next wave. If the wave has been dealt with quickly the player can press the
@@ -20,7 +21,7 @@ export function startWave() {
     const left = Math.ceil(state.countdown), cleared = !state.enemies.some((e) => !e.dead);
     const bonus = left + (cleared ? Math.ceil(left * 0.5) : 0);
     state.gold += bonus;
-    addFloater(480, 60, cleared ? `+${bonus} gold: wave cleared early!` : `+${bonus} gold early bonus!`, "#ffd54f", 18);
+    addFloater(480, 60, t(cleared ? "+{gold} gold: wave cleared early!" : "+{gold} gold early bonus!", { gold: bonus }), "#ffd54f", 18);
     sfx("coin", 0.15);
   }
   beginWave();

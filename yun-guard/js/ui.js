@@ -10,6 +10,7 @@ import { ABILITIES } from "./config.js";
 import { icon, applyIcons } from "./icons.js";
 import { clamp } from "./util.js";
 import { sfx } from "./audio.js";
+import { t, language, translateMarkup } from "./i18n.js";
 
 const $ = (id) => document.getElementById(id);
 const MENU_STYLE_KEY = "yunguard.menuStyle";
@@ -58,14 +59,16 @@ function refreshMenu() {
 // The big round button: ▶ before the first wave, ⏩ with a countdown badge between waves (press early for
 // bonus gold), crossed swords while a wave is on, an hourglass when the game is over.
 let waveBtnKey = "";
+let waveMode = "start", waveSeconds;
 export function setWaveButton(mode, seconds) {
-  const key = `${mode}|${seconds === undefined ? "" : Math.ceil(Math.max(seconds, 0))}|${state.paused}`;
+  waveMode = mode; waveSeconds = seconds;
+  const key = `${language}|${mode}|${seconds === undefined ? "" : Math.ceil(Math.max(seconds, 0))}|${state.paused}`;
   if (key === waveBtnKey) return;                               // called every frame: only touch the DOM on a change
   waveBtnKey = key;
   const b = $("next"), face = b.querySelector(".face"), badge = $("nextBadge");
   b.classList.toggle("ready", mode === "ready" || mode === "start");
   b.disabled = mode === "busy" || mode === "over" || state.paused;
-  b.title = mode === "start" ? "Start the first wave (N)" : mode === "ready" ? "Call the next wave now for bonus gold (N)" : mode === "busy" ? "Wave in progress" : "Game over";
+  b.title = t(mode === "start" ? "Start the first wave (N)" : mode === "ready" ? "Call the next wave now for bonus gold (N)" : mode === "busy" ? "Wave in progress" : "Game over");
   face.innerHTML = icon(mode === "start" ? "swords" : mode === "ready" ? "forward" : mode === "busy" ? "hourglass" : "x");
   const showCount = mode === "ready" && seconds !== undefined && seconds <= 10;              // the number only appears for the last 10 seconds
   badge.classList.toggle("on", showCount);
@@ -80,10 +83,10 @@ export function endGame(won) {
   setWaveButton("over");
   const L = state.level, last = L >= MAX_LEVEL;
   const carry = won && !last ? saveCarry(L + 1, state.gold, state.lives) : null;   // 75% of the gold left + 10 per villager, capped, travels on
-  $("overlayTitle").textContent = won ? (last ? "Kingdom saved!" : `Level ${L} complete!`) : "Game Over";
+  $("overlayTitle").textContent = won ? (last ? t("Kingdom saved!") : t("Level {level} complete!", { level: L })) : t("Game Over");
   $("overlayText").textContent = won
-    ? (last ? `You held every one of the ${MAX_LEVEL} levels. Legendary!` : `All ${state.totalWaves} waves beaten. ${carry.gold} gold goes with you to level ${L + 1}: ${carry.fromGold} from your purse and ${carry.fromLives} for the ${state.lives} villagers you kept safe${carry.capped ? " (capped at 600)" : ""}.`)
-    : `The monsters broke through on wave ${state.wave} of level ${L}. Try a different tower mix!`;
+    ? (last ? t("You held every one of the {levels} levels. Legendary!", { levels: MAX_LEVEL }) : t("All {waves} waves beaten. {gold} gold goes with you to level {level}: {purse} from your purse and {bonus} for the {lives} villagers you kept safe{cap}.", { waves: state.totalWaves, gold: carry.gold, level: L + 1, purse: carry.fromGold, bonus: carry.fromLives, lives: state.lives, cap: carry.capped ? t(" (capped at 600)") : "" }))
+    : t("The monsters broke through on wave {wave} of level {level}. Try a different tower mix!", { wave: state.wave, level: L });
   $("overlay").style.display = "flex";
   sfx(won ? "victory" : "gameOver");
   // Won: the next level is unlocked and starts by itself in a few seconds (or at a click). Lost: try this level again.
@@ -93,14 +96,14 @@ export function endGame(won) {
     const hero = state.hero ? state.hero.kind : "none";
     let left = 8;
     const go = () => startLevel({ level: L + 1, hero });               // straight in, same legend
-    const tick = () => { btn.textContent = `Next level  ·  ${left}s`; if (left-- <= 0) go(); else endTimer = setTimeout(tick, 1000); };
+    const tick = () => { btn.textContent = t("Next level  ·  {seconds}s", { seconds: left }); if (left-- <= 0) go(); else endTimer = setTimeout(tick, 1000); };
     tick();
     btn.onclick = go;
     alt.style.display = "";
     alt.onclick = () => { clearTimeout(endTimer); startLevel({ level: L + 1, hero: "pick" }); };   // pick a legend first
   } else {
     alt.style.display = "none";
-    btn.textContent = won ? "Play again from level 1" : "Try again";
+    btn.textContent = t(won ? "Play again from level 1" : "Try again");
     btn.onclick = () => startLevel(won ? { level: 1, hero: "pick" } : { level: L, seed: map.seed, hero: state.hero ? state.hero.kind : "none" });
   }
 }
@@ -110,10 +113,10 @@ let endTimer = null;
 function showInspector(html, label, preserveScroll = false) {
   const menu = $("menu"), scroll = preserveScroll ? menu.querySelector(".inspector-content")?.scrollTop || 0 : 0;
   const outerScroll = preserveScroll ? menu.scrollTop : 0;
-  menu.innerHTML = html;
+  menu.innerHTML = translateMarkup(html);
   menu.classList.remove("radial");
   menu.setAttribute("role", "region");
-  menu.setAttribute("aria-label", label);
+  menu.setAttribute("aria-label", t(label));
   menu.style.display = "flex";
   menu.querySelector(".inspector-content").scrollTop = scroll;
   menu.scrollTop = outerScroll;
@@ -129,11 +132,11 @@ export function openMenu(spotIndex) {
   const tab = tower && sameSpot ? $("menu").dataset.tab || undefined : undefined;
   if (menuStyle === "radial") {
     const menu = $("menu");
-    menu.innerHTML = radialMenu(tower, radialPage, radialPreview);
+    menu.innerHTML = translateMarkup(radialMenu(tower, radialPage, radialPreview));
     menu.classList.remove("floating");
     menu.classList.add("radial");
     menu.setAttribute("role", "region");
-    menu.setAttribute("aria-label", tower ? `${tower.def.name} actions` : "Build actions");
+    menu.setAttribute("aria-label", tower ? t("{name} actions", { name: tower.def.name }) : t("Build actions"));
     menu.style.display = "block";
     menu.scrollTop = 0;
     placeMenu();
@@ -145,7 +148,7 @@ export function openMenu(spotIndex) {
 // Monster defenses remain a snapshot; the inspector does not update the DOM every frame.
 export function openEnemyInfo(enemy) {
   closeMenu();
-  state.inspectedEnemy = { x: enemy.x, y: enemy.y, def: enemy.def };
+  state.inspectedEnemy = { x: enemy.x, y: enemy.y, def: enemy.def, type: enemy.type };
   showInspector(enemyInspector(enemy), "Monster inspector");
 }
 
@@ -215,7 +218,7 @@ function handleMenuClick(ev) {
     if (view.mobile && state.preview !== btn.dataset.type) {        // phones have no hover: the first tap shows the ghost, the second builds
       state.preview = btn.dataset.type;
       for (const t of $("menu").querySelectorAll(".tile")) t.classList.toggle("armed", t === btn);
-      $("menu").querySelector(".hint").textContent = $("menu").classList.contains("radial") ? "Tap again" : "Tap again to build";
+      $("menu").querySelector(".hint").textContent = t($("menu").classList.contains("radial") ? "Tap again" : "Tap again to build");
       return;
     }
     if (state.gold >= def.cost) {
@@ -346,6 +349,13 @@ export function resetUiForLevel() {
 const startLevel = (detail) => window.dispatchEvent(new CustomEvent("startLevel", { detail }));   // handled in main.js
 
 export function initUi() {
+  window.addEventListener("languagechange", () => {
+    const disabled = $("next").disabled;
+    setWaveButton(waveMode, waveSeconds);
+    $("next").disabled = disabled;
+    if (state.selected !== null) openMenu(state.selected);
+    else if (state.inspectedEnemy) showInspector(enemyInspector(state.inspectedEnemy), "Monster inspector");
+  });
   $("totalWaves").textContent = state.totalWaves;
   $("lvl").textContent = state.level;
   applyIcons();

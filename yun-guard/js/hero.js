@@ -5,6 +5,7 @@ import { hurt, addFloater, addBurst, addSmoke } from "./combat.js";
 import { slayCritter } from "./critters.js";
 import { dist, clamp, closestPointOnPath } from "./util.js";
 import { sfx } from "./audio.js";
+import { t } from "./i18n.js";
 
 const ACCEL = 9;          // how quickly heroes get up to speed (higher = snappier)
 const TURN = 10;          // how quickly they turn to face a new direction
@@ -21,13 +22,13 @@ function makeHero(def, kind, spawn, dir) {
     phase: 0, cd: 0, swing: 0, respawn: 0, moving: false,
     bowCd: 0, shoot: 0, aim: null,      // ranged attack cooldown, animation, and who they are aiming at
     rootCd: 1.5, cast: 0,               // Willow's vines
-    chargeCd: 2, charge: null,          // Sir Adrien's lance charge
+    chargeCd: 2, charge: null,          // Adrien's lance charge
     hunt: null,                         // an animal they have been told to chase
     level: 1, xp: 0, xpPending: 0, levelFlash: 0,
   };
 }
 
-// One hero per game: "april", "avril", "ember" or "willow". Each brings her own companion.
+// One legend per game, chosen from HERO_KINDS. Each brings a companion.
 export function initHero(kind = "april") {
   const def = HERO_KINDS[kind] || HERO_KINDS.april;
   // She starts on the road just inside the first gate, facing the way the monsters come
@@ -90,7 +91,7 @@ function gainXp(h, dt) {
     h.maxHp = heroMaxHp(h);
     h.hp = h.maxHp;                                          // levelling up heals fully
     h.levelFlash = 1.2;
-    addFloater(h.x, h.y - 40, `${h.def.name} reached level ${h.level}!`, "#80deea", 16);
+    addFloater(h.x, h.y - 40, t("{name} reached level {level}!", { name: h.def.name, level: h.level }), "#80deea", 16);
     addBurst(h.x, h.y - 5, 30, "rgba(128,222,234,0.9)");
     sfx("upgrade");
   }
@@ -159,7 +160,7 @@ function updateOne(h, dt) {
     }
     if (h.target) { goal = h.target; stopAt = 18; }
     else if (def.ranged) rangedAttack(h);                    // nothing in melee reach: shoot
-    if (def.charge && h.target && h.chargeCd <= 0) {         // Sir Adrien: a monster in reach but not at the lance's point: charge!
+    if (def.charge && h.target && h.chargeCd <= 0) {         // Adrien: a monster in reach but not at the lance's point: charge!
       const d = dist(h, h.target);
       if (d >= def.charge.min && d <= def.charge.range) { startCharge(h, h.target); return; }
     }
@@ -209,7 +210,7 @@ function updateOne(h, dt) {
       h.target.atkCd = 1;
       if (h.hp <= 0) {
         h.hp = 0; h.respawn = def.respawn; h.target = null; h.selected = false;
-        addFloater(h.x, h.y - 30, `${def.name} has fallen!`, "#ef5350", 16);
+        addFloater(h.x, h.y - 30, t("{name} has fallen!", { name: def.name }), "#ef5350", 16);
         sfx("heroDown");
       }
     }
@@ -218,7 +219,7 @@ function updateOne(h, dt) {
   }
 }
 
-// ---------- Sir Adrien's lance charge ----------
+// ---------- Adrien's lance charge ----------
 // He lowers the lance and sprints in a straight line a little past his target. Every monster within the
 // lance's width takes a heavy hit once and is left reeling (held in place) for a moment.
 function startCharge(h, target) {
@@ -295,7 +296,7 @@ function rootNearby(h, dt) {
   sfx("magic", 0.1);
 }
 
-// Princess Avril's gift: friends near her slowly recover
+// Avril's gift: friends near her slowly recover
 function healNearby(h, dt) {
   const amount = h.def.healPerSecond * dt, r = h.def.healRange;
   const friends = [...state.heroes.filter((o) => o !== h), state.dog, ...state.towers.flatMap((t) => t.soldiers)];
@@ -358,7 +359,7 @@ function updatePet(dt) {
     if (d.target.atkCd <= 0) {
       d.hp -= d.target.def.attack * (1 - P.armor);
       d.target.atkCd = 1;
-      if (d.hp <= 0) { d.hp = 0; d.respawn = P.respawn; d.target = null; addFloater(d.x, d.y - 20, `${P.name} ran off to recover`, "#ffab91", 13); }
+      if (d.hp <= 0) { d.hp = 0; d.respawn = P.respawn; d.target = null; addFloater(d.x, d.y - 20, t("{name} ran off to recover", { name: P.name }), "#ffab91", 13); }
     }
   } else if (!d.target && d.hp < d.maxHp) {
     d.hp = Math.min(d.maxHp, d.hp + P.regen * dt);

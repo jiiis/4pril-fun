@@ -66,8 +66,9 @@ input, textarea { -webkit-user-select: text; user-select: text; }   /* pinned to
    buttons on the right. No bar, just readable text with a shadow. */
 #hud { position: fixed; inset: 0; z-index: 4; pointer-events: none; font-size: 18px; }
 #hud > * { position: absolute; pointer-events: auto; display: flex; align-items: center; }
-.hud-left { top: 14px; left: 16px; gap: 18px; }          /* stats, top-left */
-.hud-topright { top: 16px; right: 16px; }                /* map number, top-right */
+.hud-left { top: 6px; left: 18px; gap: 18px; min-height: 36px; }        /* stats, top-left */
+.hud-topright { top: 6px; right: 18px; min-height: 36px; }              /* language on home, map number in-game */
+body.home .hud-topright .seed, body:not(.home) .languagePicker { display: none; }
 .hud-right { bottom: 14px; right: 16px; gap: 12px; }     /* buttons, bottom-right */
 .hud-logo { bottom: 14px; left: 16px; gap: 10px; opacity: 0.9; align-items: center !important; }   /* logo, bottom-left; the wordmark and game title are centred on it */
 .hud-logo .words { position: relative; display: flex; }                 /* holds just the wordmark, so the wordmark itself is centred on the logo */
@@ -470,6 +471,11 @@ canvas { display: block; }
 #heroPick .menuStyleOptions button[aria-pressed="true"] { background: rgba(245, 181, 63, 0.13); color: #ead5a6; }
 #heroPick .menuStyleOptions button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 #heroPick .menuStyleOptions .ico { width: 18px; height: 18px; }
+.languagePicker { display: flex; align-items: center; gap: 3px; color: #858f95; font-size: 12px; }
+.languagePicker button { min-width: 30px; min-height: 36px; padding: 6px; border-radius: 6px; background: transparent; color: #9aa7ad; font-size: 12px; font-weight: 500; letter-spacing: 0; text-transform: none; }
+.languagePicker button[aria-pressed="true"] { color: #ead5a6; }
+.languagePicker button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+:lang(zh-CN) #heroPick h1 { font-family: "PingFang SC", "Microsoft YaHei", sans-serif; letter-spacing: 1px; }
 @media (max-height: 540px) { #heroPick { padding-bottom: 108px; } }
 #heroPick .card {
   --tint: var(--accent);
@@ -611,7 +617,10 @@ canvas { display: block; }
   #heroPick .levelPick { margin-bottom: 16px; }
   #heroPick .ghost { margin-top: 12px; }
 }
-@media (max-width: 600px) { .hud-logo .words { display: none; } }   /* no room for the wordmark beside the buttons */
+@media (max-width: 600px) {
+  .hud-logo .words { display: none; }   /* no room for the wordmark beside the buttons */
+  .hud-left { font-size: 14px; gap: 12px; }
+}
 #rotate {                                                      /* portrait phones: a soft nudge at the top */
   position: fixed; top: 60px; left: 50%; transform: translateX(-50%);
   display: none; align-items: center; gap: 8px;
@@ -692,7 +701,8 @@ canvas { display: block; }
 #legendBadge .ico { width: 24px; height: 24px; display: block; }
 
 @media (max-width: 419px) {
-  #hud .hud-topright, #hud .hud-logo { display: none; }
+  #hud .hud-logo { display: none; }
+  .hud-left { font-size: 12px; gap: 6px; }
 }
 
 /* Keep a usable UI below 360px: scroll the page horizontally instead of crushing its controls.

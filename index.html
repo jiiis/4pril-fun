@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-US">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
@@ -17,7 +17,7 @@
   <meta name="apple-mobile-web-app-title" content="4pril.fun" />
   <meta name="theme-color" content="#0f1115" />
 </head>
-<body>
+<body class="home">
   <div id="wrap">
 
     <canvas id="c" width="1440" height="840"></canvas>
@@ -27,106 +27,112 @@
 
     <header id="hud">
       <div class="hud-left">
-        <div class="stat level"><span class="icon" data-icon="flag"></span><b>Lv <span id="lvl">1</span></b></div>
+        <div class="stat level"><span class="icon" data-icon="flag"></span><b><span data-i18n="Lv">Lv</span> <span id="lvl">1</span></b></div>
         <div class="stat gold"><span class="icon" data-icon="coins"></span><b id="gold">0</b></div>
         <div class="stat lives"><span class="icon" data-icon="heart"></span><b id="lives">0</b></div>
         <div class="stat wave"><span class="icon" data-icon="swords"></span><b id="wave">0</b><span class="dim">/<span id="totalWaves">0</span></span></div>
       </div>
       <div class="hud-topright">
-        <a class="stat seed" id="seedLink" href="#" title="Click to put this map in the address bar and copy the link"><span class="icon" data-icon="map"></span><span class="dim">#<span id="seed">0</span></span></a>
+        <div class="languagePicker" role="group" aria-label="Language" data-i18n-aria-label="Language">
+          <button type="button" data-language="en-US" lang="en-US" aria-label="English (US)" data-i18n-aria-label="English (US)" aria-pressed="true">EN</button>
+          <span aria-hidden="true">/</span>
+          <button type="button" data-language="zh-CN" lang="zh-CN" aria-label="Simplified Chinese" data-i18n-aria-label="Simplified Chinese" aria-pressed="false">中</button>
+        </div>
+        <a class="stat seed" id="seedLink" href="#" title="Click to put this map in the address bar and copy the link" data-i18n-title="Click to put this map in the address bar and copy the link"><span class="icon" data-icon="map"></span><span class="dim">#<span id="seed">0</span></span></a>
       </div>
-      <div class="hud-logo"><img src="yun-guard/icon-192.png" alt="Yun Guard" /><span class="words"><span class="brand">4pril<em>.fun</em></span><span class="title">Yun Guard</span></span></div>
+      <div class="hud-logo"><img src="yun-guard/icon-192.png" alt="Yun Guard"/><span class="words"><span class="brand">4pril<em>.fun</em></span><span class="title">Yun Guard</span></span></div>
       <div class="hud-right">
-        <button id="legendBadge" type="button" title="Find your legend" aria-label="Find your legend" aria-pressed="false"></button>
-        <button id="mute" class="round" title="Sound on/off (M)" data-icon="volume"></button>
-        <button id="restart-level" class="round" title="New map, same level (R)" data-icon="restart"></button>
-        <button id="fullscreen" class="round" title="Full screen (F)" data-icon="expand"></button>
-        <button id="pause" class="round" title="Pause (P)" data-icon="pause"></button>
-        <button id="next" class="round big" title="Next wave (N)"><span class="face" data-icon="play"></span><span class="badge" id="nextBadge"></span></button>
+        <button id="legendBadge" type="button" title="Find your legend" aria-label="Find your legend" aria-pressed="false" data-i18n-title="Find your legend" data-i18n-aria-label="Find your legend"></button>
+        <button id="mute" class="round" title="Sound on/off (M)" data-icon="volume" data-i18n-title="Sound on/off (M)"></button>
+        <button id="restart-level" class="round" title="New map, same level (R)" data-icon="restart" data-i18n-title="New map, same level (R)"></button>
+        <button id="fullscreen" class="round" title="Full screen (F)" data-icon="expand" data-i18n-title="Full screen (F)"></button>
+        <button id="pause" class="round" title="Pause (P)" data-icon="pause" data-i18n-title="Pause (P)"></button>
+        <button id="next" class="round big" title="Next wave (N)" data-i18n-title="Next wave (N)"><span class="face" data-icon="play"></span><span class="badge" id="nextBadge"></span></button>
       </div>
     </header>
 
-    <div id="paused"><div class="resumeChoice"><span data-icon="play" title="Resume"></span><small class="overlay-button-label">RESUME</small></div><small>paused · tap or press P to resume</small></div>
+    <div id="paused"><div class="resumeChoice"><span data-icon="play" title="Resume" data-i18n-title="Resume"></span><small class="overlay-button-label"><span data-i18n="RESUME">RESUME</span></small></div><small><span data-i18n="paused · tap or press P to resume">paused · tap or press P to resume</span></small></div>
 
     <div id="confirm">
       <div class="actions">
-        <button id="confirmSame" class="choice"><span class="big" data-icon="restart"></span><small class="overlay-button-label">same map</small></button>
-        <button id="confirmNew" class="choice alt"><span class="big" data-icon="map"></span><small class="overlay-button-label">new map</small></button>
+        <button id="confirmSame" class="choice"><span class="big" data-icon="restart"></span><small class="overlay-button-label"><span data-i18n="same map">same map</span></small></button>
+        <button id="confirmNew" class="choice alt"><span class="big" data-icon="map"></span><small class="overlay-button-label"><span data-i18n="new map">new map</span></small></button>
       </div>
-      <small class="cap">restart level <span id="confirmLevel">1</span> · tap outside or press Esc to cancel</small>
+      <small class="cap"><span data-i18n="restart level">restart level</span> <span id="confirmLevel">1</span> <span data-i18n="· tap outside or press Esc to cancel">· tap outside or press Esc to cancel</span></small>
     </div>
 
     <div id="overlay">
       <h1 id="overlayTitle"></h1>
       <p id="overlayText"></p>
       <div class="actions">
-        <button id="restart">Play again</button>
-        <button id="changeLegend" class="ghost" style="display:none">Change legend</button>
+        <button id="restart"><span data-i18n="Play again">Play again</span></button>
+        <button id="changeLegend" class="ghost" style="display:none"><span data-i18n="Change legend">Change legend</span></button>
       </div>
     </div>
 
-    <div id="rotate"><span data-icon="restart"></span>Turn your phone sideways for the best view</div>
+    <div id="rotate"><span data-icon="restart"></span><span data-i18n="Turn your phone sideways for the best view">Turn your phone sideways for the best view</span></div>
 
     <div id="heroPick">
       <div class="levelPick">
-        <button id="lvPrev" title="Previous level" data-icon="chevronLeft"></button>
-        <span class="levelField"><span id="lvLabel">Level</span> <input id="lvInput" aria-labelledby="lvLabel" type="number" min="1" max="100" value="1" /></span>
-        <button id="lvNext" title="Next level" data-icon="chevronRight"></button>
-        <button id="resetProgress" class="ghost reset" title="Forget the saved level and carried gold, and start from level 1"><span data-icon="eraser"></span><span class="lbl">Reset progress</span></button>
+        <button id="lvPrev" title="Previous level" data-icon="chevronLeft" data-i18n-title="Previous level"></button>
+        <span class="levelField"><span id="lvLabel"><span data-i18n="Level">Level</span></span> <input id="lvInput" aria-labelledby="lvLabel" type="number" min="1" max="100" value="1" /></span>
+        <button id="lvNext" title="Next level" data-icon="chevronRight" data-i18n-title="Next level"></button>
+        <button id="resetProgress" class="ghost reset" title="Forget the saved level and carried gold, and start from level 1" data-i18n-title="Forget the saved level and carried gold, and start from level 1"><span data-icon="eraser"></span><span class="lbl"><span data-i18n="Reset progress">Reset progress</span></span></button>
       </div>
-      <h1>Choose your legend</h1>
+      <h1><span data-i18n="Choose your legend">Choose your legend</span></h1>
       <div class="cards">
         <button class="card" data-hero="april">
           <kbd>1</kbd>
           <span class="portrait" data-icon="sword"></span>
-          <strong>Lady April</strong>
-          <em>Knight</em>
-          <small>Sword and shield, tough as nails. Her dog Max fights at her side.</small>
+          <strong><span data-i18n="April">April</span></strong>
+          <em><span data-i18n="Knight">Knight</span></em>
+          <small><span data-i18n="Sword and shield, tough as nails. Her dog Max fights at her side.">Sword and shield, tough as nails. Her dog Max fights at her side.</span></small>
         </button>
         <button class="card" data-hero="avril">
           <kbd>2</kbd>
           <span class="portrait" data-icon="bow"></span>
-          <strong>Princess Avril</strong>
-          <em>Archer</em>
-          <small>Frost arrows slow monsters, and she heals friends nearby. Her eagle Sky dives from above.</small>
+          <strong><span data-i18n="Avril">Avril</span></strong>
+          <em><span data-i18n="Archer">Archer</span></em>
+          <small><span data-i18n="Frost arrows slow monsters, and she heals friends nearby. Her eagle Sky dives from above.">Frost arrows slow monsters, and she heals friends nearby. Her eagle Sky dives from above.</span></small>
         </button>
         <button class="card" data-hero="adrien">
           <kbd>3</kbd>
           <span class="portrait" data-icon="shieldCheck"></span>
-          <strong>Sir Adrien</strong>
-          <em>Paladin</em>
-          <small>A gallant knight in white and gold. His lance charge runs through every monster in its path and leaves them reeling. His lion Leon fights at his side.</small>
+          <strong><span data-i18n="Adrien">Adrien</span></strong>
+          <em><span data-i18n="Paladin">Paladin</span></em>
+          <small><span data-i18n="A gallant knight in white and gold. His lance charge runs through every monster in its path and leaves them reeling. His lion Leon fights at his side.">A gallant knight in white and gold. His lance charge runs through every monster in its path and leaves them reeling. His lion Leon fights at his side.</span></small>
         </button>
         <button class="card" data-hero="ember">
           <kbd>4</kbd>
           <span class="portrait" data-icon="flame"></span>
-          <strong>Candice</strong>
-          <em>Fire mage</em>
-          <small>Fragile, but her fireballs splash and set monsters ablaze. Her baby dragon Cinder spits fire from the sky.</small>
+          <strong><span data-i18n="Candice">Candice</span></strong>
+          <em><span data-i18n="Fire mage">Fire mage</span></em>
+          <small><span data-i18n="Fragile, but her fireballs splash and set monsters ablaze. Her baby dragon Cinder spits fire from the sky.">Fragile, but her fireballs splash and set monsters ablaze. Her baby dragon Cinder spits fire from the sky.</span></small>
         </button>
         <button class="card" data-hero="willow">
           <kbd>5</kbd>
           <span class="portrait" data-icon="leaf"></span>
-          <strong>Willow</strong>
-          <em>Druid</em>
-          <small>Every few seconds her vines root every monster near her. Her bear Bramble holds the line.</small>
+          <strong><span data-i18n="Willow">Willow</span></strong>
+          <em><span data-i18n="Druid">Druid</span></em>
+          <small><span data-i18n="Every few seconds her vines root every monster near her. Her bear Bramble holds the line.">Every few seconds her vines root every monster near her. Her bear Bramble holds the line.</span></small>
         </button>
         <button class="card" data-hero="meilin">
           <kbd>6</kbd>
           <span class="portrait" data-icon="snowflake"></span>
-          <strong>寒 Hán</strong>
-          <em>Warrior</em>
-          <small>Cool as winter: her sword cleaves through several monsters at once. Her loong Yun 云 sweeps down the road.</small>
+          <strong><span data-i18n="寒 Hán">寒 Hán</span></strong>
+          <em><span data-i18n="Warrior">Warrior</span></em>
+          <small><span data-i18n="Cool as winter: her sword cleaves through several monsters at once. Her loong Yun 云 sweeps down the road.">Cool as winter: her sword cleaves through several monsters at once. Her loong Yun 云 sweeps down the road.</span></small>
         </button>
       </div>
-      <button id="noLegend" class="ghost"><span data-icon="shieldOff"></span>Go without a legend <kbd>W</kbd></button>
-      <div class="menuStylePicker" role="group" aria-label="Tower menu style">
+      <button id="noLegend" class="ghost"><span data-icon="shieldOff"></span><span data-i18n="Go without a legend">Go without a legend</span> <kbd>W</kbd></button>
+      <div class="menuStylePicker" role="group" aria-label="Tower menu style" data-i18n-aria-label="Tower menu style">
         <div class="menuStyleOptions">
-          <button type="button" data-menu-style="inspector" aria-pressed="true" title="Side panel on desktop; bottom sheet on portrait phones"><span data-icon="panel"></span>Inspector</button>
-          <button type="button" data-menu-style="floating" aria-pressed="false" title="A floating panel beside the selected tower"><span data-icon="floating"></span>Floating</button>
-          <button type="button" data-menu-style="radial" aria-pressed="false" title="Quick actions around the tower; open Details for stats and skills"><span data-icon="radial"></span>Radial</button>
+          <button type="button" data-menu-style="inspector" aria-pressed="true" title="Side panel on desktop; bottom sheet on portrait phones" data-i18n-title="Side panel on desktop; bottom sheet on portrait phones"><span data-icon="panel"></span><span data-i18n="Inspector">Inspector</span></button>
+          <button type="button" data-menu-style="floating" aria-pressed="false" title="A floating panel beside the selected tower" data-i18n-title="A floating panel beside the selected tower"><span data-icon="floating"></span><span data-i18n="Floating">Floating</span></button>
+          <button type="button" data-menu-style="radial" aria-pressed="false" title="Quick actions around the tower; open Details for stats and skills" data-i18n-title="Quick actions around the tower; open Details for stats and skills"><span data-icon="radial"></span><span data-i18n="Radial">Radial</span></button>
         </div>
       </div>
+
     </div>
 
   <script type="module" src="yun-guard/js/main.js"></script>

@@ -94,9 +94,9 @@ export const FIRE_ARROW = { burnTime: 3, burnDps: 7 };   // seconds of burning, 
 export const UPGRADE_COST_FACTOR = 0.6;   // upgrade price = tower cost × this × current level
 export const CORPSE_TIME = 7;             // seconds a fallen monster stays on the road
 
-// The hero: click her, then click anywhere to send her there. She fights whatever comes close.
-export const HERO = {
-  name: "Lady April",
+// April: click her, then click anywhere to send her there. She fights whatever comes close.
+export const APRIL = {
+  name: "April",
   hp: 260, damage: 16, rate: 1.3,   // hits per second
   speed: 115, armor: 0.3,
   engage: 70,                       // how far she will chase a monster from where she stands (sword only)
@@ -106,16 +106,16 @@ export const HERO = {
   respawn: 12,                      // seconds to return after falling
 };
 
-// Princess Avril: an archer princess. Light on her feet and weak up close, but she
-// shoots frost arrows that slow monsters and slowly heals friends near her. Key 2 selects her.
+// Avril: an archer. Light on her feet and weak up close, but she
+// shoots frost arrows that slow monsters and slowly heals friends near her.
 export const AVRIL = {
-  name: "Princess Avril",
+  name: "Avril",
   hp: 190, damage: 8, rate: 1.1,
   speed: 110, armor: 0.1,
   engage: 40,
   ranged: { kind: "bow", range: 160, damage: 14, rate: 1.15 },   // she shoots at anything further away than melee reach
   frost: { slow: 0.35, slowPerLevel: 0.03, time: 2.2 },          // hit monsters are slowed; colder with her level
-  healRange: 90, healPerSecond: 3,                   // soothes soldiers, Lady April and Max nearby
+  healRange: 90, healPerSecond: 3,                   // soothes soldiers, April and Max nearby
   regen: 6,
   respawn: 12,
   xpPerLevel: 40, maxLevel: 10, damageGrowth: 0.08, hpGrowth: 0.06,
@@ -125,7 +125,7 @@ export const AVRIL = {
 export const EAGLE = {
   name: "Sky",
   damage: 7, rate: 0.9,             // a dive every so often
-  engage: 110,                      // attacks monsters this close to Princess Avril
+  engage: 110,                      // attacks monsters this close to Avril
   speed: 220,
   kind: "eagle",
 };
@@ -166,10 +166,10 @@ export const MEILIN = {
   xpPerLevel: 40, maxLevel: 10, damageGrowth: 0.08, hpGrowth: 0.06,
 };
 
-// Sir Adrien: a gallant paladin in white and gold. When a monster is near but not yet at his lance's point he
+// Adrien: a gallant paladin in white and gold. When a monster is near but not yet at his lance's point he
 // lowers it and charges, running every monster in his path through and leaving them reeling. His lion Leon fights beside him.
 export const ADRIEN = {
-  name: "Sir Adrien",
+  name: "Adrien",
   hp: 280, damage: 14, rate: 1.1,
   speed: 112, armor: 0.35,
   engage: 75,
@@ -179,9 +179,9 @@ export const ADRIEN = {
   xpPerLevel: 40, maxLevel: 10, damageGrowth: 0.08, hpGrowth: 0.06,
 };
 
-export const HERO_KINDS = { april: HERO, avril: AVRIL, ember: EMBER, willow: WILLOW, meilin: MEILIN, adrien: ADRIEN };
+export const HERO_KINDS = { april: APRIL, avril: AVRIL, ember: EMBER, willow: WILLOW, meilin: MEILIN, adrien: ADRIEN };
 
-// Leon, Sir Adrien's lion. Proud and fierce: slower than the dog but hits harder and takes more.
+// Leon, Adrien's lion. Proud and fierce: slower than the dog but hits harder and takes more.
 export const LION = {
   name: "Leon",
   hp: 210, damage: 13, rate: 1.1,
@@ -228,7 +228,7 @@ export const DOG = {
   hp: 130, damage: 9, rate: 1.6,
   speed: 160, armor: 0.1,
   follow: 26,                       // how far behind her he trots
-  engage: 70,                       // attacks monsters this close to Lady April
+  engage: 70,                       // attacks monsters this close to April
   regen: 6,
   respawn: 8,
   kind: "dog",
@@ -303,4 +303,3 @@ export function waveTimeline(groups) {
   }
   return out;
 }
-

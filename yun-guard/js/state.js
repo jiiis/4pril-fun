@@ -22,9 +22,9 @@ export const state = {
   critters: [],      // wandering animals (see critters.js)
   corpses: [],       // fallen monsters that fade into skeletons
   heroes: [],        // all hero units (see hero.js)
-  hero: null,        // Lady April, the first hero (Max follows her)
-  dog: null,         // Lady April's German Shepherd (see hero.js)
-  eagle: null,       // Princess Avril's eagle (see hero.js)
+  hero: null,        // the chosen legend
+  dog: null,         // ground companion: Max, Bramble or Leon (see hero.js)
+  eagle: null,       // flying companion: Sky, Cinder or Yun (see hero.js)
   preview: null,     // tower type being considered in the build menu (hover, or first tap on a phone)
   previewUpgrade: false,   // hovering Upgrade (or a level-4 ability): show the range the tower would gain
   spawnQueue: [],

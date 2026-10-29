@@ -16,6 +16,7 @@ import { icon } from "./icons.js";
 import { unlockAudio, toggleMute, isMuted, sfx } from "./audio.js";
 import { initWeather } from "./weather.js";
 import { MAX_LEVEL, clampLevel, savedLevel, saveLevel, levelConfig, levelSeed, carryFor, clearProgress, reshuffleMaps, mapOptionsFor } from "./levels.js";
+import { t, initLocalization } from "./i18n.js";
 
 // Which level? ?level=N in the URL, else the last one played on this device. Each level has its own map
 // (add ?seed=1234 to force a particular map instead).
@@ -46,9 +47,9 @@ async function startLevel({ level: L, seed, hero, debounce = false }) {
   resetUiForLevel();
   lvInput.value = level; document.getElementById("lvPrev").disabled = level <= 1; document.getElementById("lvNext").disabled = level >= MAX_LEVEL;
   if (map.paths.length) heroPick.classList.add("again");
-  heroPick.style.display = "flex";
+  setHomeVisible(true);
   heroPick.setAttribute("aria-busy", "true");
-  heroPick.querySelector("h1").innerHTML = `${icon("hourglass")}<span>Generating map</span>`;
+  heroPick.querySelector("h1").innerHTML = `${icon("hourglass")}<span>${t("Generating map")}</span>`;
   for (const button of heroPick.querySelectorAll(".card, #noLegend")) button.disabled = true;
   document.getElementById("next").disabled = true; pauseBtn.disabled = true;
   if (debounce) {
@@ -66,7 +67,7 @@ async function startLevel({ level: L, seed, hero, debounce = false }) {
     console.error("Map generation failed", error);
     mapFailed = true;
     heroPick.setAttribute("aria-busy", "false");
-    heroPick.querySelector("h1").textContent = "Map generation failed. Try another level.";
+    heroPick.querySelector("h1").textContent = t("Map generation failed. Try another level.");
     return;
   }
   if (request !== mapRequest) { generated.background?.close(); generated.scenery?.image.close(); return; } // a newer selection owns the preview now
@@ -80,14 +81,14 @@ async function startLevel({ level: L, seed, hero, debounce = false }) {
   setBackground(generated.background, generated.res, generated.scenery);
   initCritters(); initWeather();
   resetUiForLevel();
-  pauseBtn.innerHTML = icon("pause"); pauseBtn.title = "Pause (P)";
+  pauseBtn.innerHTML = icon("pause"); pauseBtn.title = t("Pause (P)");
   draw();                                                       // paint the new preview before enabling the level's controls
   loadingMap = false;
   heroPick.setAttribute("aria-busy", "false");
-  heroPick.querySelector("h1").textContent = "Choose your legend";
+  heroPick.querySelector("h1").textContent = t("Choose your legend");
   for (const button of heroPick.querySelectorAll(".card, #noLegend")) button.disabled = false;
   if (hero === "pick" || !hero) {                                     // the legend screen again (no entrance animation this time)
-    heroPick.style.display = "flex";
+    setHomeVisible(true);
     showLegendBadge(null);
     document.getElementById("next").disabled = true; document.getElementById("pause").disabled = true;
     showInUrl(null);
@@ -101,11 +102,16 @@ window.addEventListener("hashchange", () => {
   if (want !== map.seed) location.reload();
 });
 
+initLocalization();
 initUi();
 initTouch();
 
 // Pick a hero before the round starts (or pass ?hero=april / ?hero=avril in the URL)
 const heroPick = document.getElementById("heroPick");
+function setHomeVisible(visible) {
+  heroPick.style.display = visible ? "flex" : "none";
+  document.body.classList.toggle("home", visible);
+}
 const preset = new URLSearchParams(location.search).get("hero");
 const LEGEND_ICON = { april: "sword", avril: "bow", adrien: "shieldCheck", ember: "flame", willow: "leaf", meilin: "snowflake" };
 const LEGEND_TINT = { april: "#7986cb", avril: "#f06292", adrien: "#ffd54f", ember: "#ff7043", willow: "#8bc34a", meilin: "#80deea" };
@@ -116,7 +122,7 @@ function showLegendBadge(kind) {
   lastLegendClick = -Infinity;
   if (!kind || !LEGEND_ICON[kind]) { legendBadge.classList.remove("on"); return; }
   legendBadge.innerHTML = icon(LEGEND_ICON[kind]); legendBadge.style.setProperty("--tint", LEGEND_TINT[kind]);
-  legendBadge.title = `${HERO_KINDS[kind].name}: click to select; double-click or double-tap to center`;
+  legendBadge.title = t("{name}: click to select; double-click or double-tap to center", { name: HERO_KINDS[kind].name });
   legendBadge.setAttribute("aria-label", legendBadge.title);
   legendBadge.classList.add("on");
 }
@@ -138,7 +144,7 @@ function chooseHero(kind) {
   if (loadingMap) return;
   initHero(kind);
   showLegendBadge(kind);
-  heroPick.style.display = "none";
+  setHomeVisible(false);
   document.getElementById("next").disabled = false;   // hero chosen: the wave and pause buttons come alive
   document.getElementById("pause").disabled = false;
   sfx("select");
@@ -148,7 +154,7 @@ function startSolo() {
   if (loadingMap) return;
   state.heroes = []; state.hero = null; state.dog = null; state.eagle = null;
   showLegendBadge(null);
-  heroPick.style.display = "none";
+  setHomeVisible(false);
   document.getElementById("next").disabled = false;
   document.getElementById("pause").disabled = false;
   sfx("select");
@@ -158,9 +164,9 @@ document.getElementById("noLegend").addEventListener("click", startSolo);
 const resetBtn = document.getElementById("resetProgress");
 let resetArmed = null;
 const resetLbl = resetBtn.querySelector(".lbl");
-const disarmReset = () => { clearTimeout(resetArmed); resetArmed = null; resetBtn.classList.remove("armed"); resetLbl.textContent = "Reset progress"; };
+const disarmReset = () => { clearTimeout(resetArmed); resetArmed = null; resetBtn.classList.remove("armed"); resetLbl.textContent = t("Reset progress"); };
 resetBtn.addEventListener("click", () => {
-  if (!resetArmed) { resetArmed = setTimeout(disarmReset, 3500); resetBtn.classList.add("armed"); resetLbl.textContent = "Tap again to reset"; return; }
+  if (!resetArmed) { resetArmed = setTimeout(disarmReset, 3500); resetBtn.classList.add("armed"); resetLbl.textContent = t("Tap again to reset"); return; }
   disarmReset();
   clearProgress(); reshuffleMaps();
   startLevel({ level: 1, hero: "pick" });                           // a fresh start on fresh maps
@@ -314,7 +320,7 @@ if (touchDevice && document.documentElement.requestFullscreen) {
 }
 fsBtn.addEventListener("click", toggleFullscreen);
 document.addEventListener("fullscreenchange", () => {
-  fsBtn.innerHTML = icon(fsOn() ? "shrink" : "expand"); fsBtn.title = fsOn() ? "Exit full screen (F)" : "Full screen (F)";
+  fsBtn.innerHTML = icon(fsOn() ? "shrink" : "expand"); fsBtn.title = t(fsOn() ? "Exit full screen (F)" : "Full screen (F)");
   // Keep Escape for closing menus instead of leaving full screen (Chromium only; Safari always exits on Escape)
   if (fsOn()) navigator.keyboard?.lock?.(["Escape"]).catch(() => {}); else navigator.keyboard?.unlock?.();
 });
@@ -325,7 +331,7 @@ const pauseBtn = document.getElementById("pause");
 function setPaused(on) {
   state.paused = on;
   pauseBtn.innerHTML = icon(on ? "play" : "pause");
-  pauseBtn.title = on ? "Resume (P)" : "Pause (P)";
+  pauseBtn.title = t(on ? "Resume (P)" : "Pause (P)");
   document.getElementById("paused").style.display = on ? "flex" : "none";
   const next = document.getElementById("next");
   if (on) { next.dataset.wasDisabled = next.disabled ? "1" : ""; next.disabled = true; }     // no calling waves while paused
@@ -335,6 +341,16 @@ function setPaused(on) {
 pauseBtn.addEventListener("click", () => setPaused(!state.paused));
 document.querySelector("#paused span").addEventListener("click", () => setPaused(false));   // the big play button resumes
 window.addEventListener("keydown", (ev) => { if ((ev.code === "KeyP" || ev.code === "Space") && heroPick.style.display === "none" && !state.over && !pauseBtn.disabled) { ev.preventDefault(); setPaused(!state.paused); } });
+
+window.addEventListener("languagechange", () => {
+  heroPick.querySelector("h1").innerHTML = loadingMap
+    ? `${icon("hourglass")}<span>${t("Generating map")}</span>`
+    : t(mapFailed ? "Map generation failed. Try another level." : "Choose your legend");
+  resetLbl.textContent = t(resetArmed ? "Tap again to reset" : "Reset progress");
+  showLegendBadge(state.hero?.kind);
+  pauseBtn.title = t(state.paused ? "Resume (P)" : "Pause (P)");
+  fsBtn.title = t(fsOn() ? "Exit full screen (F)" : "Full screen (F)");
+});
 
 // Main loop
 let last = performance.now();

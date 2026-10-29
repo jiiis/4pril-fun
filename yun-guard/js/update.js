@@ -12,6 +12,7 @@ import { hurt, addFloater, addBurst, addSmoke, addScorch } from "./combat.js";
 import { towerRange, towerDamage, towerRate, shotOrigin, archerSlots, abilityDef } from "./towers.js";
 import { dist, clamp } from "./util.js";
 import { refreshHud, setWaveButton, endGame } from "./ui.js";
+import { t } from "./i18n.js";
 import { sfx } from "./audio.js";
 
 const SHOT_SPEED = 360;        // arrows and magic bolts
@@ -194,7 +195,7 @@ export function update(dt) {
       hurt(e, f.dps * dt, "magic", false);
       if (!e.burn) e.burn = { time: 0.6, dps: 0 };
     }
-    if (e.frost) {                                           // chilled by one of Princess Avril's arrows
+    if (e.frost) {                                           // chilled by one of Avril's arrows
       e.frost.time -= dt;
       if (e.frost.time <= 0) e.frost = null;
     }
@@ -209,7 +210,7 @@ export function update(dt) {
           state.corpses.splice(state.corpses.indexOf(c), 1);
           spawnEnemyAt("skeleton", e, 0.7, c);
           addBurst(c.x, c.y, 24, "rgba(118,255,3,0.8)");
-          addFloater(c.x, c.y - 24, "Rise!", "#76ff03", 14);
+          addFloater(c.x, c.y - 24, t("Rise!"), "#76ff03", 14);
           sfx("raise", 0.2);
           e.raiseCd = e.def.raise.every;
           e.casting = 0.7;
@@ -263,11 +264,11 @@ export function update(dt) {
       if (e.def.steals) {                                    // a thief slips into the castle and runs off with gold
         const take = Math.min(state.gold, e.def.steals);
         state.gold -= take;
-        addFloater(k.x - 10, k.y - 60 * k.scale, `-${take} gold stolen!`, "#ffd54f", 18);
+        addFloater(k.x - 10, k.y - 60 * k.scale, t("-{gold} gold stolen!", { gold: take }), "#ffd54f", 18);
         sfx("steal", 0.2);
       } else {
         state.lives -= e.def.lives;
-        addFloater(k.x - 10, k.y - 60 * k.scale, `-${e.def.lives} life`, "#ef5350", 18);
+        addFloater(k.x - 10, k.y - 60 * k.scale, t("-{lives} life", { lives: e.def.lives }), "#ef5350", 18);
         sfx("lifeLost", 0.2);
       }
     }

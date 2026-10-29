@@ -2,6 +2,7 @@ import { ctx, rect, circle, ellipse, poly, line, shadow } from "./gfx.js";
 import { state } from "../state.js";
 import { xpToNext } from "../hero.js";
 import { addLight } from "./lights.js";
+import { t } from "../i18n.js";
 
 const ACCENT = { april: "#9fa8da", avril: "#f48fb1", ember: "#ffab91", willow: "#aed581", meilin: "#b2ebf2", adrien: "#ffe082" };
 const RING = { april: "rgba(159,168,218,0.28)", avril: "rgba(244,143,177,0.25)", ember: "rgba(255,171,145,0.25)", willow: "rgba(174,213,129,0.25)", meilin: "rgba(178,235,242,0.28)", adrien: "rgba(255,224,130,0.28)" };
@@ -22,7 +23,7 @@ export function drawHero(h) {
     ctx.globalAlpha = 0.6;
     circle(ctx, h.spawn.x, h.spawn.y, 12, null, "#90caf9", 2);
     ctx.fillStyle = "#e3f2fd"; ctx.font = "bold 12px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-    ctx.fillText(`${Math.ceil(h.respawn)}s`, h.spawn.x, h.spawn.y);
+    ctx.fillText(t("{seconds}s", { seconds: Math.ceil(h.respawn) }), h.spawn.x, h.spawn.y);
     ctx.globalAlpha = 1;
     return;
   }
@@ -48,7 +49,7 @@ export function drawHero(h) {
     ctx.globalAlpha = 1;
   }
 
-  if (h.charge) {                                                             // Sir Adrien's charge: a golden streak and dust behind him
+  if (h.charge) {                                                             // Adrien's charge: a golden streak and dust behind him
     for (const p of h.charge.trail) { ctx.globalAlpha = (1 - p.t / 0.25) * 0.35; circle(ctx, p.x, p.y - 8, 9 * (1 - p.t / 0.25) + 2, "#ffe082"); }
     ctx.globalAlpha = 1;
   }
@@ -93,7 +94,7 @@ export function drawHero(h) {
   ctx.fillText(h.level, x - 6, y + 3.5);
   if (h.selected) {
     ctx.fillStyle = "#fff"; ctx.font = "bold 10px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "bottom";
-    ctx.fillText(`${h.def.name}  Lv ${h.level}`, h.x, y - 2);
+    ctx.fillText(t("{name}  Lv {level}", { name: h.def.name, level: h.level }), h.x, y - 2);
   }
 }
 
@@ -103,7 +104,7 @@ function aimAngle(h) {
   return Math.max(-0.7, Math.min(0.7, Math.atan2(dy, Math.abs(dx))));
 }
 
-// ---------- Lady April: knight in silver armour with sword and shield ----------
+// ---------- April: knight in silver armour with sword and shield ----------
 function drawApril(h, a) {
   const { run, sw, breathe } = a;
   const T = state.time;
@@ -153,7 +154,7 @@ function drawApril(h, a) {
   }
 }
 
-// ---------- Princess Avril: archer princess in a rose gown with a longbow ----------
+// ---------- Avril: archer in a rose gown with a longbow ----------
 function drawAvril(h, a) {
   const { run, sw, breathe } = a;
   const hem = Math.sin(h.phase) * 2 * run;
@@ -432,7 +433,7 @@ function drawMeiLin(h, a) {
   ctx.globalAlpha = 1;
 }
 
-// ---------- Sir Adrien: a gallant paladin in white and gold plate, crimson cape, lance and kite shield ----------
+// ---------- Adrien: a gallant paladin in white and gold plate, crimson cape, lance and kite shield ----------
 function drawAdrien(h, a) {
   const { run, sw, breathe } = a;
   const T = state.time, charging = !!h.charge;
