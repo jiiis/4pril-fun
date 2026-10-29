@@ -62,7 +62,7 @@ export default {
   "Warrior": "战士",
   "Sword and shield, tough as nails. Her dog Max fights at her side.": "剑盾在手，坚韧不屈。爱犬麦克斯与她并肩作战。",
   "Frost arrows slow monsters, and she heals friends nearby. Her eagle Sky dives from above.": "冰霜箭矢减缓敌人，治愈身旁的伙伴。雄鹰苍穹从空中俯冲袭敌。",
-  "A gallant knight in white and gold. His lance charge runs through every monster in its path and leaves them reeling. His lion Leon fights at his side.": "身披白金铠甲的英勇骑士。长枪冲锋贯穿沿途敌人，使其眩晕。雄狮莱昂与他并肩作战。",
+  "A gallant knight in white and gold. His lance charge pierces and stuns enemies, while his lion Leon fights beside him.": "身披白金铠甲的英勇骑士。长枪冲锋贯穿并眩晕敌人，雄狮莱昂与他并肩作战。",
   "Fragile, but her fireballs splash and set monsters ablaze. Her baby dragon Cinder spits fire from the sky.": "身躯脆弱，但火球能造成范围伤害并点燃敌人。幼龙余烬从空中喷吐烈焰。",
   "Every few seconds her vines root every monster near her. Her bear Bramble holds the line.": "定期召唤藤蔓，缠住身旁的敌人。棕熊荆棘守住阵线。",
   "Cool as winter: her sword cleaves through several monsters at once. Her loong Yun 云 sweeps down the road.": "冷若寒冬，长剑一次斩向多个敌人。灵龙云沿道路横扫敌阵。",
