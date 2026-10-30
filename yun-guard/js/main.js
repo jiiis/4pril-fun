@@ -277,13 +277,13 @@ window.addEventListener("keydown", (ev) => {
 document.getElementById("next").addEventListener("click", startWave);
 window.addEventListener("keydown", (ev) => { if (ev.code === "KeyN" && !ev.metaKey && !ev.ctrlKey && heroPick.style.display === "none" && !document.getElementById("next").disabled && !state.paused) startWave(); });   // N: next wave
 
-// Restart: play this same map again from the start, with the same legend (R)
-// Start over: a freshly generated map and the legend choice again
-// Restart: a small in-game dialog asks for the same map (default) or a freshly generated one
+// Restart: home generates a fresh preview; gameplay offers the same map or a new one (R).
 const confirmBox = document.getElementById("confirm");
 const pausedView = document.getElementById("paused");
+const startNewMap = () => startLevel({ level, seed: 1 + Math.floor(Math.random() * 999999), hero: "pick" });
 function restartLevel() {
   if (loadingMap || state.over || confirmBox.style.display === "flex") return;
+  if (heroPick.style.display !== "none") { startNewMap(); return; }
   document.getElementById("confirmLevel").textContent = level;
   confirmBox.style.display = "flex";
   pausedView.style.display = "none";                                  // the restart prompt takes the pause screen's place
@@ -296,11 +296,11 @@ const closeConfirm = () => {
 };
 // Either way the legend screen comes back first
 document.getElementById("confirmSame").addEventListener("click", () => { closeConfirm(); startLevel({ level, seed: map.seed, hero: "pick" }); });
-document.getElementById("confirmNew").addEventListener("click", () => { closeConfirm(); startLevel({ level, seed: 1 + Math.floor(Math.random() * 999999), hero: "pick" }); });
+document.getElementById("confirmNew").addEventListener("click", () => { closeConfirm(); startNewMap(); });
 confirmBox.addEventListener("click", (ev) => { if (ev.target === confirmBox) closeConfirm(); });
 window.addEventListener("keydown", (ev) => { if (ev.key === "Escape" && confirmBox.style.display === "flex") closeConfirm(); });
 document.getElementById("restart-level").addEventListener("click", restartLevel);
-window.addEventListener("keydown", (ev) => { if (ev.code === "KeyR" && !ev.metaKey && !ev.ctrlKey) restartLevel(); });   // R: a fresh map, any time
+window.addEventListener("keydown", (ev) => { if (ev.code === "KeyR" && !ev.metaKey && !ev.ctrlKey) restartLevel(); });   // R follows the restart button's home or gameplay action
 
 // Full screen: the round button, or F (hidden where the browser doesn't allow it, e.g. iPhone)
 const fsBtn = document.getElementById("fullscreen");
