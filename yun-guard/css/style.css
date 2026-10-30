@@ -732,7 +732,7 @@ canvas { display: block; }
 #legendBadge.on:active { transform: translateY(1px); }
 #legendBadge .ico { width: 24px; height: 24px; display: block; }
 
-@media (max-width: 480px) {
+@media (width < 440px) {
   body:not(.home) #hud .hud-logo { display: none; }
 }
 @media (max-width: 419px) {
