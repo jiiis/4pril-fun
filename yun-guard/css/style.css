@@ -73,7 +73,7 @@ input, textarea { -webkit-user-select: text; user-select: text; }   /* pinned to
 .hud-left .stat, .hud-topright .stat { height: 24px; }
 body.home .hud-topright .seed, body:not(.home) .languagePicker { display: none; }
 body:not(.home) #settings-toggle { display: none; }
-body.home #pause, body.home #next { display: none; }
+body.home #legendBadge, body.home #pause, body.home #next { display: none; }
 body.home .hud-left .level, body.home .hud-left .lives,
 body.home .stat.wave #wave, body.home .stat.wave .wave-divider { display: none; }
 body.home .stat.wave .dim { color: var(--text); font-weight: 700; }
