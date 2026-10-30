@@ -441,6 +441,7 @@ canvas { display: block; }
 
 /* ---------- Legend pick (start of each round) ---------- */
 #heroPick {
+  --overlay-blur: 10px;
   position: fixed;
   inset: 0;
   display: flex;
