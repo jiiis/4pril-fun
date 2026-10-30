@@ -38,6 +38,7 @@
           <span aria-hidden="true">/</span>
           <button type="button" data-language="zh-CN" lang="zh-CN" aria-label="Simplified Chinese" data-i18n-aria-label="Simplified Chinese" aria-pressed="false">中</button>
         </div>
+        <button id="settings-toggle" class="settingsIcon" type="button" title="Settings" aria-label="Settings" aria-haspopup="dialog" aria-controls="settings" aria-expanded="false" data-icon="settings" data-i18n-title="Settings" data-i18n-aria-label="Settings"></button>
         <a class="stat seed" id="seedLink" href="#" title="Click to put this map in the address bar and copy the link" data-i18n-title="Click to put this map in the address bar and copy the link"><span class="icon" data-icon="map"></span><span class="dim">#<span id="seed">0</span></span></a>
       </div>
       <div class="hud-logo"><img src="icon-192.png" alt="Yun Guard"/><span class="words"><span class="brand">4pril<em>.fun</em></span><span class="title">Yun Guard</span></span></div>
@@ -125,15 +126,22 @@
         </button>
       </div>
       <button id="noLegend" class="ghost"><span data-icon="shieldOff"></span><span data-i18n="Go without a legend">Go without a legend</span> <kbd>W</kbd></button>
-      <div class="menuStylePicker" role="group" aria-label="Tower menu style" data-i18n-aria-label="Tower menu style">
-        <div class="menuStyleOptions">
-          <button type="button" data-menu-style="inspector" aria-pressed="true" title="Side panel on desktop; bottom sheet on portrait phones" data-i18n-title="Side panel on desktop; bottom sheet on portrait phones"><span data-icon="panel"></span><span data-i18n="Inspector">Inspector</span></button>
-          <button type="button" data-menu-style="floating" aria-pressed="false" title="A floating panel beside the selected tower" data-i18n-title="A floating panel beside the selected tower"><span data-icon="floating"></span><span data-i18n="Floating">Floating</span></button>
-          <button type="button" data-menu-style="radial" aria-pressed="false" title="Quick actions around the tower; open Details for stats and skills" data-i18n-title="Quick actions around the tower; open Details for stats and skills"><span data-icon="radial"></span><span data-i18n="Radial">Radial</span></button>
+    </div>
+
+    <dialog id="settings" aria-labelledby="settingsTitle">
+      <button id="settings-close" class="settingsIcon" type="button" title="Close (Esc)" aria-label="Close (Esc)" data-icon="x" data-i18n-title="Close (Esc)" data-i18n-aria-label="Close (Esc)"></button>
+      <div class="settings-content">
+        <h1 id="settingsTitle" data-i18n="Settings">Settings</h1>
+        <h2 id="towerControlsTitle" data-i18n="Tower menu style">Tower menu style</h2>
+        <div class="menuStylePicker" role="group" aria-labelledby="towerControlsTitle">
+          <div class="menuStyleOptions">
+            <button type="button" data-menu-style="inspector" aria-pressed="true" title="Side panel on desktop; bottom sheet on portrait phones" data-i18n-title="Side panel on desktop; bottom sheet on portrait phones"><span data-icon="panel"></span><span data-i18n="Inspector">Inspector</span></button>
+            <button type="button" data-menu-style="floating" aria-pressed="false" title="A floating panel beside the selected tower" data-i18n-title="A floating panel beside the selected tower"><span data-icon="floating"></span><span data-i18n="Floating">Floating</span></button>
+            <button type="button" data-menu-style="radial" aria-pressed="false" title="Quick actions around the tower; open Details for stats and skills" data-i18n-title="Quick actions around the tower; open Details for stats and skills"><span data-icon="radial"></span><span data-i18n="Radial">Radial</span></button>
+          </div>
         </div>
       </div>
-
-    </div>
+    </dialog>
 
   <script type="module" src="js/main.js"></script>
 </body>

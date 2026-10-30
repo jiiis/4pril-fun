@@ -1,6 +1,7 @@
 // English source text is the en-US catalog; each entry supplies its Simplified Chinese translation.
 export default {
   "Language": "语言",
+  "Settings": "设置",
   "English (US)": "英语（美国）",
   "Simplified Chinese": "简体中文",
   "Lv": "等级",

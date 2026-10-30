@@ -112,6 +112,7 @@ const heroPick = document.getElementById("heroPick");
 function setHomeVisible(visible) {
   heroPick.style.display = visible ? "flex" : "none";
   document.body.classList.toggle("home", visible);
+  if (!visible) document.getElementById("settings").close();
 }
 const preset = new URLSearchParams(location.search).get("hero");
 const LEGEND_ICON = { april: "sword", avril: "bow", adrien: "shieldCheck", ember: "flame", willow: "leaf", meilin: "snowflake" };

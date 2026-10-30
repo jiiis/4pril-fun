@@ -1,4 +1,6 @@
 :root {
+  --ui-min-width: 360px;
+  --home-heading-size: 44px;
   --control-glass-bg: rgba(22, 25, 33, 0.72);
   --control-glass-border: rgba(255, 255, 255, 0.25);
   --control-glass-hover: rgba(255, 255, 255, 0.18);
@@ -14,7 +16,7 @@
   --overlay-action-gap: clamp(64px, 6vw, 88px);
 }
 
-#heroPick, #paused, #overlay, #confirm {
+#heroPick, #paused, #overlay, #confirm, #settings {
   -webkit-backdrop-filter: blur(var(--overlay-blur));
   backdrop-filter: blur(var(--overlay-blur));
 }
@@ -67,9 +69,10 @@ input, textarea { -webkit-user-select: text; user-select: text; }   /* pinned to
 #hud { --control-size: 46px; --primary-control-size: 62px; position: fixed; inset: 0; z-index: 4; pointer-events: none; font-size: 18px; }
 #hud > * { position: absolute; pointer-events: auto; display: flex; align-items: center; }
 .hud-left { top: 6px; left: 18px; gap: 18px; min-height: 36px; }        /* stats, top-left */
-.hud-topright { top: 6px; right: 18px; min-height: 36px; }              /* language on home, map number in-game */
+.hud-topright { top: 6px; right: 18px; gap: calc(1em / 3); min-height: 36px; }              /* language and settings on home, map number in-game */
 .hud-left .stat, .hud-topright .stat { height: 24px; }
 body.home .hud-topright .seed, body:not(.home) .languagePicker { display: none; }
+body:not(.home) #settings-toggle { display: none; }
 body.home #pause, body.home #next { display: none; }
 body.home .hud-left .level, body.home .hud-left .lives,
 body.home .stat.wave #wave, body.home .stat.wave .wave-divider { display: none; }
@@ -452,10 +455,10 @@ canvas { display: block; }
   overflow: auto;
   justify-content: safe center;                                 /* centred when it fits, scrollable from the top when it doesn't */
 }
-#heroPick h1 { --heading-size: 44px; display: flex; align-items: center; justify-content: center; flex: 0 0 auto; height: calc(var(--heading-size) * 1.3); line-height: 1.3; font-family: Cinzel, Outfit, "Avenir Next", Georgia, serif; font-size: var(--heading-size); margin: 0 0 40px; letter-spacing: 2px; font-weight: 500; color: var(--accent); }
+#heroPick h1 { display: flex; align-items: center; justify-content: center; flex: 0 0 auto; height: calc(var(--home-heading-size) * 1.3); line-height: 1.3; font-family: Cinzel, Outfit, "Avenir Next", Georgia, serif; font-size: var(--home-heading-size); margin: 0 0 40px; letter-spacing: 2px; font-weight: 500; color: var(--accent); }
 #heroPick[aria-busy="true"] h1 {
   gap: 0.4em;
-  font-size: clamp(16px, calc(var(--heading-size) * 0.55), 24px);
+  font-size: clamp(16px, calc(var(--home-heading-size) * 0.55), 24px);
   font-weight: 400;
   background: none;
   color: var(--accent);
@@ -473,12 +476,24 @@ canvas { display: block; }
 #heroPick .cards { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; max-width: 100%; }
 #heroPick > * { flex-shrink: 0; }                            /* overflow scrolls instead of compressing the picker sections */
 #heroPick { touch-action: pan-x pan-y; }
-#heroPick .menuStylePicker { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 12px; margin-top: 18px; color: #b2b9bb; font-size: 11px; }
-#heroPick .menuStyleOptions { display: flex; gap: 6px; padding: 6px; border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 12px; background: rgba(13, 19, 23, 0.5); }
-#heroPick .menuStyleOptions button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 42px; padding: 6px 12px; border-radius: 6px; background: transparent; color: #aab5ba; font-size: 14px; font-weight: 500; text-transform: none; letter-spacing: 0; }
-#heroPick .menuStyleOptions button[aria-pressed="true"] { background: rgba(245, 181, 63, 0.13); color: #ead5a6; }
-#heroPick .menuStyleOptions button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-#heroPick .menuStyleOptions .ico { width: 18px; height: 18px; }
+#settings { position: fixed; inset: 0; width: 100%; min-width: var(--ui-min-width); height: 100%; max-width: none; max-height: none; margin: 0; padding: 48px 18px; border: 0; background: rgba(10, 12, 18, 0.82); color: var(--text); }
+#settings[open] { display: flex; align-items: center; justify-content: center; }
+#settings::backdrop { background: transparent; }
+#settings .settings-content { width: 100%; max-width: 480px; text-align: center; }
+#settings h1 { margin: 0 0 36px; color: var(--accent); font-family: Cinzel, Outfit, "Avenir Next", Georgia, serif; font-size: var(--home-heading-size); font-weight: 500; }
+#settings h2 { margin: 0 0 18px; color: var(--muted); font-size: 18px; font-weight: 400; }
+.settingsIcon { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; padding: 6px; background: transparent; color: var(--muted); }
+.settingsIcon .ico { width: 18px; height: 18px; }
+.settingsIcon:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+#settings-toggle { font-size: inherit; }
+#settings-toggle .ico { width: 1em; height: 1em; }
+#settings-close { position: absolute; top: 6px; right: 18px; }
+.menuStylePicker { display: flex; justify-content: center; color: #b2b9bb; }
+.menuStyleOptions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+.menuStyleOptions button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 42px; padding: 6px 12px; border-radius: 0; border-bottom: 2px solid transparent; background: transparent; color: #aab5ba; font-size: 14px; font-weight: 400; text-transform: none; letter-spacing: 0; white-space: nowrap; }
+.menuStyleOptions button[aria-pressed="true"] { border-bottom-color: var(--accent); color: #ead5a6; }
+.menuStyleOptions button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.menuStyleOptions .ico { width: 18px; height: 18px; }
 .languagePicker { display: flex; align-items: center; gap: 0.2em; color: #858f95; font-size: max(11px, calc(1em - 2px)); line-height: 1; }
 .languagePicker > span { transform: translateY(1px); } /* optically center the slash with the letterforms */
 .languagePicker button { display: inline-flex; align-items: center; justify-content: center; min-width: 2em; min-height: 36px; padding: 6px 0.4em; border-radius: 6px; background: transparent; color: #9aa7ad; font-size: inherit; line-height: 1; font-weight: 500; letter-spacing: 0; text-transform: none; }
@@ -595,7 +610,8 @@ canvas { display: block; }
 
 /* Phones: the legend picker shrinks to fit. Short screens (landscape) drop the descriptions and tighten everything. */
 @media (max-width: 1040px) {
-  #heroPick h1 { --heading-size: 32px; margin-bottom: 20px; }
+  :root { --home-heading-size: 32px; }
+  #heroPick h1 { margin-bottom: 20px; }
   #heroPick .card { width: 150px; height: 270px; padding: 18px 12px 14px; gap: 6px; }
   #heroPick .card .portrait { width: 56px; height: 56px; }
   #heroPick .card .portrait .ico { width: 28px; height: 28px; }
@@ -604,8 +620,9 @@ canvas { display: block; }
   #heroPick .ghost { margin-top: 18px; }
 }
 @media (max-height: 540px) {
+  :root { --home-heading-size: 24px; }
   #heroPick { justify-content: safe center; padding-top: 14px; }
-  #heroPick h1 { --heading-size: 24px; margin-bottom: 12px; }
+  #heroPick h1 { margin-bottom: 12px; }
   #heroPick .cards { gap: 10px; }
   #heroPick .card { width: 132px; height: 114px; padding: 12px 10px 10px; gap: 4px; }
   #heroPick .card .portrait { width: 44px; height: 44px; }
@@ -617,8 +634,9 @@ canvas { display: block; }
   #heroPick .ghost { margin-top: 12px; padding: 7px 14px; font-size: 12px; }
 }
 @media (max-width: 600px) {                                   /* phones held upright: two columns, no descriptions, clear of the HUD */
+  :root { --home-heading-size: 23px; }
   #heroPick { padding-top: 112px; padding-bottom: 104px; }   /* clear of the HUD stats and the rotate hint above, the buttons below */
-  #heroPick h1 { --heading-size: 23px; margin-bottom: 12px; letter-spacing: 1px; }
+  #heroPick h1 { margin-bottom: 12px; letter-spacing: 1px; }
   #heroPick .cards { gap: 9px; }
   #heroPick .card { width: 142px; height: 120px; padding: 11px 10px 10px; gap: 5px; }
   #heroPick .card .portrait { width: 46px; height: 46px; }
@@ -665,7 +683,7 @@ canvas { display: block; }
   #heroPick .card .portrait .ico { width: 48px; height: 48px; }
   #heroPick .card strong { font-size: 22px; }
   #heroPick .card small { font-size: 14px; }
-  #heroPick h1 { --heading-size: 56px; }
+  :root { --home-heading-size: 56px; }
   #heroPick .card kbd { top: 14px; right: 14px; padding: 3px 9px; border-radius: 7px; font-size: 15px; }
   #heroPick .ghost kbd { padding: 3px 9px; border-radius: 7px; font-size: 15px; }
 }
@@ -727,6 +745,6 @@ canvas { display: block; }
 @media (max-width: 359px) {
   html { overflow-x: auto; }
   html, body { touch-action: pan-x pan-y; }
-  body { position: relative; inset: auto; min-width: 360px; }
-  #hud, #menu, #heroPick, #paused, #overlay, #confirm, #rotate { position: absolute; }
+  body { position: relative; inset: auto; min-width: var(--ui-min-width); }
+  #hud, #menu, #heroPick, #paused, #overlay, #confirm, #rotate, #settings { position: absolute; }
 }

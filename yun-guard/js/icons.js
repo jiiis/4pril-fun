@@ -1,6 +1,7 @@
 // A small set of clean line icons (inline SVG, stroke follows the text colour). Used instead of emoji
 // in the HUD, hero cards and build menus so everything looks consistent on every device.
 const P = {
+  settings: '<path d="M10 6h11M3 6h1M3 18h11M20 18h1"/><circle cx="7" cy="6" r="3"/><circle cx="17" cy="18" r="3"/>',
   radial: '<circle cx="12" cy="12" r="2.5"/><circle cx="7.5" cy="4.2" r="1.8"/><circle cx="16.5" cy="4.2" r="1.8"/><circle cx="21" cy="12" r="1.8"/><circle cx="16.5" cy="19.8" r="1.8"/><circle cx="7.5" cy="19.8" r="1.8"/><circle cx="3" cy="12" r="1.8"/>',
   panel: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M14 4v16M17 8h1M17 12h1"/>',
   floating: '<path d="M7 4H3v16h18v-4"/><rect x="10" y="3" width="12" height="10" rx="2"/><path d="M13 6h6M13 9h3"/>',

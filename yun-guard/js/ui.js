@@ -17,6 +17,19 @@ const MENU_STYLE_KEY = "yunguard.menuStyle";
 let menuStyle = "inspector";
 let radialPage = "main", radialPreview = null;
 
+function initSettings() {
+  const dialog = $("settings"), toggle = $("settings-toggle");
+  toggle.addEventListener("click", () => {
+    if (!document.body.classList.contains("home") || dialog.open) return;
+    dialog.showModal();
+    toggle.setAttribute("aria-expanded", "true");
+  });
+  $("settings-close").addEventListener("click", () => dialog.close());
+  dialog.addEventListener("click", (ev) => { if (ev.target === dialog) dialog.close(); });
+  dialog.addEventListener("keydown", (ev) => ev.stopPropagation()); // keep game shortcuts behind the modal
+  dialog.addEventListener("close", () => toggle.setAttribute("aria-expanded", "false"));
+}
+
 function initMenuStyle() {
   try {
     const saved = localStorage.getItem(MENU_STYLE_KEY);
@@ -359,6 +372,7 @@ export function initUi() {
   $("totalWaves").textContent = state.totalWaves;
   $("lvl").textContent = state.level;
   applyIcons();
+  initSettings();
   initMenuStyle();
   setWaveButton("start");
   $("menu").addEventListener("click", handleMenuClick);
