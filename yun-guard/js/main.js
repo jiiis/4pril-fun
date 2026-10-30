@@ -202,7 +202,7 @@ function spotAt(p) {
     if (!t) hit = Math.hypot(p.x - s.x, (p.y - s.y) / SPOT_SQUASH) <= SPOT_RADIUS * ds + 5;
     else {
       const lv = visLevel(t);
-      const h = t.def === TOWERS.archer ? archerHeight(lv) + 30 : t.def === TOWERS.mage ? mageHeight(lv) + 44 : t.def === TOWERS.tesla ? teslaHeight(lv) + 26 : t.def === TOWERS.ballista ? ballistaHeight(lv) + 20 : 42;
+      const h = t.def === TOWERS.archer ? archerHeight(lv) + (t.specialization ? 48 : 30) : t.def === TOWERS.mage ? mageHeight(lv) + 44 : t.def === TOWERS.tesla ? teslaHeight(lv) + 26 : t.def === TOWERS.ballista ? ballistaHeight(lv) + 20 : 42;
       hit = Math.abs(p.x - s.x) <= 24 * ds && p.y <= s.y + 14 * ds && p.y >= s.y - h * ds;
     }
     if (hit && s.y > bestY) { best = i; bestY = s.y; }

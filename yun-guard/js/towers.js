@@ -3,11 +3,11 @@ import { closestPointOnPath, clamp } from "./util.js";
 import { map } from "./map.js";
 import { SPECIALIZATIONS } from "./specializations.js";
 
-// Each upgrade adds range, damage and fire rate; the level-4 speciality is a big jump on top
+// Ordinary tiers scale base stats; specializations can define their own attack loop.
 const FINAL = (t) => (t.level >= MAX_LEVEL ? 1 : 0);
-export const towerRange = (t) => t.def.range + 18 * (t.level - 1) + 20 * FINAL(t);
-export const towerDamage = (t) => Math.round(t.def.damage * (1 + 0.6 * (t.level - 1)) * (1 + 0.2 * FINAL(t)));
-export const towerRate = (t) => t.def.rate * (1 + 0.08 * (t.level - 1)) * (1 + 0.15 * FINAL(t));
+export const towerRange = (t) => specializationDef(t)?.range ?? t.def.range + 18 * (t.level - 1) + 20 * FINAL(t);
+export const towerDamage = (t) => specializationDef(t)?.damage ?? Math.round(t.def.damage * (1 + 0.6 * (t.level - 1)) * (1 + 0.2 * FINAL(t)));
+export const towerRate = (t) => specializationDef(t)?.rate ?? t.def.rate * (1 + 0.08 * (t.level - 1)) * (1 + 0.15 * FINAL(t));
 export const upgradeCost = (t) => Math.round(t.def.cost * UPGRADE_COST_FACTOR * t.level);
 export const sellValue = (t) => Math.round(t.spent * 0.7);
 export const canUpgrade = (t) => t.level < MAX_LEVEL - 1;               // plain upgrades up to level 3 ...
@@ -22,6 +22,7 @@ export function specialize(t, key) {
   if (!def || !canSpecialise(t)) return false;
   t.specialization = key; t.skills = {}; t.level = MAX_LEVEL;
   t.soldiers = []; t.hatchCd = null;
+  t.cd = 0;
   t.spent += def.cost;
   return true;
 }
@@ -32,7 +33,7 @@ export function trainSkill(t, key) {
   t.spent += cost;
   return true;
 }
-export const visLevel = (t) => Math.min(t.level, 3);                   // the artwork has three tiers; level 4 adds ability ornaments
+export const visLevel = (t) => Math.min(t.level, 3);                   // ordinary art has three tiers; paths provide their own art
 
 // How tall the ranged towers are (used for drawing and for where shots start).
 export const archerHeight = (lv) => 34 + Math.min(lv, 3) * 6;

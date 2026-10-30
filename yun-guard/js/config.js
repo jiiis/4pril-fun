@@ -65,13 +65,9 @@ export const TOWERS = {
   barracks: { name: "Barracks",     short: "Barracks", icon: "shield", cost: 90,  range: 117,  damage: 6,  rate: 1,    type: "physical", color: "#ef9a9a", desc: "Soldiers block ground enemies. Steel counters wards; plating resists.", soldiers: 2, soldierHp: 80 },
 };
 export const MAX_LEVEL = 4;
-// Level 4 offers an ability, or a specialization with independently ranked skills (Barracks first).
+// Level 4 offers an ability, or a specialization with independently ranked skills.
 export const ABILITY_COST_FACTOR = 1.2;   // ability price = tower cost × this
 export const ABILITIES = {
-  archer: {
-    volley: { name: "Rapid Volley", icon: "chevrons", desc: "Every archer looses two arrows at once." },
-    poison: { name: "Venom Arrows", icon: "skull", desc: "Arcane poison: 7 dmg/s for 4s and 15% slow. Warded and fortified enemies resist.", poison: { time: 4, dps: 7, slow: 0.15 } },
-  },
   mage: {
     storm:  { name: "Arcane Storm", icon: "tornado", desc: "Bolts burst on impact, hitting everything within 36.", splash: 36 },
     curse:  { name: "Curse", icon: "skull", desc: "Cursed monsters take 40% more damage from everything for 4s.", curse: { time: 4, factor: 1.4 } },
@@ -90,7 +86,7 @@ export const ABILITIES = {
   },
 };
 // Level 3 archer towers shoot fire arrows: the monster keeps burning after the hit.
-export const FIRE_ARROW = { burnTime: 3, burnDps: 7 };   // seconds of burning, damage per second (ignores armour)
+export const FIRE_ARROW = { burnTime: 3, burnDps: 7 };   // Arcane burning: bypasses armor amount; class resistance still applies
 export const UPGRADE_COST_FACTOR = 0.6;   // upgrade price = tower cost × this × current level
 export const CORPSE_TIME = 7;             // seconds a fallen monster stays on the road
 
@@ -252,8 +248,8 @@ export const ENEMIES = {
   orc:      { hp: 1269, speed: 20,  armor: 0.4, armorClass: "plated", gold: 26, lives: 2, attack: 46, size: 25 },
   skeleton: { hp: 815,  speed: 24,  armor: 0.6, armorClass: "plated", gold: 23, lives: 1, attack: 32, size: 20, frostImmune: true },
   shaman:   { hp: 998, speed: 22,  armor: 0.1, armorClass: "warded", gold: 36, lives: 1, attack: 24,  size: 20, healAura: 6, healRange: 70 },
-  golem:    { hp: 4712, speed: 12,  armor: 0.7, armorClass: "fortified", gold: 90, lives: 3, attack: 90, size: 31, frostImmune: true },
-  troll:    { hp: 8156, speed: 16,  armor: 0.3, armorClass: "light", gold: 153, lives: 5, attack: 113, size: 38 },
+  golem:    { hp: 4712, speed: 12,  armor: 0.7, armorClass: "fortified", gold: 90, lives: 3, attack: 90, size: 31, frostImmune: true, brambleResistance: 0.5 },
+  troll:    { hp: 8156, speed: 16,  armor: 0.3, armorClass: "light", gold: 153, lives: 5, attack: 113, size: 38, brambleResistance: 0.5 },
   //   split       - when killed, bursts into that many smaller monsters
   //   steals      - instead of costing lives, it runs off with this much gold if it reaches the castle
   //   raise       - necromancers turn a nearby corpse into a skeleton every few seconds

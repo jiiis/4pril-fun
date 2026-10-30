@@ -106,10 +106,13 @@ export function buildInspector() {
 
 export function enemyInspector(enemy) {
   const def = enemy.def, key = def.armorClass || "light", armorClass = ARMOR_CLASSES[key];
+  const reduction = Math.min(def.armor, enemy.armorRend?.amount || 0), armor = Math.max(0, def.armor - reduction);
   const name = enemy.type[0].toUpperCase() + enemy.type.slice(1);
   const counter = Object.entries(DAMAGE_TYPES).filter(([type]) => armorClass.multipliers[type] > 1).map(([type, attack]) => `<span class="attack-badge">${icon(ATTACK_ICONS[type])}${attack.name}<b>×${armorClass.multipliers[type]}</b></span>`).join("");
   const resist = Object.entries(DAMAGE_TYPES).filter(([type]) => armorClass.multipliers[type] < 1).map(([type, attack]) => `<span class="attack-badge">${icon(ATTACK_ICONS[type])}${attack.name}<b>×${armorClass.multipliers[type]}</b></span>`).join("");
-  const body = `<div class="enemy-class">${armorBadge(key)}<span>${def.flying ? "Airborne" : "Ground"}</span></div><div class="stats">${stat("Base health", def.hp)}${stat("Armor amount", `${Math.round(def.armor * 100)}%`)}${stat("Speed", def.speed)}</div><p class="tower-description">${armorClass.desc}</p>
+  const body = `<div class="enemy-class">${armorBadge(key)}<span>${def.flying ? "Airborne" : "Ground"}</span></div><div class="stats">${stat("Base health", def.hp)}${stat("Armor amount", `${Math.round(armor * 100)}%`)}${stat("Speed", def.speed)}</div><p class="tower-description">${armorClass.desc}</p>
+    ${reduction ? `<p class="matchup-note">Armor reduced by ${Math.round(reduction * 100)} percentage points. Class resistance remains.</p>` : ""}
+    ${def.brambleResistance ? `<p class="matchup-note">Bramble roots last ${Math.round((1 - def.brambleResistance) * 100)}% as long.</p>` : ""}
     ${heading("Defenses")}<div class="matchup-row favorable"><small>Counter with</small><div>${counter || "No class weakness"}</div></div>${resist ? `<div class="matchup-row unfavorable"><small>Resists</small><div>${resist}</div></div>` : ""}<p class="matchup-note">Class multipliers, before armor amount.</p>${armorGuide()}`;
   return panel(name, "Monster inspector", ARMOR_ICONS[key], "", body);
 }

@@ -6,6 +6,7 @@ import { SPOT_RADIUS, W, H, TOWERS } from "../config.js";
 import { towerRange, abilityDef } from "../towers.js";
 import { buildBackground, drawSign, CASTLE_STYLES, gatePillars, lairStakes, drawDecoItem, drawCastleAt, drawCastleDamage, drawGateStructure, gateAnchorY, drawLairStructure, lairAnchorY, lairParts, cherryToneOf } from "./background.js";
 import { drawTower, flag } from "./towers.js";
+import { drawBramblePatches, drawArcherAir, drawMoonShot } from "./archer.js";
 import { drawEnemy, drawCorpse } from "./creatures.js";
 import { drawSoldier } from "./soldiers.js";
 import { drawCritter, drawWaterBird } from "./critters.js";
@@ -312,6 +313,7 @@ export function draw() {
 
   drawSnowCover(ctx);                                        // settled snow lies on the ground
   drawWater();
+  for (const tower of state.towers) drawBramblePatches(tower);
   // Fallen monsters lie on the road under everything else
   for (const c of state.corpses) drawCorpse(c);
 
@@ -383,6 +385,7 @@ export function draw() {
 
   // Shots
   for (const s of state.shots) {
+    if (s.kind === "moon") { drawMoonShot(s); continue; }
     const a = Math.atan2(s.ty - s.y, s.tx - s.x);
     if (s.ghost) {                                           // a spent arrow in flight: it fades out over the last part of its life
       const al = Math.min(1, s.life / (s.maxLife * 0.55)), cx = Math.cos(a), cy = Math.sin(a), y = s.y - s.z;
@@ -488,6 +491,7 @@ export function draw() {
     drawActor(actor);
   }
   while (sceneryIndex < sceneryActors.length) drawScenery(sceneryActors[sceneryIndex++]);
+  for (const tower of state.towers) drawArcherAir(tower);
   // Falling blossom and leaves: cherry trees shed petals, autumn trees shed leaves. Both loosen from the
   // canopy, flutter down on the breeze with a tumbling spin and fade as they reach the grass.
   const AUTUMN = ["#e65100", "#f9a825", "#bf360c", "#ffb300", "#d84315"];

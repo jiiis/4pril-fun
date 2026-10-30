@@ -4,6 +4,7 @@ import { map } from "./map.js";
 import { TOWERS, FIRE_ARROW } from "./config.js";
 import { beginWave, spawnEnemy, spawnEnemyAt, waveFinished, canCallWave } from "./waves.js";
 import { updateSoldiers } from "./soldiers.js";
+import { updateArcher, updateMoonShot } from "./archer.js";
 import { updateCritters } from "./critters.js";
 import { updateHero } from "./hero.js";
 import { slayCritter } from "./critters.js";
@@ -178,6 +179,8 @@ export function update(dt) {
   // --- Monsters walk (unless a soldier is blocking them) ---
   for (const e of state.enemies) {
     if (e.hitFlash > 0) e.hitFlash -= dt;
+    if (e.armorRend && (e.armorRend.time -= dt) <= 0) e.armorRend = null;
+    if (e.thornRootCd > 0) e.thornRootCd = Math.max(0, e.thornRootCd - dt);
     if (e.burn) {                                            // set alight by a fire arrow
       e.burn.time -= dt;
       hurt(e, e.burn.dps * dt, "magic", false);
@@ -218,7 +221,7 @@ export function update(dt) {
       }
     }
     if (e.casting > 0) e.casting -= dt;
-    if (e.rooted > 0) {                                      // held fast by Willow's vines
+    if (e.rooted > 0) {                                      // held fast by Willow's vines or a bramble patch
       e.rooted -= dt;
       e.blocked = false; e.wasBlocked = true; e.phase += dt * 4;
       continue;
@@ -280,6 +283,7 @@ export function update(dt) {
   for (const t of state.towers) {
     if (t.recoil > 0) t.recoil -= dt;
     if (t.anim > 0) t.anim -= dt;
+    if (t.type === "archer" && t.specialization) { updateArcher(t, dt); continue; }
     if (t.def.soldiers) continue;             // barracks don't shoot
     const ab = abilityDef(t);
     if (ab?.field) {                          // static field: everything in range crawls and crackles
@@ -305,11 +309,6 @@ export function update(dt) {
         const fire = t.def === TOWERS.archer && t.level >= 3 && !ab?.poison;
         const shot = { x: o.x, y: o.y, z: 0, total: dist(o, best), target: best, tx: best.x, ty: best.y, dmg: towerDamage(t), def: t.def, trail: [], fire, poison: ab?.poison || null, splash: ab?.splash || null, curse: ab?.curse || null };
         state.shots.push(shot);
-        if (t.def === TOWERS.archer && t.ability === "volley") {           // rapid volley: a second arrow from another archer
-          t.shooter = (t.shooter + 1) % archerSlots(t.level).length;
-          const o2 = shotOrigin(t);
-          state.shots.push({ ...shot, x: o2.x, y: o2.y, total: dist(o2, best), trail: [] });
-        }
         t.anim = FIRE_ANIM;
         sfx(t.def.type === "magic" ? "magic" : "arrow", 0.06);
       }
@@ -319,6 +318,7 @@ export function update(dt) {
 
   // --- Shots fly ---
   for (const s of state.shots) {
+    if (s.kind === "moon") { updateMoonShot(s, dt); continue; }
     if (s.ghost) {                            // an arrow that has struck: it flies on a good way, sinks to the ground and fades
       s.life -= dt;
       s.x += s.vx * dt; s.y += s.vy * dt; s.z = Math.max(0, s.z - 14 * dt);

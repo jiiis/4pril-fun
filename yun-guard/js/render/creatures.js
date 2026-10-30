@@ -1,4 +1,5 @@
 import { ctx, withCtx, rect as rect0, circle as circle0, ellipse as ellipse0, poly as poly0, line, shadow } from "./gfx.js";
+import { drawArmorRend } from "./archer.js";
 
 // Tinting (hit flash, frost, fresh corpses) used ctx.filter, which drops the whole canvas onto a slow software
 // path and made the game stutter every time an arrow landed. Instead the creature is drawn into a small scratch
@@ -66,6 +67,7 @@ export function drawEnemy(e) {
   if (e.staticSlow > 0) drawStatic(e);
   if (e.rooted > 0) drawVines(e);
   if (e.burn) drawFlames(e);
+  drawArmorRend(e);
 
   // Health bar
   const w = e.def.size, x = e.x - w / 2, y = e.y - e.def.size * 0.85;

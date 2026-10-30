@@ -1,6 +1,7 @@
 import { ctx, rect, circle, ellipse, poly, line, shadow } from "./gfx.js";
 import { TOWERS } from "../config.js";
 import { state } from "../state.js";
+import { drawArcherSpecialization } from "./archer.js";
 import { addLight } from "./lights.js";
 import { archerHeight, mageHeight, teslaHeight, ballistaHeight, archerSlots, visLevel } from "../towers.js";
 
@@ -34,15 +35,6 @@ function drawAbility(t, x, y) {
   const T = state.time + x * 0.013;
   const topY = t.def === TOWERS.archer ? y - archerHeight(3) - 30 : t.def === TOWERS.mage ? y - mageHeight(3) - 44 : t.def === TOWERS.tesla ? y - teslaHeight(3) - 26 : t.def === TOWERS.ballista ? y - ballistaHeight(3) - 14 : y - 30;
   switch (t.ability) {
-    case "volley":                                                                       // golden quivers bristling with arrows on the parapet
-      for (const qx of [-16, 16]) { rect(ctx, x + qx - 3, y - archerHeight(3) - 6, 6, 10, "#8d6e63", "#4e342e", 1); for (let i = 0; i < 3; i++) { line(ctx, x + qx - 2 + i * 2, y - archerHeight(3) - 6, x + qx - 3 + i * 2.5, y - archerHeight(3) - 14, "#d7ccc8", 1); poly(ctx, [[x + qx - 3 + i * 2.5, y - archerHeight(3) - 14], [x + qx - 4.5 + i * 2.5, y - archerHeight(3) - 11], [x + qx - 1.5 + i * 2.5, y - archerHeight(3) - 11]], "#ffd54f"); } }
-      flag(x - 20, y - archerHeight(3) - 26, 12, "#ffd54f", 3);
-      break;
-    case "poison":                                                                       // green vats bubbling at the foot, a sickly haze above
-      for (const vx of [-14, 14]) { rect(ctx, x + vx - 4, y - 2, 8, 8, "#4e342e", "#3e2723", 1); ellipse(ctx, x + vx, y - 2, 4, 1.6, "#7cb342"); for (let i = 0; i < 2; i++) { const k = (((T * 0.7 + i / 2 + vx * 0.37) % 1) + 1) % 1; ctx.globalAlpha = 0.5 * (1 - k); circle(ctx, x + vx + Math.sin(T * 3 + i) * 2, y - 3 - k * 10, 1 + k * 2, "#aed581"); } }
-      ctx.globalAlpha = 0.25 + Math.sin(T * 2) * 0.08; circle(ctx, x, topY + 10, 18, "#9ccc65"); ctx.globalAlpha = 1;
-      for (const vx of [-14, 14]) addLight(ctx, x + vx, y - 3, 8, "green");                 // the vats glow faintly
-      break;
     case "storm":                                                                        // a dark storm cloud circling the spire, flickering
       for (let i = 0; i < 4; i++) { const a = T * 1.2 + i * 1.57; ctx.globalAlpha = 0.65; circle(ctx, x + Math.cos(a) * 16, topY + Math.sin(a) * 5, 6 + (i % 2) * 2, "#4a3f7a"); }
       ctx.globalAlpha = 1;
@@ -128,6 +120,7 @@ function smokeColumn(px, py, seed = 0) {
 //  ARCHER TOWER
 // =====================================================================
 function drawArcher(t, x, y, lv) {
+  if (t.specialization) { drawArcherSpecialization(t, x, y); return; }
   const h = archerHeight(lv);
   if (lv === 1) {
     rect(ctx, x - 14, y - 6, 28, 14, "#8d6e63", "#4e342e");

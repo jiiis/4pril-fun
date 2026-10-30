@@ -1,6 +1,9 @@
 // A small set of clean line icons (inline SVG, stroke follows the text colour). Used instead of emoji
 // in the HUD, hero cards and build menus so everything looks consistent on every device.
 const P = {
+  falcon: '<path d="M3 5l8 6 2-1 8-5-5 9-4 2-5-2z"/><path d="M10 16l-2 5 4-2 4 2-2-5M12 10V7l3 2"/>',
+  thorns: '<path d="M4 20c0-9 7-15 16-16-1 9-7 16-16 16zM4 20L16 8M7 14l-3-3M10 11l-1-4M10 16l5 2M14 12l5 1"/>',
+  moon: '<path d="M20.9 13A9 9 0 0 1 11 3.1 9 9 0 1 0 20.9 13z"/>',
   settings: '<path d="M10 6h11M3 6h1M3 18h11M20 18h1"/><circle cx="7" cy="6" r="3"/><circle cx="17" cy="18" r="3"/>',
   radial: '<circle cx="12" cy="12" r="2.5"/><circle cx="7.5" cy="4.2" r="1.8"/><circle cx="16.5" cy="4.2" r="1.8"/><circle cx="21" cy="12" r="1.8"/><circle cx="16.5" cy="19.8" r="1.8"/><circle cx="7.5" cy="19.8" r="1.8"/><circle cx="3" cy="12" r="1.8"/>',
   panel: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M14 4v16M17 8h1M17 12h1"/>',

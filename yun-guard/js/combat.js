@@ -7,7 +7,7 @@ import { damageMultiplier } from "./damage.js";
 // source = the hero who struck the blow (or whose dog did); kills earn that hero XP.
 export function hurt(e, dmg, type, flash = true, source = null) {
   if (e.dead) return;
-  dmg *= damageMultiplier(e.def, type);
+  dmg *= damageMultiplier(e.def, type, e.armorRend?.amount || 0);
   if (e.cursed > 0) dmg *= e.curseFactor || 1.4;
   e.hp -= dmg;
   if (flash) e.hitFlash = 0.12;

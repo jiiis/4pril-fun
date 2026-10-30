@@ -161,7 +161,7 @@ export function openMenu(spotIndex) {
 // Monster defenses remain a snapshot; the inspector does not update the DOM every frame.
 export function openEnemyInfo(enemy) {
   closeMenu();
-  state.inspectedEnemy = { x: enemy.x, y: enemy.y, def: enemy.def, type: enemy.type };
+  state.inspectedEnemy = { x: enemy.x, y: enemy.y, def: enemy.def, type: enemy.type, armorRend: enemy.armorRend ? { ...enemy.armorRend } : null };
   showInspector(enemyInspector(enemy), "Monster inspector");
 }
 
