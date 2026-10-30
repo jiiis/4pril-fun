@@ -48,6 +48,7 @@ async function startLevel({ level: L, seed, hero, debounce = false }) {
   lvInput.value = level; document.getElementById("lvPrev").disabled = level <= 1; document.getElementById("lvNext").disabled = level >= MAX_LEVEL;
   if (map.paths.length) heroPick.classList.add("again");
   setHomeVisible(true);
+  document.getElementById("totalWaves").textContent = levelConfig(level).waves;
   heroPick.setAttribute("aria-busy", "true");
   heroPick.querySelector("h1").innerHTML = `${icon("hourglass")}<span>${t("Generating map")}</span>`;
   for (const button of heroPick.querySelectorAll(".card, #noLegend")) button.disabled = true;

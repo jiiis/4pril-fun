@@ -64,14 +64,21 @@ input, textarea { -webkit-user-select: text; user-select: text; }   /* pinned to
 /* ---------- HUD ---------- */
 /* The HUD is two loose clusters floating over the bottom corners of the board: numbers on the left,
    buttons on the right. No bar, just readable text with a shadow. */
-#hud { position: fixed; inset: 0; z-index: 4; pointer-events: none; font-size: 18px; }
+#hud { --control-size: 46px; --primary-control-size: 62px; position: fixed; inset: 0; z-index: 4; pointer-events: none; font-size: 18px; }
 #hud > * { position: absolute; pointer-events: auto; display: flex; align-items: center; }
 .hud-left { top: 6px; left: 18px; gap: 18px; min-height: 36px; }        /* stats, top-left */
 .hud-topright { top: 6px; right: 18px; min-height: 36px; }              /* language on home, map number in-game */
 .hud-left .stat, .hud-topright .stat { height: 24px; }
 body.home .hud-topright .seed, body:not(.home) .languagePicker { display: none; }
-.hud-right { bottom: 14px; right: 16px; gap: 12px; }     /* buttons, bottom-right */
-.hud-logo { bottom: 14px; left: 16px; gap: 10px; opacity: 0.9; align-items: center !important; }   /* logo, bottom-left; the wordmark and game title are centred on it */
+body.home #pause, body.home #next { display: none; }
+body.home .hud-left .level, body.home .hud-left .lives,
+body.home .stat.wave #wave, body.home .stat.wave .wave-divider { display: none; }
+body.home .stat.wave .dim { color: var(--text); font-weight: 700; }
+/* Keep a shared center at the next-wave button's position, including when it is hidden. */
+.hud-right, .hud-logo { bottom: calc(14px + var(--primary-control-size) / 2); transform: translateY(50%); }
+.hud-right { right: 14px; gap: 12px; }     /* buttons, bottom-right */
+body.home .hud-right { right: calc(14px + (var(--primary-control-size) - var(--control-size)) / 2); }
+.hud-logo { left: 16px; gap: 10px; opacity: 0.9; align-items: center !important; }   /* logo, bottom-left; the wordmark and game title are centred on it */
 .hud-logo .words { position: relative; display: flex; }                 /* holds just the wordmark, so the wordmark itself is centred on the logo */
 .hud-logo img { width: 64px; height: 64px; border-radius: 14px; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5); }
 .hud-logo .brand { font-family: Impact, "Arial Black", "Helvetica Neue", Arial, sans-serif; font-size: 24px; line-height: 1; letter-spacing: 1px; color: #f1efe6; text-shadow: 0 2px 3px rgba(0, 0, 0, 0.9), 0 0 12px rgba(0, 0, 0, 0.6); }
@@ -118,7 +125,7 @@ button:disabled { background: #3a3f4d; color: #8a8f9c; cursor: default; filter: 
 /* Round icon buttons */
 #hud .round {
   position: relative;
-  width: 46px; height: 46px; padding: 0;
+  width: var(--control-size); height: var(--control-size); padding: 0;
   display: inline-flex; align-items: center; justify-content: center;
   border-radius: 50%;
   background: var(--control-glass-bg);
@@ -128,7 +135,7 @@ button:disabled { background: #3a3f4d; color: #8a8f9c; cursor: default; filter: 
 }
 #hud .round .ico { width: 22px; height: 22px; display: block; }
 #hud .round:hover { background: var(--control-glass-hover); filter: none; }
-#hud .round.big { width: 62px; height: 62px; background: var(--accent); color: #1b1400; border-color: #ffe08a; }
+#hud .round.big { width: var(--primary-control-size); height: var(--primary-control-size); background: var(--accent); color: #1b1400; border-color: #ffe08a; }
 #hud .round.big .ico { width: 30px; height: 30px; }
 #hud .round.big .face { display: inline-flex; }
 #hud .round.big:hover { filter: brightness(1.08); background: var(--accent); }
@@ -472,10 +479,10 @@ canvas { display: block; }
 #heroPick .menuStyleOptions button[aria-pressed="true"] { background: rgba(245, 181, 63, 0.13); color: #ead5a6; }
 #heroPick .menuStyleOptions button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 #heroPick .menuStyleOptions .ico { width: 18px; height: 18px; }
-.languagePicker { display: flex; align-items: center; gap: 3px; color: #858f95; font-size: 12px; line-height: 1; }
+.languagePicker { display: flex; align-items: center; gap: 0.2em; color: #858f95; font-size: max(11px, calc(1em - 2px)); line-height: 1; }
 .languagePicker > span { transform: translateY(1px); } /* optically center the slash with the letterforms */
-.languagePicker button { display: inline-flex; align-items: center; justify-content: center; min-width: 30px; min-height: 36px; padding: 6px; border-radius: 6px; background: transparent; color: #9aa7ad; font-size: 12px; line-height: 1; font-weight: 500; letter-spacing: 0; text-transform: none; }
-.languagePicker button[data-language="zh-CN"] { margin-left: -2px; }
+.languagePicker button { display: inline-flex; align-items: center; justify-content: center; min-width: 2em; min-height: 36px; padding: 6px 0.4em; border-radius: 6px; background: transparent; color: #9aa7ad; font-size: inherit; line-height: 1; font-weight: 500; letter-spacing: 0; text-transform: none; }
+.languagePicker button[data-language="zh-CN"] { margin-left: -0.13em; }
 .languagePicker button[aria-pressed="true"] { color: #ead5a6; }
 .languagePicker button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 :lang(zh-CN) #heroPick h1 { font-family: "PingFang SC", "Microsoft YaHei", sans-serif; letter-spacing: 1px; }
@@ -623,8 +630,9 @@ canvas { display: block; }
   #heroPick .ghost { margin-top: 12px; }
 }
 @media (max-width: 600px) {
-  .hud-logo .words { display: none; }   /* no room for the wordmark beside the buttons */
-  .hud-left { font-size: 14px; gap: 12px; }
+  body:not(.home) .hud-logo .words { display: none; }   /* gameplay controls leave room for only the icon */
+  .hud-left, .hud-topright { font-size: 14px; }
+  .hud-left { gap: 12px; }
 }
 #rotate {                                                      /* portrait phones: a soft nudge at the top */
   position: fixed; top: 60px; left: 50%; transform: translateX(-50%);
@@ -636,7 +644,7 @@ canvas { display: block; }
 }
 #rotate .ico { width: 16px; height: 16px; }
 @media (max-width: 1040px), (max-height: 540px) {               /* phones: a smaller logo in the corner */
-  .hud-logo { bottom: 25px; left: 12px; gap: 8px; }                /* 40px logo centred on the button row (62px tall, 14px up) */
+  .hud-logo { left: 12px; gap: 8px; }
   .hud-logo img { width: 40px; height: 40px; border-radius: 10px; }
   .hud-logo .brand { font-size: 16px; }
   .hud-logo .title { margin-top: 4px; font-size: 7px; letter-spacing: 3px; }
@@ -706,9 +714,12 @@ canvas { display: block; }
 #legendBadge.on:active { transform: translateY(1px); }
 #legendBadge .ico { width: 24px; height: 24px; display: block; }
 
+@media (max-width: 480px) {
+  body:not(.home) #hud .hud-logo { display: none; }
+}
 @media (max-width: 419px) {
-  #hud .hud-logo { display: none; }
-  .hud-left { font-size: 12px; gap: 6px; }
+  .hud-left, .hud-topright { font-size: 12px; }
+  .hud-left { gap: 6px; }
 }
 
 /* Keep a usable UI below 360px: scroll the page horizontally instead of crushing its controls.
