@@ -12,6 +12,7 @@ import { clamp } from "./util.js";
 import { sfx } from "./audio.js";
 import { t, language, translateMarkup } from "./i18n.js";
 import { shortcutLabel } from "./input-hints.js";
+import { isOverlayVisible, setOverlayVisible } from "./overlays.js";
 
 const $ = (id) => document.getElementById(id);
 const MENU_STYLE_KEY = "yunguard.menuStyle";
@@ -21,12 +22,12 @@ let radialPage = "main", radialPreview = null;
 function initSettings() {
   const dialog = $("settings"), toggle = $("settings-toggle");
   toggle.addEventListener("click", () => {
-    if (!document.body.classList.contains("home") || dialog.open) return;
-    dialog.showModal();
+    if (!document.body.classList.contains("home") || isOverlayVisible("settings")) return;
+    setOverlayVisible("settings", true);
     toggle.setAttribute("aria-expanded", "true");
   });
-  $("settings-close").addEventListener("click", () => dialog.close());
-  dialog.addEventListener("click", (ev) => { if (ev.target === dialog) dialog.close(); });
+  $("settings-close").addEventListener("click", () => setOverlayVisible("settings", false));
+  dialog.addEventListener("click", (ev) => { if (ev.target === dialog) setOverlayVisible("settings", false); });
   dialog.addEventListener("keydown", (ev) => ev.stopPropagation()); // keep game shortcuts behind the modal
   dialog.addEventListener("close", () => toggle.setAttribute("aria-expanded", "false"));
 }
@@ -94,7 +95,7 @@ export function setWaveButton(mode, seconds) {
 export function endGame(won) {
   state.over = true;
   state.paused = false;
-  $("paused").style.display = "none";
+  setOverlayVisible("paused", false);
   $("pause").disabled = true;
   setWaveButton("over");
   const L = state.level, last = L >= MAX_LEVEL;
@@ -103,7 +104,7 @@ export function endGame(won) {
   $("overlayText").textContent = won
     ? (last ? t("You held every one of the {levels} levels. Legendary!", { levels: MAX_LEVEL }) : t("All {waves} waves beaten. {gold} gold goes with you to level {level}: {purse} from your purse and {bonus} for the {lives} villagers you kept safe{cap}.", { waves: state.totalWaves, gold: carry.gold, level: L + 1, purse: carry.fromGold, bonus: carry.fromLives, lives: state.lives, cap: carry.capped ? t(" (capped at 600)") : "" }))
     : t("The monsters broke through on wave {wave} of level {level}. Try a different tower mix!", { wave: state.wave, level: L });
-  $("overlay").style.display = "flex";
+  setOverlayVisible("overlay", true);
   sfx(won ? "victory" : "gameOver");
   // Won: the next level is unlocked and starts by itself in a few seconds (or at a click). Lost: try this level again.
   const btn = $("restart"), alt = $("changeLegend");
@@ -349,8 +350,8 @@ export function resetUiForLevel() {
   cameraMove = null;
   clearTimeout(endTimer);
   waveBtnKey = "";
-  $("overlay").style.display = "none";
-  $("paused").style.display = "none";
+  setOverlayVisible("overlay", false);
+  setOverlayVisible("paused", false);
   closeMenu();
   applyView();
   setWaveButton("start");

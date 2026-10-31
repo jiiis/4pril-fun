@@ -18,6 +18,7 @@ import { initWeather } from "./weather.js";
 import { MAX_LEVEL, clampLevel, savedLevel, saveLevel, levelConfig, levelSeed, carryFor, clearProgress, reshuffleMaps, mapOptionsFor } from "./levels.js";
 import { t, initLocalization } from "./i18n.js";
 import { initInputHints, shortcutLabel } from "./input-hints.js";
+import { isOverlayVisible, setOverlayVisible } from "./overlays.js";
 
 // Which level? ?level=N in the URL, else the last one played on this device. Each level has its own map
 // (add ?seed=1234 to force a particular map instead).
@@ -114,7 +115,7 @@ const heroPick = document.getElementById("heroPick");
 function setHomeVisible(visible) {
   heroPick.style.display = visible ? "flex" : "none";
   document.body.classList.toggle("home", visible);
-  if (!visible) document.getElementById("settings").close();
+  if (!visible) setOverlayVisible("settings", false);
 }
 const preset = new URLSearchParams(location.search).get("hero");
 const LEGEND_ICON = { april: "sword", avril: "bow", adrien: "shieldCheck", ember: "flame", willow: "leaf", meilin: "snowflake" };
@@ -282,26 +283,25 @@ window.addEventListener("keydown", (ev) => { if (ev.code === "KeyN" && !ev.metaK
 
 // Restart: home generates a fresh preview; gameplay offers the same map or a new one (R).
 const confirmBox = document.getElementById("confirm");
-const pausedView = document.getElementById("paused");
 const startNewMap = () => startLevel({ level, seed: 1 + Math.floor(Math.random() * 999999), hero: "pick" });
 function restartLevel() {
-  if (loadingMap || state.over || confirmBox.style.display === "flex") return;
+  if (loadingMap || state.over || isOverlayVisible("confirm")) return;
   if (heroPick.style.display !== "none") { startNewMap(); return; }
   document.getElementById("confirmLevel").textContent = level;
-  confirmBox.style.display = "flex";
-  pausedView.style.display = "none";                                  // the restart prompt takes the pause screen's place
+  setOverlayVisible("confirm", true);
+  setOverlayVisible("paused", false);                                  // the restart prompt takes the pause screen's place
   pauseBtn.disabled = true;                                           // and pausing waits until it's answered
 }
 const closeConfirm = () => {
-  confirmBox.style.display = "none";
-  if (state.paused) pausedView.style.display = "flex";
+  setOverlayVisible("confirm", false);
+  if (state.paused) setOverlayVisible("paused", true);
   pauseBtn.disabled = loadingMap || state.over || heroPick.style.display !== "none";
 };
 // Either way the legend screen comes back first
 document.getElementById("confirmSame").addEventListener("click", () => { closeConfirm(); startLevel({ level, seed: map.seed, hero: "pick" }); });
 document.getElementById("confirmNew").addEventListener("click", () => { closeConfirm(); startNewMap(); });
 confirmBox.addEventListener("click", (ev) => { if (ev.target === confirmBox) closeConfirm(); });
-window.addEventListener("keydown", (ev) => { if (ev.key === "Escape" && confirmBox.style.display === "flex") closeConfirm(); });
+window.addEventListener("keydown", (ev) => { if (ev.key === "Escape" && isOverlayVisible("confirm")) closeConfirm(); });
 document.getElementById("restart-level").addEventListener("click", restartLevel);
 window.addEventListener("keydown", (ev) => { if (ev.code === "KeyR" && !ev.metaKey && !ev.ctrlKey) restartLevel(); });   // R follows the restart button's home or gameplay action
 
@@ -336,14 +336,14 @@ function setPaused(on) {
   state.paused = on;
   pauseBtn.innerHTML = icon(on ? "play" : "pause");
   pauseBtn.title = shortcutLabel(on ? "Resume" : "Pause", "P");
-  document.getElementById("paused").style.display = on ? "flex" : "none";
+  setOverlayVisible("paused", on);
   const next = document.getElementById("next");
   if (on) { next.dataset.wasDisabled = next.disabled ? "1" : ""; next.disabled = true; }     // no calling waves while paused
   else next.disabled = next.dataset.wasDisabled === "1";
   sfx("click");
 }
 pauseBtn.addEventListener("click", () => setPaused(!state.paused));
-document.querySelector("#paused span").addEventListener("click", () => setPaused(false));   // the big play button resumes
+document.getElementById("resume").addEventListener("click", () => setPaused(false));   // the big play button resumes
 window.addEventListener("keydown", (ev) => { if ((ev.code === "KeyP" || ev.code === "Space") && heroPick.style.display === "none" && !state.over && !pauseBtn.disabled) { ev.preventDefault(); setPaused(!state.paused); } });
 
 window.addEventListener("languagechange", () => {
