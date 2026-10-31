@@ -1,4 +1,4 @@
-import { ctx, rect, circle, ellipse, poly, line, shadow } from "./gfx.js";
+import { ctx, rect, circle, ellipse, poly, line, shadow, bodyShadow, SHADOW_STYLE } from "./gfx.js";
 import { state } from "../state.js";
 import { xpToNext } from "../hero.js";
 import { addLight } from "./lights.js";
@@ -487,8 +487,9 @@ export function drawEagle() {
   if (!g) return;
   const groundY = g.owner.hp > 0 ? g.owner.y : g.owner.spawn.y;
   const height = Math.max(0, groundY - g.y);
-  ctx.globalAlpha = 0.22 * Math.max(0.3, 1 - height / 80);
-  ellipse(ctx, g.x, groundY + 10, (g.def.kind === "loong" ? 16 : 9) * Math.max(0.5, 1 - height / 120) * LEGEND_SCALE, 2.5 * LEGEND_SCALE, "#000");
+  const scale = LEGEND_SCALE * SHADOW_STYLE.scale;
+  ctx.globalAlpha = SHADOW_STYLE.airOpacity * Math.max(0.3, 1 - height / 80);
+  ellipse(ctx, g.x, groundY + 10, (g.def.kind === "loong" ? 16 : 9) * Math.max(0.5, 1 - height / 120) * scale, 2.5 * scale, "#000");
   ctx.globalAlpha = 1;
   scaleLegendAt(g.x, g.y);
   if (g.def.kind === "dragon") drawDragon(g); else if (g.def.kind === "loong") drawLoong(g); else drawBird(g);
@@ -648,7 +649,7 @@ function drawGroundPet(d) {
   const sit = !d.moving && !d.target;
   const wag = Math.sin(state.time * (sit ? 9 : 5)) * (sit ? 4 : 2);
   const lungeBite = d.bite > 0 ? Math.sin((d.bite / 0.2) * Math.PI) * 3 : 0;
-  shadow(ctx, d.x, d.y + 8, 10, 3);
+  bodyShadow(ctx, d.x, d.y + 8, 12 * 0.82, 6 * 0.82);
   ctx.save();
   ctx.translate(d.x + lungeBite * Math.sign(d.face || 1), d.y - bob);
   ctx.scale(Math.sign(d.face || 1) * Math.max(0.2, Math.abs(d.face)) * 0.82, 0.82);                      // a little smaller than the heroes
@@ -694,7 +695,7 @@ function drawLion(d) {
   const flick = Math.sin(state.time * (sit ? 3 : 6)) * 3;
   const lunge = d.bite > 0 ? Math.sin((d.bite / 0.2) * Math.PI) * 4 : 0;
   const coat = "#d9a441", coatDark = "#b9842c", belly = "#efd194", mane = "#8b4a1f", maneDark = "#6b3514";
-  shadow(ctx, d.x, d.y + 8, 13, 3.5);
+  bodyShadow(ctx, d.x, d.y + 8, 14, 7);
   ctx.save();
   ctx.translate(d.x + lunge * Math.sign(d.face || 1), d.y - bob);
   ctx.scale(Math.sign(d.face || 1) * Math.max(0.2, Math.abs(d.face)), 1);
@@ -737,7 +738,7 @@ function drawBear(d) {
   const idle = !d.moving && !d.target;
   const swipe = d.bite > 0 ? Math.sin((d.bite / 0.2) * Math.PI) : 0;
   const T = state.time;
-  shadow(ctx, d.x, d.y + 10, 16, 5);
+  bodyShadow(ctx, d.x, d.y + 10, 17, 10);
   ctx.save();
   ctx.translate(d.x, d.y - bob);
   ctx.scale(Math.sign(d.face || 1) * Math.max(0.2, Math.abs(d.face)), 1);

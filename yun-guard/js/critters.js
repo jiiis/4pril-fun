@@ -17,7 +17,7 @@ const BEHAVIOUR = {
   duck:  { speed: 32, wander: 30, idleMin: 1.0, idleMax: 3.5 },
 };
 
-const POOPERS = { sheep: 1.2, cow: 2.2, deer: 1.3, bunny: 0.9 };   // who poops, and how big (ducks are too polite)
+const POOPERS = { sheep: 1.2, cow: 1.8, deer: 1.3, bunny: 0.9 };   // who poops, and how big (ducks are too polite)
 const REAR = { sheep: 10, cow: 17, deer: 13, bunny: 7 };            // how far behind the animal's centre its rump is
 
 export function initCritters() {

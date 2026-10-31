@@ -1,7 +1,7 @@
 import { W, H, ROAD_WIDTH, ROAD_EDGE } from "../config.js";
 import { rng, pointsAlongPath, closestPointOnPath, pointAtArc } from "../util.js";
 import { map } from "../map.js";
-import { createCanvas, rect, circle, ellipse, poly, line, shadow } from "./gfx.js";
+import { createCanvas, rect, circle, ellipse, poly, line, shadow, SHADOW_STYLE } from "./gfx.js";
 import { addLight } from "./lights.js";
 import { state } from "../state.js";
 
@@ -170,15 +170,15 @@ function liftGrass(c) {
   c.restore();
 }
 
-// A long, soft shadow stretching to the lower-right, as if the sun were high on the left
+// A projected shadow stretching to the lower-right, as if the sun were high on the left
 function castShadow(c, x, y, w, h) {
   if (!w) return;
+  w *= SHADOW_STYLE.scale; h *= SHADOW_STYLE.scale;
   c.save();
   c.translate(x + w * 0.35, y + 2);
   c.transform(1, 0, -0.55, 0.35, 0, 0);                        // skew and flatten onto the ground
   const g = c.createRadialGradient(0, -h * 0.3, 1, 0, -h * 0.3, h);
-  g.addColorStop(0, "rgba(10,30,5,0.32)");
-  g.addColorStop(1, "rgba(10,30,5,0)");
+  for (const [at, color] of SHADOW_STYLE.projected) g.addColorStop(at, color);
   c.fillStyle = g;
   c.beginPath(); c.ellipse(0, -h * 0.3, w, h, 0, 0, Math.PI * 2); c.fill();
   c.restore();

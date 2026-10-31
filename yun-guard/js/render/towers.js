@@ -1,4 +1,4 @@
-import { ctx, rect, circle, ellipse, poly, line, shadow } from "./gfx.js";
+import { ctx, rect, circle, ellipse, poly, line, shadow, SHADOW_STYLE } from "./gfx.js";
 import { TOWERS } from "../config.js";
 import { state } from "../state.js";
 import { drawArcherSpecialization } from "./archer.js";
@@ -11,14 +11,15 @@ import { archerHeight, mageHeight, teslaHeight, ballistaHeight, archerSlots, vis
 export function drawTower(t) {
   const { x, y } = t;
   const lv = visLevel(t);                                      // level 4 reuses the level-3 artwork plus ability ornaments
-  // Long soft shadow cast to the lower-right, taller towers cast longer ones
+  // Taller towers cast longer shadows toward the lower right.
   const tall = t.def === TOWERS.archer ? archerHeight(lv) : t.def === TOWERS.mage ? mageHeight(lv) : t.def === TOWERS.tesla ? teslaHeight(lv) : t.def === TOWERS.ballista ? ballistaHeight(lv) + 8 : 30;
   ctx.save();
   ctx.translate(x + 10, y + 10);
   ctx.transform(1, 0, -0.6, 0.35, 0, 0);
-  const sg = ctx.createRadialGradient(0, -tall * 0.4, 2, 0, -tall * 0.4, tall * 1.1);
-  sg.addColorStop(0, "rgba(10,30,5,0.3)"); sg.addColorStop(1, "rgba(10,30,5,0)");
-  ctx.fillStyle = sg; ctx.beginPath(); ctx.ellipse(0, -tall * 0.4, 20, tall * 1.1, 0, 0, Math.PI * 2); ctx.fill();
+  const reach = tall * 1.1 * SHADOW_STYLE.scale;
+  const sg = ctx.createRadialGradient(0, -tall * 0.4, 2, 0, -tall * 0.4, reach);
+  for (const [at, color] of SHADOW_STYLE.projected) sg.addColorStop(at, color);
+  ctx.fillStyle = sg; ctx.beginPath(); ctx.ellipse(0, -tall * 0.4, 20 * SHADOW_STYLE.scale, reach, 0, 0, Math.PI * 2); ctx.fill();
   ctx.restore();
   shadow(ctx, x, y + 10, 22, 8, 40);
   if (t.def === TOWERS.archer) drawArcher(t, x, y, lv);

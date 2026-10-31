@@ -1,4 +1,4 @@
-import { ctx, rect, circle, ellipse, poly, line, shadow } from "./gfx.js";
+import { ctx, circle, ellipse, poly, line, bodyShadow } from "./gfx.js";
 import { state } from "../state.js";
 import { critterSizeFactor } from "../config.js";
 
@@ -14,8 +14,8 @@ export function drawCritter(c) {
     ctx.setLineDash([]);
     for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) line(ctx, c.x + dx * (pulse + 2), c.y + 1 + dy * (pulse + 2), c.x + dx * (pulse + 6), c.y + 1 + dy * (pulse + 6), "#ffd54f", 1.5);
   }
-  const k = (CRITTER_SCALE[c.type] || 1) * critterSizeFactor(c.type);
-  shadow(ctx, c.x, c.y + 1, (c.type === "deer" ? 11 : c.type === "chicken" || c.type === "duck" ? 5 : 8) * k, 3 * k, (c.type === "deer" ? 12 : c.type === "chicken" || c.type === "duck" ? 4 : 7) * k);
+  const body = CRITTER_ART[c.type], k = body.scale * critterSizeFactor(c.type);
+  bodyShadow(ctx, c.x, c.y + 1, body.rx * k, body.ry * k);
   ctx.save();
   ctx.translate(c.x, c.y);
   ctx.scale(c.dir * k, k);
@@ -30,7 +30,7 @@ export function drawCritter(c) {
 
 // A duck floating on a pond: only the top half shows above the water
 export function drawWaterBird(kind, x, y, dir, t) {
-  const k = (CRITTER_SCALE[kind] || 1) * critterSizeFactor(kind);
+  const k = (CRITTER_ART[kind]?.scale || 1) * critterSizeFactor(kind);
   ctx.save();
   ctx.translate(x, y);
   ctx.scale(dir * k, k);
@@ -52,7 +52,16 @@ export function drawWaterBird(kind, x, y, dir, t) {
   ctx.restore();
 }
 
-const CRITTER_SCALE = { bunny: 0.7, chicken: 0.8, fox: 0.72, deer: 0.86, cow: 1.2, duck: 0.8 };
+// Artwork scale and torso radii, excluding heads, tails, ears and antlers.
+const CRITTER_ART = {
+  bunny: { scale: 0.7, rx: 7, ry: 5 },
+  chicken: { scale: 0.8, rx: 6, ry: 4.5 },
+  duck: { scale: 0.8, rx: 7, ry: 4.5 },
+  fox: { scale: 0.72, rx: 11, ry: 5.5 },
+  deer: { scale: 0.86, rx: 12, ry: 7 },
+  cow: { scale: 1.2, rx: 14, ry: 8 },
+  sheep: { scale: 1, rx: 12, ry: 8 },
+};
 
 const DRAW = {
   bunny(phase, moving) {

@@ -52,9 +52,16 @@ export function line(c, x1, y1, x2, y2, color, lw = 2) {
   c.stroke();
 }
 
-// Ground shadows share one light: the sun is high on the upper left, so every shadow is a soft contact patch
-// under the feet plus a fainter, longer one thrown to the lower right. The falloff is a gradient (a unit
-// radial gradient per canvas, scaled into place), so there are no hard edges.
+// Shared shadow styling for units, scenery, buildings and flying companions.
+// A firmer core grounds each object; the edges fade toward the lower right.
+export const SHADOW_STYLE = {
+  scale: 1.15,
+  cast: [[0, "rgba(10,25,5,0.2)"], [0.65, "rgba(10,25,5,0.13)"], [1, "rgba(10,25,5,0)"]],
+  contact: [[0, "rgba(5,15,0,0.42)"], [0.7, "rgba(5,15,0,0.27)"], [1, "rgba(5,15,0,0)"]],
+  projected: [[0, "rgba(10,30,5,0.29)"], [0.5, "rgba(10,30,5,0.17)"], [1, "rgba(10,30,5,0)"]],
+  airOpacity: 0.22,
+};
+// Cache unit radial gradients per canvas, then scale them into place.
 const unitGrads = new WeakMap();
 function unitGradient(c, key, stops) {
   let m = unitGrads.get(c); if (!m) { m = {}; unitGrads.set(c, m); }
@@ -68,6 +75,14 @@ function softBlob(c, x, y, rx, ry, key, stops) {
   c.restore();
 }
 export function shadow(c, x, y, rx, ry = rx * 0.4, h = 0) {   // h: how tall the thing is, which stretches the cast shadow
-  softBlob(c, x + rx * 0.55 + h * 0.55, y + ry * 0.3 + h * 0.1, rx * 1.45 + h * 0.55, ry * 1.05 + h * 0.06, "cast", [[0, "rgba(10,25,5,0.2)"], [0.55, "rgba(10,25,5,0.12)"], [1, "rgba(10,25,5,0)"]]);   // thrown to the lower right
-  softBlob(c, x, y, rx * 0.95, ry * 1.05, "contact", [[0, "rgba(5,15,0,0.42)"], [0.6, "rgba(5,15,0,0.26)"], [1, "rgba(5,15,0,0)"]]);                 // dark where it touches the ground
+  rx *= SHADOW_STYLE.scale; ry *= SHADOW_STYLE.scale; h *= SHADOW_STYLE.scale;
+  softBlob(c, x + rx * 0.55 + h * 0.55, y + ry * 0.3 + h * 0.1, rx * 1.45 + h * 0.55, ry * 1.05 + h * 0.06, "cast", SHADOW_STYLE.cast);
+  softBlob(c, x, y, rx * 0.95, ry * 1.05, "contact", SHADOW_STYLE.contact);
+}
+
+// A compact ground patch follows the torso, with a distinct lighter cast to the lower right.
+export function bodyShadow(c, x, y, rx, ry) {
+  rx *= SHADOW_STYLE.scale; ry *= SHADOW_STYLE.scale;
+  softBlob(c, x + rx * 0.95, y + ry * 0.55, rx * 1.15, ry * 0.55, "cast", SHADOW_STYLE.cast);
+  softBlob(c, x, y, rx * 1.2, ry * 0.8, "contact", SHADOW_STYLE.contact);
 }
