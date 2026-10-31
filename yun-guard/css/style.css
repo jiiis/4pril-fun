@@ -653,6 +653,7 @@ canvas { display: block; }
   body:not(.home) .hud-logo .words { display: none; }   /* gameplay controls leave room for only the icon */
   .hud-left, .hud-topright { font-size: 14px; }
   .hud-left { gap: 12px; }
+  body.home .hud-topright { right: 6px; }   /* account for the settings button's padding around its smaller icon */
 }
 #rotate {                                                      /* portrait phones: a soft nudge at the top */
   position: fixed; top: 60px; left: 50%; transform: translateX(-50%);
