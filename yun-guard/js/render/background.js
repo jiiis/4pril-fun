@@ -95,8 +95,10 @@ export function buildBackground(res = 1) {                      // res: device p
   for (const r of rivers) drawRiver(c, r, rand, 0);              // banks and mud for every river first ...
   for (const r of rivers) drawRiver(c, r, rand, 1);              // ... then the water, so a tributary flows into its river
 
-  drawRoad(c, rand, map.paths);
+  const roadTufts = drawRoad(c, rand, map.paths);
   liftGrass(c);                                                  // the grass stands above the roads and rivers: a soil wall, a lit crest and a shadow
+  // Paint plants after the terrain mask so golden seed heads aren't mistaken for bare soil.
+  for (const tuft of roadTufts) drawTuft(c, tuft.x, tuft.y, tuft.s, tuft.variant, rng(tuft.seed));
 
   for (const b of map.bridges) drawBridge(c, b);
   for (const g of map.exits) drawGateGround(c, g);                // chevrons on the road
@@ -194,6 +196,7 @@ const ROAD_BANK = 8;                                             // the earthen 
 const ROAD_RAGGED = 10;                                          // how far lumps of earth and grass can bulge past the bank
 const roadReach = (w) => w / 2 + ROAD_BANK / 2 + ROAD_RAGGED;    // from the centre line to the outermost bit of road at width w
 function drawRoad(c, rand, paths) {
+  const tufts = [];
   // Pre-compute the sample points and the wandering width of every route
   roadSamples = [];
   const roads = paths.map((path) => {
@@ -357,8 +360,8 @@ function drawRoad(c, rand, paths) {
       }
       if (rand() < 0.03 + 1.0 * verge[i]) {                                  // grass tufts along the verge, bunched in clumps
         const o = (rand() < 0.5 ? 1 : -1) * (half + 2 + rand() * 6);
-        const q = { x: p.x + p.nx * o, y: p.y + p.ny * o }, h = 4 + rand() * 4, shade = rand() < 0.5 ? "#2f6b1f" : "#3e7f2a";
-        if (edgeOk(k, q)) for (let kk = -1; kk <= 1; kk++) line(c, q.x, q.y, q.x + kk * (2.5 + rand()), q.y - h - rand() * 3, shade, 1.5);
+        const q = { x: p.x + p.nx * o, y: p.y + p.ny * o };
+        if (edgeOk(k, q)) tufts.push({ ...q, s: 0.7 + rand() * 0.3, variant: Math.floor(rand() * TUFT_KINDS), seed: Math.floor(rand() * 1e6) });
       }
       if (rand() < 0.1) {                                                    // the odd broad-leaved weed or small flower
         const o = (rand() < 0.5 ? 1 : -1) * (half + 4 + rand() * 6);
@@ -416,6 +419,7 @@ function drawRoad(c, rand, paths) {
       }
     }
   });
+  return tufts;
 }
 
 // A rock of random shape: 4 to 8 corners at uneven distances, stretched and turned any way
@@ -496,7 +500,7 @@ function drawPond(c, p) {
   }
 }
 
-// ---------- Small plants (shared by the river banks and the open grass) ----------
+// ---------- Small plants (shared by road edges, water banks and open grass) ----------
 const GREENS = ["#4f8a34", "#5f9e3d", "#3e7a2c", "#6aa845", "#487a30"];
 const pick = (arr, r) => arr[Math.floor(r() * arr.length)];
 export const TUFT_KINDS = 4, WEED_KINDS = 4;
