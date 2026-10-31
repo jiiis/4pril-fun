@@ -1,6 +1,6 @@
 import { state } from "./state.js";
 import { map, roadDistance } from "./map.js";
-import { W, H, ROAD_EDGE } from "./config.js";
+import { W, H, ROAD_EDGE, critterSizeFactor } from "./config.js";
 import { dist } from "./util.js";
 import { addFloater, addBurst, addBlood, makeCorpse } from "./combat.js";
 import { sfx } from "./audio.js";
@@ -36,7 +36,7 @@ export function slayCritter(c) {
   state.gold += 2;
   addFloater(c.x, c.y - 16, "+2", "#ffd54f");
   addBurst(c.x, c.y, 12, "rgba(255,255,255,0.8)");
-  const size = c.type === "deer" || c.type === "cow" ? 22 : c.type === "chicken" || c.type === "duck" ? 10 : 16;
+  const size = (c.type === "deer" || c.type === "cow" ? 22 : c.type === "chicken" || c.type === "duck" ? 10 : 16) * critterSizeFactor(c.type);
   addBlood(c.x, c.y, size);
   state.corpses.push(makeCorpse(c.x, c.y, c.type, { size }, c.dir, c.phase, { critter: true }));   // its little skeleton stays a while
   sfx("die", 0.08); sfx("coin", 0.12);
@@ -60,7 +60,8 @@ export function updateCritters(dt) {
     if (c.pooping) {
       c.pooping -= dt;
       if (c.poopDue !== null && (c.poopDue -= dt) <= 0) {
-        state.poops.push({ x: c.x - c.dir * REAR[c.type], y: c.y + 2, size: POOPERS[c.type], n: 1 + Math.floor(Math.random() * 3), life: 45, age: 0, seed: Math.random() * 10 });
+        const k = critterSizeFactor(c.type);
+        state.poops.push({ x: c.x - c.dir * REAR[c.type] * k, y: c.y + 2 * k, size: POOPERS[c.type] * k, n: 1 + Math.floor(Math.random() * 3), life: 45, age: 0, seed: Math.random() * 10 });
         c.poopDue = null;
       }
       if (c.pooping <= 0) c.pooping = 0;

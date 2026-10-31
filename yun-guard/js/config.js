@@ -15,6 +15,11 @@ export const ENGAGE_RANGE = 50;        // how far from their rally point soldier
 export const ROAD_WIDTH = 90;           // average width; the drawn road wanders around this
 export const ROAD_EDGE = ROAD_WIDTH * 0.55 + 8;    // how far from the centre line the drawn road (at its widest, +10%) plus its earthen bank reaches
 export const ENEMY_SCALE = 0.68;         // monsters are drawn at this fraction of their original artwork size
+// Visual adjustment for ambient animals and their remains; foxes and fish keep their current size.
+export function critterSizeFactor(type) {
+  if (type === "fox" || type === "fish") return 1;
+  return type === "deer" || type === "cow" ? 0.9 : 0.8;
+}
 export const SPOT_RADIUS = 19;          // size of the stone build pads
 
 // The world is generated randomly on a grid every time the game starts (see map.js).

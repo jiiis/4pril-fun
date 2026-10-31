@@ -154,12 +154,10 @@ function drawWater() {
     }
   }
   ctx.globalAlpha = 1;
-  // Ducks and swans paddle slowly around the bigger ponds
+  // Ducks paddle slowly around the bigger ponds
   for (const p of map.ponds) for (const b of p.birds || []) {
     const a = b.a0 + T * b.speed, x = p.x + Math.cos(a) * p.rx * b.r, y = p.y + Math.sin(a) * p.ry * b.r;
     const dir = -Math.sin(a) * b.speed >= 0 ? 1 : -1;                     // facing the way it drifts
-    ctx.globalAlpha = 0.35; ctx.strokeStyle = "#e3f2fd"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x - dir * 4, y + 2); ctx.lineTo(x - dir * 16, y + 5); ctx.moveTo(x - dir * 4, y + 2); ctx.lineTo(x - dir * 16, y - 1); ctx.stroke();   // wake
-    ctx.globalAlpha = 1;
     drawWaterBird(b.kind, x, y, dir, T + b.a0);
   }
   for (const f of state.fish) {

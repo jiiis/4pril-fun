@@ -1,5 +1,6 @@
 import { ctx, rect, circle, ellipse, poly, line, shadow } from "./gfx.js";
 import { state } from "../state.js";
+import { critterSizeFactor } from "../config.js";
 
 // Cute animals drawn with shapes. Each faces right; the canvas is flipped
 // when the animal walks left. (0, 0) is the point where it touches the ground.
@@ -13,7 +14,7 @@ export function drawCritter(c) {
     ctx.setLineDash([]);
     for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) line(ctx, c.x + dx * (pulse + 2), c.y + 1 + dy * (pulse + 2), c.x + dx * (pulse + 6), c.y + 1 + dy * (pulse + 6), "#ffd54f", 1.5);
   }
-  const k = CRITTER_SCALE[c.type] || 1;                                      // small animals drawn smaller
+  const k = (CRITTER_SCALE[c.type] || 1) * critterSizeFactor(c.type);
   shadow(ctx, c.x, c.y + 1, (c.type === "deer" ? 11 : c.type === "chicken" || c.type === "duck" ? 5 : 8) * k, 3 * k, (c.type === "deer" ? 12 : c.type === "chicken" || c.type === "duck" ? 4 : 7) * k);
   ctx.save();
   ctx.translate(c.x, c.y);
@@ -29,9 +30,15 @@ export function drawCritter(c) {
 
 // A duck floating on a pond: only the top half shows above the water
 export function drawWaterBird(kind, x, y, dir, t) {
+  const k = (CRITTER_SCALE[kind] || 1) * critterSizeFactor(kind);
   ctx.save();
-  ctx.translate(x, y + Math.sin(t * 2) * 0.6);
-  ctx.scale(dir, 1);
+  ctx.translate(x, y);
+  ctx.scale(dir * k, k);
+  ctx.globalAlpha = 0.35;
+  ctx.strokeStyle = "#e3f2fd"; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(-4, 2); ctx.lineTo(-16, 5); ctx.moveTo(-4, 2); ctx.lineTo(-16, -1); ctx.stroke();   // wake follows the bird's scale
+  ctx.globalAlpha = 1;
+  ctx.translate(0, Math.sin(t * 2) * 0.6);
   {
     ellipse(ctx, 0, -1.5, 6.5, 3, "#8d6e63", "#75594c", 0.7);               // duck body
     ellipse(ctx, 0.5, -2, 4, 1.8, "#a1887f");
