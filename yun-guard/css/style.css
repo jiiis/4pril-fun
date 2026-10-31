@@ -443,6 +443,7 @@ canvas { display: block; }
 /* ---------- Legend pick (start of each round) ---------- */
 #heroPick {
   --overlay-blur: 10px;
+  container: legend-picker / inline-size;
   position: fixed;
   inset: 0;
   display: flex;
@@ -649,6 +650,10 @@ canvas { display: block; }
   #heroPick .card small { display: none; }
   #heroPick .levelPick { margin-bottom: 16px; }
   #heroPick .ghost { margin-top: 12px; }
+  /* Two 142px cards plus their 9px gap; a third card fits at 444px. */
+  @container legend-picker (293px <= width < 444px) {
+    #heroPick #noLegend { width: 293px; justify-content: center; }
+  }
 }
 @media (max-width: 600px) {
   body:not(.home) .hud-logo .words { display: none; }   /* gameplay controls leave room for only the icon */
