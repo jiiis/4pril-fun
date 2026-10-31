@@ -1265,9 +1265,9 @@ function drawPalace(c, x, y) {
 function drawPagoda(c, x, y) {
   const red = "#a8382f", redDark = "#7a2420", redEdge = "rgba(122,36,32,0.55)", redDeep = "#8e2f29", gold = "#e9c55a", goldDark = "#b8902a";
   const blue = "#2d4e9e", blueDark = "#1c3470", blueLight = "#4a6fc2";
+  // One shared contact-and-cast shadow, sized for the broad marble foundation.
   shadow(c, x, y + 6, 60, 11, 70);
   // Marble terrace: three wide round tiers with balustrades, a stair up the middle
-  ellipse(c, x, y + 8, 59, 10, "rgba(35,30,20,0.42)");                                               // the foundation's own shadow on the grass, so it sits firmly on the ground
   for (const [hw, hh, ty] of [[56, 8, y + 3], [46, 7, y - 4], [36, 6, y - 10]]) {
     const EDGE = "#6f685a", wall = c.createLinearGradient(0, ty - 6, 0, ty);                          // stone with a lit top and a shaded front: it has weight
     wall.addColorStop(0, "#d6d0c2"); wall.addColorStop(1, "#b3ab99");
