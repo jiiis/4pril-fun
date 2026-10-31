@@ -23,7 +23,7 @@ Player-facing text lives in the shared translation catalog at `js/locales/zh-CN.
 
 ## How to play
 
-- The world is bigger than the screen and always shown at its natural size: drag with the mouse or a finger to look around. The HUD stays put.
+- The map fits the window's height within the zoom limits: drag with the mouse or a finger to look around. The HUD stays put. Pinch zoom-out stops at the fitted view; zooming in and panning still work.
 - Keyboard badges and shortcut hints hide on touch-capable devices, independently of screen size. Keyboard shortcuts still work with an attached keyboard.
 - The UI has a minimum layout width of 360px. Narrower windows scroll horizontally instead of squeezing the controls and legend cards; swipe sideways or use the mouse wheel/trackpad. Rotate a phone for more room. The legend picker can still scroll vertically when needed.
 - The top-right corner shows the language switch on the home page and the map hash during gameplay. Below 420px, the top stats become compact. The game-view logo hides below 440px; the full home-page logo remains visible.

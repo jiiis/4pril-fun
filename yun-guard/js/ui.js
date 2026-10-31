@@ -276,14 +276,12 @@ function handleMenuClick(ev) {
   refreshHud();
 }
 
-// Scale the whole board to fill the browser window.
-// The board always fills the screen: shown at its natural size, or scaled up (never down) when the window is
-// larger than it. Whatever sticks out past the screen is reached by dragging (see touch.js).
+// Fit the board to the window's height; dragging reaches anything outside the viewport (see touch.js).
 export const view = { k: 1, fit: 1, panX: 0, panY: 0, mobile: false };
 let cameraMove = null;
 const CAMERA_FOCUS_MS = 240;
 export const viewport = { left: 0, top: 0, right: W, bottom: H };
-const MAX_ZOOM = 2, MIN_ZOOM = 0.6;                              // small screens may shrink the board to see more of it; pads stay tappable
+const MAX_ZOOM = 2, MIN_ZOOM = 0.6;                              // keep the fitted board usable on short screens
 const hudH = () => 0;                                           // the HUD floats over the board, so the whole window is for the map
 // The page (html/body) is sized to the dynamic viewport; measure it rather than window.innerHeight, which
 // phones report late and inconsistently while their toolbars slide
@@ -294,7 +292,7 @@ export function fitToWindow() {
   cameraMove = null;
   view.mobile = window.matchMedia("(pointer: coarse)").matches || navigator.maxTouchPoints > 1;
   document.documentElement.style.setProperty("--hud", `${hudH()}px`);
-  // The board is scaled to the window's height (never below natural size, never more than 2×); the width
+  // The board is scaled to the window's height (within the zoom limits); the width
   // follows proportionally, so a wide screen gets quiet borders at the sides and a narrow one pans sideways.
   view.k = view.fit = clamp((pageH() - hudH()) / H, MIN_ZOOM, MAX_ZOOM);
   applyView();
@@ -305,7 +303,7 @@ export function zoomTo(k, sx, sy) {
   cameraMove = null;
   const origin = document.body.getBoundingClientRect();
   sx -= origin.left; sy -= origin.top;                          // pointer coordinates stay correct when the wider page is scrolled
-  k = clamp(k, Math.max(MIN_ZOOM, view.fit * 0.8), Math.min(MAX_ZOOM, view.fit * 1.8));   // only a little out, a fair bit in, from the natural fit
+  k = clamp(k, view.fit, Math.min(MAX_ZOOM, view.fit * 1.8));       // never shrink below the fitted view
   const cx = pageW() / 2, cy = (pageH() - hudH()) / 2;
   const ux = (sx - cx - view.panX) / view.k, uy = (sy - cy - view.panY) / view.k;   // board offset (from its centre) under the finger
   view.panX = sx - cx - ux * k; view.panY = sy - cy - uy * k; view.k = k;
