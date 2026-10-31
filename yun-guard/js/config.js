@@ -12,7 +12,7 @@ export const WAVE_BREAK = 26;          // seconds until the next wave comes by i
 export const CALL_AT = 0.6;            // the next wave may be called once this share of the current wave has entered
 export const SOLDIER_RESPAWN = 8;      // seconds for a fallen soldier to come back
 export const ENGAGE_RANGE = 50;        // how far from their rally point soldiers will chase
-export const ROAD_WIDTH = 90;           // average width; the drawn road wanders around this
+export const ROAD_WIDTH = 84;           // average width; the drawn road wanders within ±10%
 export const ROAD_EDGE = ROAD_WIDTH * 0.55 + 8;    // how far from the centre line the drawn road (at its widest, +10%) plus its earthen bank reaches
 export const ENEMY_SCALE = 0.68;         // monsters are drawn at this fraction of their original artwork size
 // Visual adjustment for ambient animals and their remains; foxes and fish keep their current size.

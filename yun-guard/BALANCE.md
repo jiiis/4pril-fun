@@ -6,6 +6,10 @@ Professional, balanced, and fun for hours. Preserve clear feedback, gradual diff
 
 Update this file whenever balance changes. Record the actual values and rationale in the same change as the code. Separate implemented mechanics from proposals; design approval does not mean a mechanic is playable. Configuration is in `js/config.js`, upgrade formulas in `js/towers.js`, level progression in `js/levels.js`, and enemy damage resolution in `js/damage.js` and `js/combat.js`.
 
+## Implemented: road geometry
+
+Roads have a base surface width of 84 world pixels (previously 90), with smooth variation within ±10% (75.6–92.4 pixels). The narrower surface keeps all existing bank widths, ragged-edge extents, placement buffers and generation caps unchanged. Road-relative placements and enemy lateral movement limits follow the reduced width through the existing shared constants; tower stats, costs and enemy stats are unchanged.
+
 ## Implemented: armor framework
 
 Initial values for iteration, not a claim that the game is fully balanced. All current enemies have one of four armor classes. Armor class and armor amount are separate. Flying, frost immunity, blocking, healing, and other traits remain separate from armor.
