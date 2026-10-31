@@ -1,7 +1,7 @@
 import { state } from "./state.js";
 import { TOWERS, ARMOR_CLASSES, DAMAGE_TYPES, ABILITIES } from "./config.js";
 import { SPECIALIZATIONS } from "./specializations.js";
-import { towerRange, towerDamage, towerRate, upgradeCost, sellValue, canUpgrade, canSpecialise, abilityCost, abilityDef, soldierCount, soldierHp, soldierDamage, specializationDef, skillRank, skillCost } from "./towers.js";
+import { towerRange, towerDamage, towerRate, upgradeCost, sellValue, canUpgrade, canSpecialise, abilityCost, abilityDef, soldierCount, soldierHp, soldierDamage, specializationDef, skillRank, skillCost, escortCount, foundationDamage, foundationHp, foundationRange, foundationRate } from "./towers.js";
 import { icon } from "./icons.js";
 import { inputHint, shortcutLabel } from "./input-hints.js";
 
@@ -56,10 +56,12 @@ export function towerInspector(tower, tab) {
   const spec = specializationDef(tower), ability = spec || abilityDef(tower), def = tower.def;
   const unitLabel = tower.specialization === "brood" ? "Adults" : spec ? "Units" : "Soldiers";
   tab ||= canSpecialise(tower) || spec ? "upgrades" : "overview";
-  let overview = `<div class="stats">` + (def.soldiers
+  let overview = (tower.type === "archer" && spec ? heading("Specialist attack") : "") + `<div class="stats">` + (def.soldiers
     ? stat("Damage", soldierDamage(tower)) + stat("Health", soldierHp(tower)) + stat(unitLabel, soldierCount(tower))
     : stat("Damage", towerDamage(tower)) + stat("Range", towerRange(tower)) + stat("Rate", `${towerRate(tower).toFixed(2)}/s`)) + `</div>`;
   overview += `<p class="tower-description">${spec?.desc || def.desc}</p>`;
+  if (escortCount(tower)) overview += heading("Veteran guard detail") + `<div class="stats">${stat("Guards", escortCount(tower))}${stat("Damage", foundationDamage(tower))}${stat("Health", foundationHp(tower))}</div>`;
+  if (tower.type === "archer" && spec) overview += heading("Veteran fire arrows") + `<div class="stats">${stat("Damage", foundationDamage(tower))}${stat("Range", foundationRange(tower))}${stat("Rate", `${foundationRate(tower).toFixed(2)}/s`)}</div>`;
   overview += attackProfile(spec?.type || def.type);
   if (def.soldiers) overview += unitArmor(tower, spec);
   const tabs = `<div class="inspector-tabs" role="tablist" aria-label="Tower details">${["overview", "upgrades"].map((key) => `<button role="tab" id="inspector-tab-${key}" aria-controls="inspector-panel-${key}" aria-selected="${tab === key}" data-action="tab" data-tab="${key}">${key === "overview" ? "Overview" : "Upgrades"}</button>`).join("")}</div>`;

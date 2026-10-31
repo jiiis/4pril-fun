@@ -65,19 +65,19 @@ Archer and Barracks instead choose one of three specializations at level 3. Each
 
 | Archer specialization | Role | Skills |
 |---|---|---|
-| **Falcon Roost** | Returning falcons hunt ground and air targets. Travel costs damage uptime; poor against swarms. | **Quarry:** prioritize and punish healers/necromancers. **Talon Rend:** temporarily weaken armor amount for allied physical attacks. **Hunting Pair:** add and improve a second falcon. |
-| **Thornweavers** | Persistent brambles pulse at ground enemies and briefly root them. No anti-air; fixed coverage and plating are weaknesses. | **Deep Roots:** longer roots, with a shared cooldown and heavy-enemy resistance. **Barbed Growth:** extra damage only against moving enemies. **Seed Drift:** a second patch and wider coverage. |
-| **Moonbow** | Silver arrows ricochet among the tower's own marked enemies, at least 24 and at most 110 apart. Weak against isolated/tightly packed enemies and armor. | **Lunar Marks:** more marked targets. **Silver Thread:** retain more damage per ricochet. |
+| **Falcon Roost** | Retained veteran fire archers support returning falcons hunting ground and air targets. Travel costs damage uptime; poor against swarms. | **Quarry:** prioritize and punish healers/necromancers. **Talon Rend:** temporarily weaken armor amount for allied physical attacks. **Hunting Pair:** add and improve a second falcon. |
+| **Thornweavers** | Retained veteran fire archers support persistent brambles that damage and root ground enemies. Brambles cannot hit flyers; fixed coverage and plating are weaknesses. | **Deep Roots:** longer roots, with a shared cooldown and heavy-enemy resistance. **Barbed Growth:** extra damage on every pulse, including blocked/rooted targets. **Seed Drift:** a second patch and wider coverage. |
+| **Moonbow** | Retained veteran fire archers support silver arrows ricocheting among each arrow's own marked enemies, at least 24 and at most 110 apart. Weak against isolated/tightly packed enemies and armor. | **Lunar Marks:** more marked targets. **Silver Thread:** retain more damage per ricochet. |
 
-Archer specializations replace the original fire-arrow attack. All three deal Piercing damage; Talon Rend reduces armor amount, not class resistance. Summons, patches, control and projectile counts have explicit limits. Exact costs and limits are in [BALANCE.md](BALANCE.md).
+Archer specializations retain tier-3 fire arrows and add a specialist attack. Specialist attacks deal Piercing damage; fire-arrow burn remains Arcane. Talon Rend reduces armor amount, not class resistance. Summons, patches, control and projectile counts have explicit limits. Exact costs and limits are in [BALANCE.md](BALANCE.md).
 
 | Barracks specialization | Role | Skills |
 |---|---|---|
-| **Cloud Monastery** | Two fragile spear spirits intercept ground and air, then retreat to recover. Never blocks; Piercing attacks struggle with plating. | **Cloudstep:** faster interception and recovery. **Sky Spears:** extra damage to flyers. |
-| **Brood Nursery** | Two armored beetles block ground enemies and hatch temporary helpers, with a strict population cap. Cannot hit flyers. | **Chitin:** adult durability. **Hatchery:** faster hatching and a larger cap. **Last Brood:** hatchlings released when adults fall. |
-| **Jade Colossus** | One slow guardian crushes groups with Siege damage, countering Fortified enemies. Cannot cover scattered runners or flyers. | **Stoneheart:** health, rest healing and respawn. **Earthbreaker:** wider, harder, slower crushing attacks. |
+| **Cloud Monastery** | Three veteran guards hold the road while two fragile spear spirits intercept ground and air, then retreat to recover. Spirits never block; Piercing attacks struggle with plating. | **Cloudstep:** faster interception and recovery. **Sky Spears:** extra damage to flyers. |
+| **Brood Nursery** | Three armored beetles block ground enemies and hatch temporary helpers, with a strict population cap. Cannot hit flyers. | **Chitin:** adult durability. **Hatchery:** faster hatching and a larger cap. **Last Brood:** hatchlings released when adults fall. |
+| **Jade Colossus** | One jade guardian and two veteran guards hold the road. The guardian crushes groups with Siege damage, countering Fortified enemies. Slow to reposition; no anti-air. | **Stoneheart:** health, rest healing and respawn. **Earthbreaker:** wider, harder crushing attacks without losing attack speed. |
 
-Barracks specializations replace the original squad; rally orders still work. Skills can be purchased in any order. Exact costs, ranks and initial balance values are in [BALANCE.md](BALANCE.md).
+Barracks specializations promote the existing defense in place, preserving wounds and respawn timers. Cloud keeps three guards, Colossus keeps two alongside its guardian, and Brood promotes all three soldiers into armored adults; rally orders still work. Skills can be purchased in any order. Exact costs, ranks and initial balance values are in [BALANCE.md](BALANCE.md).
 
 | Monster | What makes it different |
 |---|---|

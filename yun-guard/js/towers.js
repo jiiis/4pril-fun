@@ -3,11 +3,23 @@ import { closestPointOnPath, clamp } from "./util.js";
 import { map } from "./map.js";
 import { SPECIALIZATIONS } from "./specializations.js";
 
+const damageAt = (t, level) => t.def.damage * (1 + 0.6 * (level - 1));
+const rateAt = (t, level) => t.def.rate * (1 + 0.08 * (level - 1));
+const rangeAt = (t, level) => t.def.range + 18 * (level - 1);
+const hpAt = (t, level) => Math.round(t.def.soldierHp * (1 + 0.6 * (level - 1)));
+
+// Retained crews and guards use the same tier scaling as ordinary upgrades.
+export const foundationDamage = (t) => Math.round(damageAt(t, 3));
+export const foundationRate = (t) => rateAt(t, 3);
+export const foundationRange = (t) => rangeAt(t, 3);
+export const foundationHp = (t) => hpAt(t, 3);
+export const escortCount = (t) => specializationDef(t)?.escorts || 0;
+
 // Ordinary tiers scale base stats; specializations can define their own attack loop.
 const FINAL = (t) => (t.level >= MAX_LEVEL ? 1 : 0);
-export const towerRange = (t) => specializationDef(t)?.range ?? t.def.range + 18 * (t.level - 1) + 20 * FINAL(t);
-export const towerDamage = (t) => specializationDef(t)?.damage ?? Math.round(t.def.damage * (1 + 0.6 * (t.level - 1)) * (1 + 0.2 * FINAL(t)));
-export const towerRate = (t) => specializationDef(t)?.rate ?? t.def.rate * (1 + 0.08 * (t.level - 1)) * (1 + 0.15 * FINAL(t));
+export const towerRange = (t) => specializationDef(t)?.range ?? rangeAt(t, t.level) + 20 * FINAL(t);
+export const towerDamage = (t) => specializationDef(t)?.damage ?? Math.round(damageAt(t, t.level) * (1 + 0.2 * FINAL(t)));
+export const towerRate = (t) => specializationDef(t)?.rate ?? rateAt(t, t.level) * (1 + 0.15 * FINAL(t));
 export const upgradeCost = (t) => Math.round(t.def.cost * UPGRADE_COST_FACTOR * t.level);
 export const sellValue = (t) => Math.round(t.spent * 0.7);
 export const canUpgrade = (t) => t.level < MAX_LEVEL - 1;               // plain upgrades up to level 3 ...
@@ -21,7 +33,11 @@ export function specialize(t, key) {
   const def = SPECIALIZATIONS[t.type]?.[key];
   if (!def || !canSpecialise(t)) return false;
   t.specialization = key; t.skills = {}; t.level = MAX_LEVEL;
-  t.soldiers = []; t.hatchCd = null;
+  // Promote units in place: no teleport, free revive, lost wounds or gap in blocking.
+  t.soldiers.forEach((soldier, index) => {
+    soldier.escort = !!def.escorts && (key === "cloud" || index >= def.count);
+  });
+  t.hatchCd = null;
   t.cd = 0;
   t.spent += def.cost;
   return true;
@@ -72,7 +88,7 @@ export const soldierCount = (t) => specializationDef(t)?.count ?? t.def.soldiers
 export const soldierHp = (t) => {
   const spec = specializationDef(t);
   if (spec) return spec.skills.chitin?.hp[skillRank(t, "chitin")] ?? spec.skills.stoneheart?.hp[skillRank(t, "stoneheart")] ?? spec.hp;
-  return Math.round(t.def.soldierHp * (1 + 0.6 * (t.level - 1)));
+  return hpAt(t, t.level);
 };
 export const soldierDamage = (t) => specializationDef(t)?.skills.earthbreaker?.damage[skillRank(t, "earthbreaker")] ?? specializationDef(t)?.damage ?? towerDamage(t);
 export const soldierRate = (t) => specializationDef(t)?.skills.earthbreaker?.rate[skillRank(t, "earthbreaker")] ?? specializationDef(t)?.rate ?? towerRate(t);

@@ -1,7 +1,7 @@
 import { state } from "./state.js";
 import { TOWERS, ABILITIES, ARMOR_CLASSES, DAMAGE_TYPES, W, H } from "./config.js";
 import { SPECIALIZATIONS } from "./specializations.js";
-import { canUpgrade, canSpecialise, upgradeCost, abilityCost, sellValue, specializationDef, abilityDef, skillRank, skillCost, towerDamage, towerRange, towerRate, soldierDamage, soldierHp, soldierCount } from "./towers.js";
+import { canUpgrade, canSpecialise, upgradeCost, abilityCost, sellValue, specializationDef, abilityDef, skillRank, skillCost, towerDamage, towerRange, towerRate, soldierDamage, soldierHp, soldierCount, escortCount, foundationDamage, foundationRate, foundationRange } from "./towers.js";
 import { icon } from "./icons.js";
 
 const SIZE = 300, REACH = 108;
@@ -60,8 +60,10 @@ function towerSummary(tower) {
   const strong = Object.values(ARMOR_CLASSES).filter((c) => c.multipliers[type] > 1).map((c) => c.name).join(", ");
   const weak = Object.values(ARMOR_CLASSES).filter((c) => c.multipliers[type] < 1).map((c) => c.name).join(", ");
   const armor = spec?.skills.chitin?.armor[skillRank(tower, "chitin")] ?? spec?.armor ?? 0;
+  if (escortCount(tower)) stats.push(["Guards", escortCount(tower)]);
+  const crew = tower.type === "archer" && spec ? `<p><strong>Veteran fire arrows</strong></p><div class="radial-stats"><span><small>Damage</small><b>${foundationDamage(tower)}</b></span><span><small>Range</small><b>${foundationRange(tower)}</b></span><span><small>Rate</small><b>${foundationRate(tower).toFixed(2)}/s</b></span></div>` : "";
   return `<div class="radial-stats">${stats.map(([label, value]) => `<span><small>${label}</small><b>${value}</b></span>`).join("")}</div>
-    <p>${escape(spec?.desc || tower.def.desc)}</p><div class="radial-facts"><strong>${DAMAGE_TYPES[type].name} · primary attack</strong>
+    ${crew}<p>${escape(spec?.desc || tower.def.desc)}</p><div class="radial-facts"><strong>${DAMAGE_TYPES[type].name} · primary attack</strong>
     ${strong ? `<span>Effective vs ${strong}</span>` : ""}${weak ? `<span>Resisted by ${weak}</span>` : ""}<small>Class matchups apply before armor amount.</small>
     ${tower.def.soldiers ? `<span>${icon("shield")} ${tower.specialization === "brood" ? "Adult" : "Unit"} armor: ${Math.round(armor * 100)}%</span>` : ""}</div>
     ${ability ? `<p><strong>${ability.name}</strong> · ${escape(ability.desc)}</p>` : ""}`;
@@ -73,7 +75,7 @@ function previewCard(tower, selected) {
   const subtitle = detail ? tower ? "Tower details" : "Build details" : selected.rank != null ? `Skill · rank ${selected.rank}/${selected.ranks}` : "Specialization";
   const content = detail ? towerSummary(tower) : selected.rank != null
     ? `<div class="radial-training" aria-label="${selected.rank} of ${selected.ranks} ranks">${Array.from({ length: selected.ranks }, (_, i) => `<i class="${i < selected.rank ? "trained" : ""}"></i>`).join("")}</div><p><small>Current</small>${escape(selected.current)}</p>${selected.cost !== null ? `<p><small>Next rank</small>${escape(selected.description)}</p>` : ""}`
-    : `<p>${escape(selected.description)}</p>${selected.skills ? `<div class="radial-skill-names">${Object.values(selected.skills).map((skill) => `<span>${escape(skill.name)}</span>`).join("")}</div><p class="radial-card-note">${tower.def.soldiers ? "Replaces your squad. Skills are bought separately." : "Replaces the tower's attack. Skills are bought separately."}</p>` : ""}`;
+    : `<p>${escape(selected.description)}</p>${selected.skills ? `<div class="radial-skill-names">${Object.values(selected.skills).map((skill) => `<span>${escape(skill.name)}</span>`).join("")}</div><p class="radial-card-note">${tower.def.soldiers ? "Strengthens your defense with specialist units. Skills are bought separately." : "Keeps veteran fire arrows and adds a specialist attack. Skills are bought separately."}</p>` : ""}`;
   const maxed = !detail && selected.rank != null && selected.cost === null;
   const button = detail ? "" : `<footer><button class="radial-purchase" data-action="${selected.action}" ${selected.data} ${maxed ? "disabled" : `data-cost="${selected.cost}" ${state.gold < selected.cost ? "disabled" : ""}`}>
     <span>${maxed ? "Fully trained" : selected.rank != null ? selected.rank ? "Upgrade skill" : "Learn skill" : "Choose path"}</span>${maxed ? icon("check") : gold(selected.cost)}</button></footer>`;

@@ -3,14 +3,16 @@ import { TOWERS } from "../config.js";
 import { state } from "../state.js";
 import { drawArcherSpecialization } from "./archer.js";
 import { addLight } from "./lights.js";
+import { masonry, timber, tiledRoof, lantern, insetWindow } from "./tower-materials.js";
+import { drawSummoningHall } from "./barracks.js";
 import { archerHeight, mageHeight, teslaHeight, ballistaHeight, archerSlots, visLevel } from "../towers.js";
 
-// Each tower is drawn with simple shapes and looks different at every level.
+// Simple structural shapes gain material shading, equipment and detail at each tier.
 // (x, y) is the centre of its build spot, t.angle points at the last target,
 // t.anim counts down after a shot, t.lastShot is when the crew last fired.
 export function drawTower(t) {
   const { x, y } = t;
-  const lv = visLevel(t);                                      // level 4 reuses the level-3 artwork plus ability ornaments
+  const lv = visLevel(t);                                      // specializations supply their own buildings; legacy abilities add ornaments
   // Taller towers cast longer shadows toward the lower right.
   const tall = t.def === TOWERS.archer ? archerHeight(lv) : t.def === TOWERS.mage ? mageHeight(lv) : t.def === TOWERS.tesla ? teslaHeight(lv) : t.def === TOWERS.ballista ? ballistaHeight(lv) + 8 : 30;
   ctx.save();
@@ -121,49 +123,34 @@ function smokeColumn(px, py, seed = 0) {
 //  ARCHER TOWER
 // =====================================================================
 function drawArcher(t, x, y, lv) {
-  if (t.specialization) { drawArcherSpecialization(t, x, y); return; }
   const h = archerHeight(lv);
-  if (lv === 1) {
-    rect(ctx, x - 14, y - 6, 28, 14, "#8d6e63", "#4e342e");
-    for (const xx of [-8, 0, 8]) line(ctx, x + xx, y - 6, x + xx, y + 8, "#6d4c41", 1);
-  } else {
-    rect(ctx, x - 17, y - 14, 34, 24, lv === 3 ? "#8d8d8d" : "#9e9e9e", "#4e4e4e");
-    bricks(x - 17, y - 14, 34, 24, 3, "#7a7a7a");
-    if (lv === 3) rect(ctx, x - 17, y - 4, 34, 3, "#455a64");
-  }
-  if (lv === 1) {
-    for (const xx of [-10, 10]) line(ctx, x + xx, y - h, x + xx, y - 6, "#a1703f", 4);
-    line(ctx, x - 10, y - h, x + 10, y - 6, "#7a4e25", 2);
-    line(ctx, x + 10, y - h, x - 10, y - 6, "#7a4e25", 2);
-    for (let i = 0; i < 4; i++) line(ctx, x - 2, y - 10 - i * (h - 12) / 4, x + 2, y - 10 - i * (h - 12) / 4, "#7a4e25", 1.5);
-    line(ctx, x - 2, y - h, x - 2, y - 6, "#7a4e25", 1); line(ctx, x + 2, y - h, x + 2, y - 6, "#7a4e25", 1);
-  } else {
-    rect(ctx, x - 12, y - h, 24, h - 14, "#a1703f", "#5d4037");
-    line(ctx, x - 12, y - h, x + 12, y - 14, "#7a4e25", 2);
-    line(ctx, x + 12, y - h, x - 12, y - 14, "#7a4e25", 2);
-    if (lv === 3) {
-      rect(ctx, x - 12, y - h / 2 - 2, 24, h / 2 - 12, "#9e9e9e", "#5d4037");
-      bricks(x - 12, y - h / 2 - 2, 24, h / 2 - 12, 2, "#7a7a7a");
-      rect(ctx, x - 3, y - h + 8, 6, 9, "#3e2723"); line(ctx, x, y - h + 8, x, y - h + 17, "#8d6e63", 1);
+  if (t.specialization) drawArcherSpecialization(t, x, y);
+  else {
+    if (lv === 1) {
+      masonry(x - 15, y - 4, 30, 14);
+      for (const dx of [-12, 8]) timber(x + dx, y - h, 4, h - 2);
+      line(ctx, x - 10, y - h + 6, x + 10, y - 5, "#7b6244", 2.2);
+      line(ctx, x + 10, y - h + 6, x - 10, y - 5, "#ac8754", 2);
     } else {
-      rect(ctx, x - 2, y - h / 2 - 6, 4, 10, "#3e2723");
+      masonry(x - 18, y - 16, 36, 27);
+      for (const dx of [-13, 8]) timber(x + dx, y - h, 5, h - 13);
+      if (lv === 3) masonry(x - 12, y - h + 18, 24, h - 32);
+      else line(ctx, x - 10, y - h + 5, x + 10, y - 15, "#8c714d", 3);
+      insetWindow(x - 3, y - 25, 6, 9);
     }
+    for (const dx of [-3, 2]) line(ctx, x + dx, y - h + 3, x + dx, y - 5, "#b89966", 1);
+    for (let i = 0; i < 6; i++) line(ctx, x - 3, y - 8 - i * 5.5, x + 2, y - 8 - i * 5.5, "#d3b681", 0.9);
+    timber(x - 22, y - h - 6, 44, 6);
+    for (const dx of [-19, 19]) timber(x + dx - 1, y - h - 15, 2, 9);
+    line(ctx, x - 20, y - h - 15, x + 20, y - h - 15, "#c7a36a", 1.3);
+    if (lv === 3) {
+      for (const dx of [-23, 22]) timber(x + dx, y - h - 42, 2.5, 38);
+      tiledRoof(x, y - h - 41, 28, 18, "red");
+      rect(ctx, x - 7, y - h - 7, 14, 2, "#b49c69");
+    }
+    if (lv === 2) flag(x - 20, y - h - 30, 16, "#a86144", x);
+    lantern(x + 18, y - h - 2, x, 22);
   }
-  rect(ctx, x - 21, y - h - 6, 42, 6, "#6d4c41", "#3e2723");
-  if (lv >= 2) {
-    line(ctx, x - 20, y - h - 18, x + 20, y - h - 18, "#5d4037", 2);
-    for (const px of [-20, -10, 0, 10, 20]) line(ctx, x + px, y - h - 18, x + px, y - h - 6, "#5d4037", 2);
-  }
-  if (lv === 3) {
-    for (const px of [-19, 19]) line(ctx, x + px, y - h - 6, x + px, y - h - 44, "#5d4037", 3);
-    poly(ctx, [[x - 25, y - h - 42], [x, y - h - 58], [x + 25, y - h - 42]], "#c62828", "#7f0000");   // a steady canopy
-    for (let i = 1; i < 4; i++) line(ctx, x - 25 + i * 6, y - h - 42 - i * 4, x + 25 - i * 6, y - h - 42 - i * 4, "rgba(0,0,0,0.15)", 1);
-    rect(ctx, x - 5, y - h - 13, 10, 7, "#5d4037", "#3e2723", 1);
-    rect(ctx, x + 13, y - h - 14, 8, 6, "#424242", "#212121", 1);           // brazier
-    line(ctx, x + 17, y - h - 8, x + 17, y - h - 6, "#424242", 2);
-    fire(x + 17, y - h - 14, 5, x);
-  }
-  if (lv === 2) flag(x, y - h - 40, 22, "#ffd54f", x);
   const dir = facing(t), idle = relaxed(t);
   const looks = [["#5d4037", "#2e7d32"], ["#f9a825", "#c62828"], ["#3e2723", "#1565c0"]];
   archerSlots(lv).forEach((s, i) => drawArcherGirl(x + s.dx, y - h - 6 + s.dy, dir, t.shooter === i ? t.anim : 0, looks[i][0], looks[i][1], t.angle, lv === 3, idle, i * 2.1 + x * 0.01));
@@ -421,6 +408,7 @@ function drawBallista(t, x, y, lv) {
   ctx.fillStyle = lv === 3 ? "#cfd8dc" : "#6d4c41"; ctx.beginPath(); ctx.arc(look ? 0.6 : 0, -18.5, 4, Math.PI, 0); ctx.fill();
   line(ctx, 3, -10, 8, -9 + crank, "#ffcc80", 2.2);
   ctx.restore();
+  lantern(x + 23, deckY + 14, x, 22);
   if (lv === 3) flag(x + 22, deckY - 30, 26, "#c62828", x);
 }
 
@@ -479,78 +467,32 @@ function drawCannon(t, x, y, lv) {
 // =====================================================================
 function drawBarracks(t, x, y, lv) {
   if (t.specialization) { drawSummoningHall(t, x, y); return; }
+  // The same hall gains dressed stone, buttresses and a second roof tier as it develops.
+  masonry(x - 23, y + 4, 46, 8);
   if (lv === 1) {
-    rect(ctx, x - 18, y - 14, 36, 24, "#8d6e63", "#4e342e");
-    for (const xx of [-12, -6, 0, 6, 12]) line(ctx, x + xx, y - 14, x + xx, y + 10, "#6d4c41", 1.2);
-    poly(ctx, [[x - 22, y - 14], [x, y - 30], [x + 22, y - 14]], "#c9a95c", "#8d6e63");
-    for (let i = 1; i < 5; i++) line(ctx, x - 22 + i * 4.4, y - 14 - i * 3.2, x + 22 - i * 4.4, y - 14 - i * 3.2, "rgba(0,0,0,0.12)", 1);
-    ctx.fillStyle = "#4e342e";
-    ctx.beginPath(); ctx.arc(x, y, 5, Math.PI, 0); ctx.lineTo(x + 5, y + 10); ctx.lineTo(x - 5, y + 10); ctx.closePath(); ctx.fill();
-    for (const px of [-24, 24]) { rect(ctx, x + px - 2, y - 6, 4, 16, "#8d6e63", "#4e342e", 1); poly(ctx, [[x + px - 2, y - 6], [x + px, y - 10], [x + px + 2, y - 6]], "#8d6e63"); }
-    smokeColumn(x + 10, y - 26, x * 0.01);                                     // cooking fire smoke through the thatch
-    addLight(ctx, x, y + 4, 14, "lantern");                                     // and firelight through the door
-    return;
-  }
-  if (lv === 3) {
-    for (const px of [-22, 22]) {
-      rect(ctx, x + px - 5, y - 30, 10, 40, "#9e9e9e", "#4e4e4e");
-      for (let i = -5; i < 5; i += 4) rect(ctx, x + px + i, y - 35, 3, 6, "#9e9e9e", "#4e4e4e", 1);
-      rect(ctx, x + px - 1.5, y - 22, 3, 6, "#263238");
-    }
-  }
-  rect(ctx, x - 18, y - 18, 36, 28, lv === 3 ? "#bdbdbd" : "#bcaaa4", "#5d4037");
-  bricks(x - 18, y - 18, 36, 28, 3, lv === 3 ? "#9e9e9e" : "#a1887f");
-  ctx.fillStyle = "#4e342e";
-  ctx.beginPath(); ctx.arc(x, y, 6, Math.PI, 0); ctx.lineTo(x + 6, y + 10); ctx.lineTo(x - 6, y + 10); ctx.closePath(); ctx.fill();
-  circle(ctx, x + 3, y + 4, 0.8, "#ffd54f");
-  poly(ctx, [[x - 22, y - 18], [x, y - 34], [x + 22, y - 18]], lv === 3 ? "#ffb300" : "#b71c1c", "#3e2723");
-  for (let i = 1; i < 4; i++) line(ctx, x - 22 + i * 5.5, y - 18 - i * 4, x + 22 - i * 5.5, y - 18 - i * 4, "rgba(0,0,0,0.15)", 1);
-  rect(ctx, x - 12, y - 32, 5, 8, "#6d6d6d", "#424242", 1);                    // chimney
-  smokeColumn(x - 9.5, y - 33, x * 0.01);
-  circle(ctx, x, y - 20, 5, "#1565c0", "#ffd54f");
-  if (lv === 2) {
-    flag(x + 15, y - 48, 16, "#1565c0", x);
-    const wob = Math.sin(state.time * 1.7 + x) * 0.08;                        // training dummy wobbles
-    ctx.save(); ctx.translate(x - 26, y + 10); ctx.rotate(wob);
-    line(ctx, 0, 0, 0, -16, "#6d4c41", 2); line(ctx, -5, -12, 5, -12, "#6d4c41", 2);
-    circle(ctx, 0, -18, 3, "#c9a95c", "#8d6e63", 1);
-    ctx.restore();
-  }
-  if (lv === 3) for (const px of [-22, 22]) flag(x + px, y - 50, 16, "#ffd54f", x + px);
-}
-
-function drawSummoningHall(t, x, y) {
-  const T = state.time, cloud = t.specialization === "cloud", brood = t.specialization === "brood";
-  if (cloud) {
-    rect(ctx, x - 22, y - 12, 44, 22, "#b0bec5", "#455a64", 1.5);
-    for (const dx of [-16, 16]) rect(ctx, x + dx - 3, y - 35, 6, 28, "#e0f7fa", "#607d8b", 1);
-    poly(ctx, [[x - 30, y - 33], [x, y - 49], [x + 30, y - 33], [x + 19, y - 29], [x, y - 38], [x - 19, y - 29]], "#4f83a0", "#263238", 1.5);
-    circle(ctx, x, y - 21, 8, "#263238", "#ffd54f", 1.5);
-    for (let i = 0; i < 3; i++) ellipse(ctx, x + Math.sin(T + i * 2) * 18, y + 4 + i * 2, 12, 3, "rgba(224,247,250,0.5)");
-    flag(x + 24, y - 37, 25, "#b3e5fc", x);
-  } else if (brood) {
-    ellipse(ctx, x, y + 3, 30, 13, "#5d4037", "#3e2723", 2);
-    ellipse(ctx, x, y - 10, 23, 22, "#557c30", "#263c18", 2);
-    for (const dx of [-12, 0, 12]) line(ctx, x + dx, y - 26, x + dx * 1.5, y + 1, "#8aa65a", 2);
-    ellipse(ctx, x, y, 9, 8, "#263c18");
-    for (const dx of [-19, 19]) {
-      ellipse(ctx, x + dx, y + 6, 6, 8, "#dce8ab", "#829b56", 1);
-      circle(ctx, x + dx, y + 4 + Math.sin(T * 2 + dx), 2, "#aed581");
-    }
+    timber(x - 19, y - 18, 38, 23);
+    for (const dx of [-19, 16]) timber(x + dx, y - 20, 3, 27);
   } else {
-    ellipse(ctx, x, y + 5, 28, 12, "#347566", "#235b50", 2);
-    for (const dx of [-19, 19]) {
-      rect(ctx, x + dx - 5, y - 29, 10, 33, "#68ad91", "#235b50", 2);
-      rect(ctx, x + dx - 7, y - 32, 14, 5, "#a3d4bd", "#235b50", 1);
-    }
-    poly(ctx, [[x - 27, y - 32], [x, y - 46], [x + 27, y - 32]], "#347566", "#235b50", 2);
-    const pulse = 0.45 + Math.sin(T * 1.8) * 0.15;
-    ctx.globalAlpha = pulse;
-    circle(ctx, x, y - 8, 11, "#a3d4bd", "#ffe082", 1.5);
-    ctx.globalAlpha = 1;
-    poly(ctx, [[x, y - 19], [x + 5, y - 10], [x, y - 1], [x - 5, y - 10]], "#ffe082");
+    masonry(x - 20, y - 23, 40, 30);
+    for (const dx of [-24, 19]) masonry(x + dx, y - (lv === 3 ? 31 : 16), 6, lv === 3 ? 40 : 25);
+    insetWindow(x - 16, y - 14, 6, 9);
+    insetWindow(x + 10, y - 14, 6, 9);
   }
-  // Purchased ranks remain visible on the building without adding another UI panel.
-  const ranks = Object.values(t.skills).reduce((sum, rank) => sum + rank, 0);
-  for (let i = 0; i < ranks; i++) circle(ctx, x - (ranks - 1) * 2 + i * 4, y + 13, 1.4, "#ffd54f");
+  rect(ctx, x - 6, y - 6, 12, 14, "#2b3730");
+  rect(ctx, x - 5, y - 5, 4, 12, "#795e3d");
+  line(ctx, x - 5, y + 2, x - 1, y + 2, "#b08c56", 0.8);
+  masonry(x - 9, y + 8, 18, 3);
+  tiledRoof(x, y - (lv === 1 ? 18 : 23), lv === 3 ? 29 : 25, lv === 1 ? 16 : 19, lv === 1 ? "straw" : "red");
+  if (lv === 3) {
+    masonry(x - 8, y - 42, 16, 13);
+    tiledRoof(x, y - 42, 14, 12);
+    flag(x + 23, y - 48, 21, "#bda05c", x);
+  } else if (lv === 2) flag(x + 23, y - 39, 19, "#657d83", x);
+  lantern(x + 7, y - 3, x, 21);
+  // A fixed chimney vents the kitchen; no unsupported smoke through a solid roof.
+  if (lv >= 2) { masonry(x - 14, y - 37, 5, 12); smokeColumn(x - 11, y - 38, x * 0.01); }
+  for (let i = 0; i < lv; i++) {
+    line(ctx, x - 28 + i * 3, y + 7, x - 28 + i * 3, y - 8, "#938367", 1);
+    poly(ctx, [[x - 29 + i * 3, y - 8], [x - 28 + i * 3, y - 12], [x - 27 + i * 3, y - 8]], "#b5c3bd");
+  }
 }

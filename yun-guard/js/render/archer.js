@@ -1,5 +1,7 @@
 import { ctx, rect, circle, ellipse, poly, line } from "./gfx.js";
 import { state } from "../state.js";
+import { addLight } from "./lights.js";
+import { shaded, masonry, timber, tiledRoof, lantern, insetWindow } from "./tower-materials.js";
 import { specializationDef, skillRank } from "../towers.js";
 
 function crescent(x, y, radius, color) {
@@ -10,53 +12,110 @@ function crescent(x, y, radius, color) {
   ctx.fill();
 }
 
-export function drawArcherSpecialization(tower, x, y) {
+export function drawArcherSpecialization(t, x, y) {
   ctx.save();
-  if (tower.specialization === "falcon") {
-    rect(ctx, x - 19, y - 10, 38, 22, "#85735a", "#514739", 1.5);
-    for (const side of [-1, 1]) {
-      line(ctx, x + side * 12, y - 10, x + side * 12, y - 78, "#775338", 5);
-      line(ctx, x, y - 18, x + side * 12, y - 58, "#a47b4c", 2);
-      line(ctx, x + side * 12, y - 58, x + side * 24, y - 58, "#c4a66c", 3);
-    }
-    rect(ctx, x - 24, y - 69, 48, 7, "#9a734b", "#5f4937", 1);
-    poly(ctx, [[x - 27, y - 80], [x, y - 99], [x + 27, y - 80]], "#9d6b42", "#553e30", 1.5);
-    for (let i = -2; i <= 2; i++) line(ctx, x + i * 7, y - 83 + Math.abs(i) * 2, x + i * 8, y - 78, "#d6b77d", 1);
-    ellipse(ctx, x, y - 71, 11, 4, "#c5a46b", "#69513a", 1);
-    for (let i = 0; i < 4; i++) line(ctx, x - 10 + i * 5, y - 72, x - 5 + i * 4, y - 76, "#e0c58b", 1);
-    poly(ctx, [[x - 4, y - 35], [x + 4, y - 41], [x + 2, y - 28], [x - 2, y - 24]], "#ead7a5", "#8d744b", 1);
-    line(ctx, x, y - 38, x - 1, y - 25, "#947342", 1);
-  } else if (tower.specialization === "thorn") {
-    ellipse(ctx, x, y + 5, 24, 11, "#344d32", "#263b27", 1.5);
-    ctx.strokeStyle = "#5c7042"; ctx.lineWidth = 11; ctx.lineCap = "round";
-    ctx.beginPath(); ctx.moveTo(x - 3, y + 3); ctx.bezierCurveTo(x - 22, y - 24, x + 18, y - 37, x, y - 67); ctx.stroke();
-    ctx.strokeStyle = "#91a466"; ctx.lineWidth = 3;
-    ctx.beginPath(); ctx.moveTo(x - 5, y); ctx.bezierCurveTo(x - 15, y - 28, x + 12, y - 38, x, y - 67); ctx.stroke();
-    for (let i = 0; i < 6; i++) {
-      const side = i % 2 ? -1 : 1, yy = y - 14 - i * 9, xx = x + side * (6 + i % 3 * 2);
-      line(ctx, xx, yy, xx + side * 15, yy - 10, "#53763b", 2.5);
-      poly(ctx, [[xx + side * 7, yy - 5], [xx + side * 20, yy - 18], [xx + side * 18, yy - 3]], "#8baa55", "#435f32", 1);
-    }
-    ellipse(ctx, x, y - 69, 13, 9, "#748a48", "#344a2c", 1.5);
-    poly(ctx, [[x - 10, y - 68], [x, y - 86], [x + 10, y - 68]], "#c5d38a", "#5c7440", 1);
-    circle(ctx, x, y - 70, 4 + Math.max(0, tower.anim) * 3, "#e2d8a7");
-    for (const side of [-1, 1]) line(ctx, x, y + 2, x + side * 29, y + 9, "#718148", 3);
-  } else {
-    rect(ctx, x - 20, y - 12, 40, 23, "#46576a", "#2e3b4b", 1.5);
-    for (const side of [-1, 1]) {
-      poly(ctx, [[x + side * 8, y - 11], [x + side * 18, y - 11], [x + side * 23, y - 57], [x + side * 13, y - 64]], "#718298", "#35465b", 1.5);
-      line(ctx, x + side * 15, y - 20, x + side * 18, y - 58, "#bdd3df", 1.2);
-    }
-    rect(ctx, x - 23, y - 64, 46, 5, "#a3b5c9", "#455a70", 1);
-    ctx.strokeStyle = "#c8def1"; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.arc(x, y - 74, 16, Math.PI * 0.1, Math.PI * 1.9); ctx.stroke();
-    crescent(x, y - 75, 11, "#e2ebff");
-    for (const side of [-1, 1]) { circle(ctx, x + side * 14, y - 43, 3, "#bad7ff"); line(ctx, x + side * 14, y - 49, x + side * 14, y - 58, "#9caec6", 1); }
-    const pulse = Math.max(0, tower.anim) / 0.4;
-    circle(ctx, x, y - 31, 3 + pulse * 2, "#d5e6ff");
-    line(ctx, x - 12, y - 14, x + 12, y - 14, "#b4c7db", 1);
-  }
+  // All paths keep the veteran archers' deck and firing positions.
+  masonry(x - 20, y - 15, 40, 27, t.specialization === "thorn");
+  for (const dx of [-16, 11]) timber(x + dx, y - 57, 5, 44);
+  masonry(x - 12, y - 32, 24, 18, t.specialization === "thorn");
+  insetWindow(x - 3, y - 26, 6, 9);
+  timber(x - 24, y - 58, 48, 6);
+  for (const dx of [-22, 20]) timber(x + dx, y - 69, 2, 11);
+  line(ctx, x - 22, y - 69, x + 22, y - 69, "#c5ab7c", 1.1);
+  if (t.specialization === "falcon") drawRoost(t, x, y);
+  else if (t.specialization === "thorn") drawWeavers(t, x, y);
+  else drawMoonShrine(t, x, y);
   ctx.restore();
+}
+
+function drawRoost(t, x, y) {
+  const quarry = skillRank(t, "quarry"), rend = skillRank(t, "talonrend"), pair = skillRank(t, "huntingpair");
+  for (const dx of [-26, 23]) timber(x + dx, y - 92, 3, 37);
+  timber(x - 25, y - 90, 50, 5);
+  tiledRoof(x, y - 91, 32, 20, "red");
+  // Individual perches and straw-lined nesting boxes, rather than a floating roof and feather.
+  for (const side of [-1, 1]) {
+    line(ctx, x + side * 25, y - 72, x + side * 36, y - 72, "#c7aa77", 2.2);
+    line(ctx, x + side * 25, y - 64, x + side * 36, y - 72, "#806444", 1.2);
+    if (side < 0 || pair) {
+      rect(ctx, x + side * 30 - 5, y - 84, 10, 8, "#806347");
+      ellipse(ctx, x + side * 30, y - 77, 5, 1.5, "#d7bd86");
+      for (let i = 0; i < 4; i++) line(ctx, x + side * 30 - 4 + i * 2, y - 78, x + side * 30 - 2 + i * 2, y - 80, "#bda06a", 0.6);
+    }
+  }
+  lantern(x + 24, y - 43, x, 23);
+  for (let i = 0; i < quarry; i++) {
+    const xx = x - 12 + i * 8;
+    rect(ctx, xx - 2, y - 7, 4, 10, "#776349");
+    line(ctx, xx - 1, y - 7, xx + 1, y + 2, "#ccb78d", 0.65);
+  }
+  for (let i = 0; i < rend; i++) {
+    line(ctx, x - 24, y - 24 - i * 6, x - 18, y - 24 - i * 6, "#c7b78e", 1);
+    poly(ctx, [[x - 21, y - 27 - i * 6], [x - 19, y - 24 - i * 6], [x - 23, y - 24 - i * 6]], "#bbc7be");
+  }
+  for (let i = 1; i < pair; i++) line(ctx, x + 12, y - 83 + i * 2.5, x + 23, y - 83 + i * 2.5, "#b49b6b", 0.7);
+}
+
+function drawWeavers(t, x, y) {
+  const roots = skillRank(t, "deeproots"), barbs = skillRank(t, "barbedgrowth"), drift = skillRank(t, "seeddrift");
+  for (const dx of [-27, 24]) timber(x + dx, y - 91, 3, 37);
+  tiledRoof(x, y - 92, 33, 19);
+  // Living vines climb the fixed trellis; leaves move lightly in the wind, never the load-bearing frame.
+  for (const side of [-1, 1]) {
+    ctx.strokeStyle = "#667c48"; ctx.lineWidth = 3.2;
+    ctx.beginPath(); ctx.moveTo(x + side * 24, y + 6);
+    ctx.bezierCurveTo(x + side * 36, y - 25, x + side * 30, y - 47, x + side * 27, y - 91); ctx.stroke();
+    line(ctx, x + side * 24 - 0.6, y - 12, x + side * 24 - 0.6, y - 23, "#a7af73", 0.7);
+    for (let i = 0; i < 7; i++) {
+      const yy = y - 8 - i * 12, xx = x + side * (25 + Math.sin(i * 2) * 3), sway = Math.sin(state.time * 1.6 + i + x) * 0.7;
+      poly(ctx, [[xx, yy], [xx + side * (9 + sway), yy - 7], [xx + side * 8, yy - 1]], i % 2 ? "#7c9558" : "#a0af6f");
+      line(ctx, xx + side, yy - 1, xx + side * 7, yy - 5, "#c0c691", 0.55);
+      if (barbs && i % 2 === 0) poly(ctx, [[xx, yy + 2], [xx + side * (3 + barbs), yy - 1], [xx + side, yy + 4]], "#b9ab7c");
+    }
+  }
+  timber(x - 16, y + 5, 32, 6);
+  for (let i = 0; i < 3 + roots; i++) {
+    const xx = x - 12 + i * 5;
+    ellipse(ctx, xx, y + 4, 3, 1.4, "#45543a");
+    line(ctx, xx, y + 4, xx - 1, y - 1 - roots, "#97a969", 1);
+  }
+  lantern(x - 25, y - 45, x, 23);
+  for (let i = 0; i < drift; i++) {
+    const xx = x + 8 + i * 5;
+    line(ctx, xx, y - 83, xx, y - 76, "#8e9569", 0.6);
+    ellipse(ctx, xx, y - 74, 2, 3, "#c0bd8e");
+  }
+}
+
+function drawMoonShrine(t, x, y) {
+  const marks = skillRank(t, "lunarmarks"), thread = skillRank(t, "silverthread");
+  for (const side of [-1, 1]) {
+    const xx = x + side * 25;
+    masonry(xx - 3, y - 91, 6, 38);
+    line(ctx, xx - 1, y - 89, xx - 1, y - 57, "#dce0cd", 0.7);
+  }
+  tiledRoof(x, y - 95, 32, 19);
+  timber(x - 26, y - 93, 52, 3);
+  // The crescent is an actual silver bow mounted above the crew; its string recoils on a ricochet launch.
+  const recoil = Math.max(0, 0.18 - (state.time - (t.moonFired ?? -99))) / 0.18;
+  ctx.save(); ctx.translate(34, 9);
+  line(ctx, x - 10, y - 69, x - 22, y - 64, "#8b9d97", 2);
+  ctx.strokeStyle = shaded(x - 14, y - 90, 28, 24, "#f1ebcf", "#c1d0ce", "#6d8e98"); ctx.lineWidth = 3.2;
+  ctx.beginPath(); ctx.arc(x, y - 77, 13, -Math.PI * 0.8, Math.PI * 0.8); ctx.stroke();
+  ctx.strokeStyle = "#d7e6dc"; ctx.lineWidth = 0.65;
+  ctx.beginPath(); ctx.moveTo(x - 10.5, y - 84.5); ctx.lineTo(x - 10.5 - recoil * 3, y - 77); ctx.lineTo(x - 10.5, y - 69.5); ctx.stroke();
+  for (let i = 0; i <= marks; i++) {
+    const xx = x - 12 + i * 8;
+    poly(ctx, [[xx, y - 90], [xx + 1.6, y - 87], [xx, y - 84], [xx - 1.6, y - 87]], "#cedfdf");
+  }
+  circle(ctx, x + 1, y - 77, 2.1, "#e4efed");
+  addLight(ctx, x + 1, y - 77, 23, "arc");
+  ctx.restore();
+  for (let i = 0; i < thread; i++) {
+    const yy = y - 43 + i * 6;
+    line(ctx, x - 12, yy, x + 12, yy, "#b4c4b9", 0.8);
+    circle(ctx, x - 12, yy, 1.2, "#d5cfab"); circle(ctx, x + 12, yy, 1.2, "#d5cfab");
+  }
 }
 
 export function drawBramblePatches(tower) {

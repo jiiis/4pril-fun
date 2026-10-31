@@ -1,13 +1,13 @@
 import { state } from "./state.js";
 import { map } from "./map.js";
-import { specializationDef, skillRank } from "./towers.js";
+import { specializationDef, skillRank, foundationDamage, foundationRate, foundationRange, shotOrigin, archerSlots } from "./towers.js";
 import { closestPointOnPath, pointsAlongPath, dist, clamp } from "./util.js";
 import { hurt, addBurst } from "./combat.js";
 import { sfx } from "./audio.js";
 
 const alive = (enemy) => !enemy.dead && !enemy.reached;
 const support = (enemy) => !!(enemy.def.healAura || enemy.def.raise);
-const perch = (tower, index) => ({ x: tower.x + (index ? 12 : -12), y: tower.y - 72 });
+const perch = (tower, index) => ({ x: tower.x + (index ? 31 : -31), y: tower.y - 76 });
 
 function falconTarget(tower, spec, bird) {
   let best = null, bestPriority = -1;
@@ -20,6 +20,25 @@ function falconTarget(tower, spec, bird) {
     }
   }
   return best;
+}
+
+// Specialization attacks supplement the established crew instead of deleting its investment.
+function updateFoundationArrows(tower, dt) {
+  tower.foundationCd = Math.max(0, (tower.foundationCd || 0) - dt);
+  if (tower.foundationCd > 0) return;
+  let target = null;
+  for (const enemy of state.enemies) {
+    if (alive(enemy) && dist(tower, enemy) <= foundationRange(tower) && (!target || enemy.travelled > target.travelled)) target = enemy;
+  }
+  if (!target) return;
+  tower.angle = Math.atan2(target.y - tower.y, target.x - tower.x);
+  tower.shooter = (tower.shooter + 1) % archerSlots(3).length;
+  const origin = shotOrigin(tower);
+  state.shots.push({ ...origin, z: 0, total: dist(origin, target), target, tx: target.x, ty: target.y,
+    dmg: foundationDamage(tower), def: tower.def, trail: [], fire: true });
+  tower.anim = 0.4; tower.lastShot = state.time;
+  tower.foundationCd = 1 / foundationRate(tower);
+  sfx("arrow", 0.06);
 }
 
 function updateFalcons(tower, spec, dt) {
@@ -94,8 +113,7 @@ function updateBrambles(tower, spec, dt) {
   const targets = state.enemies.filter(enemy => alive(enemy) && !enemy.def.flying && tower.patches.some(patch => patch.age >= spec.growth && dist(patch, enemy) <= patch.radius))
     .sort((a, b) => b.travelled - a.travelled).slice(0, spec.targets);
   for (const enemy of targets) {
-    const moving = !enemy.wasBlocked && !(enemy.rooted > 0);
-    hurt(enemy, spec.damage + (moving ? spec.skills.barbedgrowth.damage[skillRank(tower, "barbedgrowth")] : 0), spec.type, false);
+    hurt(enemy, spec.damage + spec.skills.barbedgrowth.damage[skillRank(tower, "barbedgrowth")], spec.type, false);
     if (!enemy.dead && !(enemy.thornRootCd > 0)) {
       const duration = spec.skills.deeproots.duration[skillRank(tower, "deeproots")];
       enemy.rooted = Math.max(enemy.rooted || 0, duration * (1 - (enemy.def.brambleResistance || 0)));
@@ -120,11 +138,11 @@ function fireMoonbow(tower, spec) {
     if (!next) break;
     targets.push(next);
   }
-  tower.moonMarks = new Map(targets.map(enemy => [enemy, spec.markTime]));
-  const origin = { x: tower.x, y: tower.y - 75 };
+  const marks = new Map(targets.map(enemy => [enemy, spec.markTime]));
+  const origin = { x: tower.x + 35, y: tower.y - 68 };
   const shot = { kind: "moon", ...origin, z: 0, tx: first.x, ty: first.y, total: dist(origin, first), target: first, dmg: spec.damage, def: tower.def, trail: [], tower,
-    struck: new Set(), life: spec.markTime, retention: spec.skills.silverthread.retention[skillRank(tower, "silverthread")] };
-  tower.moonShot = shot;
+    struck: new Set(), marks, life: spec.markTime, retention: spec.skills.silverthread.retention[skillRank(tower, "silverthread")] };
+  tower.moonShots.push(shot); tower.moonFired = state.time;
   state.shots.push(shot);
   tower.angle = Math.atan2(first.y - tower.y, first.x - tower.x);
   tower.anim = 0.4; tower.lastShot = state.time; tower.cd = 1 / spec.rate;
@@ -132,23 +150,26 @@ function fireMoonbow(tower, spec) {
 }
 
 export function updateArcher(tower, dt) {
+  updateFoundationArrows(tower, dt);
   const spec = specializationDef(tower);
   if (tower.specialization === "falcon") updateFalcons(tower, spec, dt);
   else if (tower.specialization === "thorn") updateBrambles(tower, spec, dt);
   else if (tower.specialization === "moon") {
-    if (tower.moonShot?.done) tower.moonShot = null;
-    for (const [enemy, life] of tower.moonMarks || []) {
-      if (!alive(enemy) || life <= dt || dist(tower, enemy) > spec.range + spec.leash) tower.moonMarks.delete(enemy);
-      else tower.moonMarks.set(enemy, life - dt);
-    }
+    tower.moonShots = (tower.moonShots || []).filter(shot => !shot.done);
     tower.cd -= dt;
-    if (tower.cd <= 0 && (!tower.moonShot || tower.moonShot.done)) fireMoonbow(tower, spec);
+    // Longer chains never postpone the next paid-for attack. Lifetime bounds this to three arrows.
+    if (tower.cd <= 0 && tower.moonShots.length < Math.ceil(spec.markTime * spec.rate)) fireMoonbow(tower, spec);
+    tower.moonMarks = new Map();
+    for (const shot of tower.moonShots) for (const [enemy, life] of shot.marks) {
+      if (!alive(enemy) || life <= dt || dist(tower, enemy) > spec.range + spec.leash) shot.marks.delete(enemy);
+      else { shot.marks.set(enemy, life - dt); tower.moonMarks.set(enemy, life - dt); }
+    }
   }
 }
 
 function nextMoonTarget(shot, spec, origin) {
   let next = null, nearest = Infinity;
-  for (const enemy of shot.tower.moonMarks.keys()) {
+  for (const enemy of shot.marks.keys()) {
     if (!alive(enemy) || shot.struck.has(enemy)) continue;
     const distance = dist(origin, enemy);
     if (distance >= spec.minJump && distance <= spec.jumpRange && distance < nearest) { next = enemy; nearest = distance; }
@@ -157,12 +178,12 @@ function nextMoonTarget(shot, spec, origin) {
   shot.target = next; shot.total = dist(shot, next);
 }
 
-// One bounded projectile per Moonbow; it uses only that tower's own visible marks.
+// Each bounded projectile owns its marks, so a later launch cannot overwrite its route.
 export function updateMoonShot(shot, dt) {
   const spec = specializationDef(shot.tower);
   shot.life -= dt;
   if (shot.life <= 0 || !state.towers.includes(shot.tower)) { shot.done = true; return; }
-  if (!alive(shot.target) || !shot.tower.moonMarks.has(shot.target)) {
+  if (!alive(shot.target) || !shot.marks.has(shot.target)) {
     nextMoonTarget(shot, spec, shot);
     if (shot.done) return;
   }

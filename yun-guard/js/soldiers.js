@@ -1,7 +1,7 @@
 import { state } from "./state.js";
 import { SOLDIER_RESPAWN, ENGAGE_RANGE } from "./config.js";
 import { hurt, addBurst } from "./combat.js";
-import { soldierDamage, soldierRate, soldierCount, soldierHp, specializationDef, skillRank } from "./towers.js";
+import { soldierDamage, soldierRate, soldierCount, soldierHp, specializationDef, skillRank, escortCount, foundationHp, foundationDamage, foundationRate } from "./towers.js";
 import { dist } from "./util.js";
 import { sfx } from "./audio.js";
 
@@ -21,12 +21,13 @@ function hatch(t, spec, count, origin) {
 
 export function updateSoldiers(t, dt) {
   const spec = specializationDef(t), n = soldierCount(t), hp = soldierHp(t);
-  const cloud = t.specialization === "cloud", brood = t.specialization === "brood", colossus = t.specialization === "colossus";
+  const brood = t.specialization === "brood", escorts = escortCount(t);
   const stepRank = skillRank(t, "cloudstep"), heartRank = skillRank(t, "stoneheart"), earthRank = skillRank(t, "earthbreaker");
-  const engage = cloud ? spec.skills.cloudstep.engage[stepRank] : spec?.engage ?? ENGAGE_RANGE;
   let adults = 0;
-  for (const s of t.soldiers) if (!s.hatchling) adults++;
+  for (const s of t.soldiers) if (!s.hatchling && !s.escort) adults++;
   while (adults < n) { t.soldiers.push(makeSoldier(t, hp)); adults++; }
+  let guards = t.soldiers.filter((s) => s.escort).length;
+  while (guards < escorts) { t.soldiers.push(makeSoldier(t, foundationHp(t), { escort: true })); guards++; }
   if (brood) {
     t.soldiers = t.soldiers.filter((s) => !s.hatchling || (s.hp > 0 && s.life > 0));
     const interval = spec.skills.hatchery.interval[skillRank(t, "hatchery")];
@@ -34,15 +35,17 @@ export function updateSoldiers(t, dt) {
     const adult = t.soldiers.find((s) => !s.hatchling && s.hp > 0);
     if (adult && (t.hatchCd -= dt) <= 0) { hatch(t, spec, 1, adult); t.hatchCd = interval; }
   }
-  let adultIndex = 0, hatchIndex = 0;
+  let adultIndex = 0, hatchIndex = 0, guardIndex = 0;
   for (const s of t.soldiers) {
+    const cloud = !s.escort && t.specialization === "cloud", colossus = !s.escort && t.specialization === "colossus";
+    const engage = s.escort ? ENGAGE_RANGE : cloud ? spec.skills.cloudstep.engage[stepRank] : spec?.engage ?? ENGAGE_RANGE;
     if (s.hatchling && (s.life -= dt) <= 0) { s.hp = 0; s.target = null; continue; }
     // Preserve wounds when upgrading; fallen units still wait for their respawn.
-    const maxHp = s.hatchling ? spec.hatchling.hp : hp;
+    const maxHp = s.escort ? foundationHp(t) : s.hatchling ? spec.hatchling.hp : hp;
     if (s.maxHp !== maxHp) { if (s.hp > 0) s.hp += maxHp - s.maxHp; s.maxHp = maxHp; }
     s.level = Math.min(t.level, 3);
-    s.specialization = t.specialization || null;
-    const off = s.hatchling ? (hatchIndex++ - 2) * 10 : (adultIndex++ - (n - 1) / 2) * 16;
+    s.specialization = s.escort ? null : t.specialization || null;
+    const off = s.escort ? (guardIndex++ - (escorts - 1) / 2) * 24 : s.hatchling ? (hatchIndex++ - 2) * 10 : (adultIndex++ - (n - 1) / 2) * 16;
     s.home = { x: t.rally.x + off, y: t.rally.y + off * 0.4 + (s.hatchling ? 12 : 0) };
     if (s.hp <= 0) {
       if (s.hatchling) continue;
@@ -69,9 +72,9 @@ export function updateSoldiers(t, dt) {
       if (!cloud) target.blocked = true;
       s.dir = target.x >= s.x ? 1 : -1;
       if (s.cd <= 0) {
-        const damage = s.hatchling ? spec.hatchling.damage : soldierDamage(t);
+        const damage = s.escort ? foundationDamage(t) : s.hatchling ? spec.hatchling.damage : soldierDamage(t);
         const airBonus = cloud && target.def.flying ? spec.skills.skyspears.airDamage[skillRank(t, "skyspears")] : 0;
-        hurt(target, damage + airBonus, spec?.type || t.def.type);
+        hurt(target, damage + airBonus, s.escort ? t.def.type : spec?.type || t.def.type);
         if (colossus) {
           const earth = spec.skills.earthbreaker, radius = earth.radius[earthRank];
           let hits = 1;
@@ -81,7 +84,7 @@ export function updateSoldiers(t, dt) {
           }
           addBurst(target.x, target.y, radius, "rgba(128,203,166,0.65)");
         }
-        s.cd = 1 / (s.hatchling ? spec.hatchling.rate : soldierRate(t));
+        s.cd = 1 / (s.escort ? foundationRate(t) : s.hatchling ? spec.hatchling.rate : soldierRate(t));
         s.swing = colossus ? 0.45 : 0.2;
         if (cloud) { s.recovery = spec.skills.cloudstep.recovery[stepRank]; addBurst(target.x, target.y - (target.def.flying ? 18 : 0), 12, "rgba(179,229,252,0.7)"); }
         sfx("clash", 0.12);
@@ -89,18 +92,18 @@ export function updateSoldiers(t, dt) {
       if (!target.dead) {
         target.atkCd = (target.atkCd ?? 0.5) - dt;
         if (target.atkCd <= 0) {
-          const armor = s.hatchling ? 0 : brood ? spec.skills.chitin.armor[skillRank(t, "chitin")] : spec?.armor || 0;
+          const armor = s.escort || s.hatchling ? 0 : brood ? spec.skills.chitin.armor[skillRank(t, "chitin")] : spec?.armor || 0;
           s.hp -= target.def.attack * (1 - armor);
           target.atkCd = 1;
           if (s.hp <= 0) {
-            s.respawn = colossus ? spec.skills.stoneheart.respawn[heartRank] : spec?.respawn ?? SOLDIER_RESPAWN;
+            s.respawn = s.escort ? SOLDIER_RESPAWN : colossus ? spec.skills.stoneheart.respawn[heartRank] : spec?.respawn ?? SOLDIER_RESPAWN;
             s.target = null;
             if (brood && !s.hatchling) hatch(t, spec, spec.skills.lastbrood.count[skillRank(t, "lastbrood")], s);
           }
         }
       }
     } else if (d > 1) {                                   // walk to the fight or back home
-      const speed = s.hatchling ? spec.hatchling.speed : cloud ? spec.skills.cloudstep.speed[stepRank] : spec?.speed ?? 90;
+      const speed = s.escort ? 90 : s.hatchling ? spec.hatchling.speed : cloud ? spec.skills.cloudstep.speed[stepRank] : spec?.speed ?? 90;
       const step = Math.min(speed * dt, d);
       const dx = dest.x - s.x;
       s.x += (dx / d) * step;
@@ -109,7 +112,7 @@ export function updateSoldiers(t, dt) {
       s.moving = true;
       s.phase += dt * 12;
     } else if (s.hp < s.maxHp) {                          // resting at home: slowly heal
-      const regen = colossus ? spec.skills.stoneheart.regen[heartRank] : spec?.regen ?? 6;
+      const regen = s.escort ? 6 : colossus ? spec.skills.stoneheart.regen[heartRank] : spec?.regen ?? 6;
       s.hp = Math.min(s.maxHp, s.hp + regen * dt);
     }
   }
