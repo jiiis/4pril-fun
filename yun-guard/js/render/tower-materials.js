@@ -2,18 +2,20 @@ import { ctx, rect, ellipse, poly, line } from "./gfx.js";
 import { state } from "../state.js";
 import { addLight } from "./lights.js";
 
-// Material faces carry the silhouette: narrow highlights and internal joints replace heavy borders.
+// Material faces carry the silhouette. Optional flat styling keeps joints and adds restrained contours.
 export function shaded(x, y, w, h, light, mid, dark) {
   const fill = ctx.createLinearGradient(x, y, x + w, y + h * 0.2);
   fill.addColorStop(0, light); fill.addColorStop(0.42, mid); fill.addColorStop(1, dark);
   return fill;
 }
 
-export function masonry(x, y, w, h, jade = false) {
+export function masonry(x, y, w, h, jade = false, style) {
   const colors = jade ? ["#a6c3ad", "#6e9784", "#405f57"] : ["#c5bbaa", "#9b9587", "#656d68"];
-  rect(ctx, x, y, w, h, shaded(x, y, w, h, ...colors));
-  poly(ctx, [[x, y], [x + 3, y - 3], [x + w + 3, y - 3], [x + w, y]], jade ? "#b7cbb4" : "#d2caba");
-  rect(ctx, x + w - 3, y, 3, h, "rgba(24,38,33,0.16)");
+  rect(ctx, x, y, w, h, style?.flat ? colors[1] : shaded(x, y, w, h, ...colors), style?.flat ? colors[2] : null, 1);
+  if (!style?.flat) {
+    poly(ctx, [[x, y], [x + 3, y - 3], [x + w + 3, y - 3], [x + w, y]], jade ? "#b7cbb4" : "#d2caba");
+    rect(ctx, x + w - 3, y, 3, h, "rgba(24,38,33,0.16)");
+  }
   const rows = Math.ceil(h / 7), step = h / rows;
   for (let i = 1; i < rows; i++) {
     const yy = y + i * step;
@@ -25,8 +27,8 @@ export function masonry(x, y, w, h, jade = false) {
   }
 }
 
-export function timber(x, y, w, h) {
-  rect(ctx, x, y, w, h, shaded(x, y, w, h, "#c29c68", "#987246", "#594735"));
+export function timber(x, y, w, h, style) {
+  rect(ctx, x, y, w, h, style?.flat ? "#a17d50" : shaded(x, y, w, h, "#c29c68", "#987246", "#594735"), style?.flat ? "#69523a" : null, 0.9);
   for (let i = 1; i <= 3; i++) {
     const xx = x + w * i / 4;
     line(ctx, xx, y + 2, xx + Math.sin(i * 3 + x) * 0.7, y + h - 2, "rgba(67,43,25,0.28)", 0.55);
@@ -35,17 +37,41 @@ export function timber(x, y, w, h) {
   if (h > 18) { rect(ctx, x, y + 5, w, 2, "#66706a"); rect(ctx, x, y + h - 7, w, 2, "#66706a"); }
 }
 
-export function tiledRoof(x, y, halfWidth, height, color = "blue") {
-  const colors = color === "red" ? ["#bf8070", "#8e4b3d", "#553c34"] : color === "straw" ? ["#d4ba7f", "#b2935c", "#776342"] : ["#8ea8aa", "#52777c", "#304c54"];
-  const fill = shaded(x - halfWidth, y - height, halfWidth * 2, height, ...colors);
-  poly(ctx, [[x - halfWidth, y], [x - halfWidth * 0.8, y - 3], [x, y - height], [x + halfWidth * 0.8, y - 3], [x + halfWidth, y], [x + halfWidth * 0.7, y + 3], [x, y - height * 0.66], [x - halfWidth * 0.7, y + 3]], fill);
+const ROOF_COLORS = {
+  red: ["#bf8070", "#8e4b3d", "#553c34"],
+  straw: ["#d4ba7f", "#b2935c", "#776342"],
+  blue: ["#8ea8aa", "#52777c", "#304c54"],
+  green: ["#a2b17a", "#6f874e", "#455d36"],
+};
+
+export function tiledRoof(x, y, halfWidth, height, color = "blue", style) {
+  const colors = ROOF_COLORS[color] || ROOF_COLORS.blue;
+  const fill = style?.flat ? colors[1] : shaded(x - halfWidth, y - height, halfWidth * 2, height, ...colors);
+  if (style?.flat) {
+    // A filled gable with a soft peak and swept eaves, rather than an open chevron.
+    ctx.beginPath(); ctx.moveTo(x - halfWidth, y);
+    ctx.quadraticCurveTo(x - halfWidth * 0.78, y - 2, x - halfWidth * 0.5, y - height * 0.48);
+    ctx.quadraticCurveTo(x - halfWidth * 0.16, y - height * 0.87, x, y - height);
+    ctx.quadraticCurveTo(x + halfWidth * 0.16, y - height * 0.87, x + halfWidth * 0.5, y - height * 0.48);
+    ctx.quadraticCurveTo(x + halfWidth * 0.78, y - 2, x + halfWidth, y);
+    ctx.quadraticCurveTo(x, y + 4, x - halfWidth, y); ctx.closePath();
+    ctx.fillStyle = fill; ctx.fill(); ctx.strokeStyle = colors[2]; ctx.lineWidth = 1; ctx.stroke();
+  } else {
+    poly(ctx, [[x - halfWidth, y], [x - halfWidth * 0.8, y - 3], [x, y - height], [x + halfWidth * 0.8, y - 3], [x + halfWidth, y], [x + halfWidth * 0.7, y + 3], [x, y - height * 0.66], [x - halfWidth * 0.7, y + 3]], fill);
+  }
   for (let row = 1; row < 5; row++) {
     const f = row / 5, yy = y - height + height * f, hw = halfWidth * f * 0.93;
     line(ctx, x - hw, yy, x + hw, yy, "rgba(28,42,40,0.27)", 0.7);
     for (let xx = -hw + 3 + row % 2 * 2; xx < hw - 1; xx += 6) line(ctx, x + xx, yy - 2, x + xx + 1, yy, "rgba(246,239,210,0.24)", 0.55);
   }
-  line(ctx, x - halfWidth, y, x - halfWidth * 0.7, y + 2, colors[0], 1);
-  line(ctx, x - halfWidth * 0.7, y + 2, x, y - height * 0.66, "rgba(236,219,173,0.45)", 0.65);
+  if (style?.flat) {
+    ctx.strokeStyle = colors[0]; ctx.lineWidth = 0.8;
+    ctx.beginPath(); ctx.moveTo(x - halfWidth + 1, y + 0.5);
+    ctx.quadraticCurveTo(x, y + 3, x + halfWidth - 1, y + 0.5); ctx.stroke();
+  } else {
+    line(ctx, x - halfWidth, y, x - halfWidth * 0.7, y + 2, colors[0], 1);
+    line(ctx, x - halfWidth * 0.7, y + 2, x, y - height * 0.66, "rgba(236,219,173,0.45)", 0.65);
+  }
   line(ctx, x, y - height, x + halfWidth * 0.8, y - 3, colors[2], 1);
 }
 

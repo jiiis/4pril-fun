@@ -1,13 +1,12 @@
 import { state } from "./state.js";
 import { map } from "./map.js";
-import { specializationDef, skillRank, foundationDamage, foundationRate, foundationRange, shotOrigin, archerSlots } from "./towers.js";
+import { specializationDef, skillRank, foundationDamage, foundationRate, foundationRange, shotOrigin, archerSlots, falconPerch, moonbowOrigin } from "./towers.js";
 import { closestPointOnPath, pointsAlongPath, dist, clamp } from "./util.js";
 import { hurt, addBurst } from "./combat.js";
 import { sfx } from "./audio.js";
 
 const alive = (enemy) => !enemy.dead && !enemy.reached;
 const support = (enemy) => !!(enemy.def.healAura || enemy.def.raise);
-const perch = (tower, index) => ({ x: tower.x + (index ? 31 : -31), y: tower.y - 76 });
 
 function falconTarget(tower, spec, bird) {
   let best = null, bestPriority = -1;
@@ -45,7 +44,7 @@ function updateFalcons(tower, spec, dt) {
   tower.falcons ||= [];
   const pair = spec.skills.huntingpair, rank = skillRank(tower, "huntingpair");
   while (tower.falcons.length < pair.count[rank]) {
-    tower.falcons.push({ ...perch(tower, tower.falcons.length), target: null, returning: false, cd: 0, flight: 0, phase: 0 });
+    tower.falcons.push({ ...falconPerch(tower, tower.falcons.length), target: null, returning: false, cd: 0, flight: 0, phase: 0 });
   }
   tower.falcons.forEach((bird, index) => {
     bird.phase += dt * (bird.target || bird.returning ? 14 : 2);
@@ -61,7 +60,7 @@ function updateFalcons(tower, spec, dt) {
       tower.lastShot = state.time;
     }
     const enemy = bird.target;
-    const aim = enemy ? { x: enemy.x, y: enemy.y - (enemy.def.flying ? 24 : 8) } : perch(tower, index);
+    const aim = enemy ? { x: enemy.x, y: enemy.y - (enemy.def.flying ? 24 : 8) } : falconPerch(tower, index);
     const distance = dist(bird, aim), step = spec.speed * dt;
     if (distance > step) {
       bird.x += (aim.x - bird.x) / distance * step;
@@ -139,7 +138,7 @@ function fireMoonbow(tower, spec) {
     targets.push(next);
   }
   const marks = new Map(targets.map(enemy => [enemy, spec.markTime]));
-  const origin = { x: tower.x + 35, y: tower.y - 68 };
+  const origin = moonbowOrigin(tower);
   const shot = { kind: "moon", ...origin, z: 0, tx: first.x, ty: first.y, total: dist(origin, first), target: first, dmg: spec.damage, def: tower.def, trail: [], tower,
     struck: new Set(), marks, life: spec.markTime, retention: spec.skills.silverthread.retention[skillRank(tower, "silverthread")] };
   tower.moonShots.push(shot); tower.moonFired = state.time;

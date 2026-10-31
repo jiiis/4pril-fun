@@ -1,8 +1,13 @@
 import { ctx, rect, circle, ellipse, poly, line } from "./gfx.js";
 import { state } from "../state.js";
 import { addLight } from "./lights.js";
-import { shaded, masonry, timber, tiledRoof, lantern, insetWindow } from "./tower-materials.js";
-import { specializationDef, skillRank } from "../towers.js";
+import { masonry as stonework, timber as woodwork, tiledRoof as roofTiles, lantern, insetWindow } from "./tower-materials.js";
+import { specializationDef, skillRank, archerHeight, archerSlots, ARCHER_ART_SCALE, falconPerch } from "../towers.js";
+
+const FLAT = { flat: true };
+const masonry = (x, y, w, h, jade) => stonework(x, y, w, h, jade, FLAT);
+const timber = (x, y, w, h) => woodwork(x, y, w, h, FLAT);
+const tiledRoof = (x, y, w, h, color) => roofTiles(x, y, w, h, color, FLAT);
 
 function crescent(x, y, radius, color) {
   ctx.fillStyle = color;
@@ -12,7 +17,7 @@ function crescent(x, y, radius, color) {
   ctx.fill();
 }
 
-export function drawArcherSpecialization(t, x, y) {
+function drawArcherSpecialization(t, x, y) {
   ctx.save();
   // All paths keep the veteran archers' deck and firing positions.
   masonry(x - 20, y - 15, 40, 27, t.specialization === "thorn");
@@ -59,7 +64,7 @@ function drawRoost(t, x, y) {
 function drawWeavers(t, x, y) {
   const roots = skillRank(t, "deeproots"), barbs = skillRank(t, "barbedgrowth"), drift = skillRank(t, "seeddrift");
   for (const dx of [-27, 24]) timber(x + dx, y - 91, 3, 37);
-  tiledRoof(x, y - 92, 33, 19);
+  tiledRoof(x, y - 92, 33, 19, "green");
   // Living vines climb the fixed trellis; leaves move lightly in the wind, never the load-bearing frame.
   for (const side of [-1, 1]) {
     ctx.strokeStyle = "#667c48"; ctx.lineWidth = 3.2;
@@ -100,7 +105,7 @@ function drawMoonShrine(t, x, y) {
   const recoil = Math.max(0, 0.18 - (state.time - (t.moonFired ?? -99))) / 0.18;
   ctx.save(); ctx.translate(34, 9);
   line(ctx, x - 10, y - 69, x - 22, y - 64, "#8b9d97", 2);
-  ctx.strokeStyle = shaded(x - 14, y - 90, 28, 24, "#f1ebcf", "#c1d0ce", "#6d8e98"); ctx.lineWidth = 3.2;
+  ctx.strokeStyle = "#bdcfd4"; ctx.lineWidth = 3.2;
   ctx.beginPath(); ctx.arc(x, y - 77, 13, -Math.PI * 0.8, Math.PI * 0.8); ctx.stroke();
   ctx.strokeStyle = "#d7e6dc"; ctx.lineWidth = 0.65;
   ctx.beginPath(); ctx.moveTo(x - 10.5, y - 84.5); ctx.lineTo(x - 10.5 - recoil * 3, y - 77); ctx.lineTo(x - 10.5, y - 69.5); ctx.stroke();
@@ -116,6 +121,94 @@ function drawMoonShrine(t, x, y) {
     line(ctx, x - 12, yy, x + 12, yy, "#b4c4b9", 0.8);
     circle(ctx, x - 12, yy, 1.2, "#d5cfab"); circle(ctx, x + 12, yy, 1.2, "#d5cfab");
   }
+}
+
+// =====================================================================
+//  ARCHER TOWER
+// =====================================================================
+export function drawArcherTower(t, x, y, lv) {
+  const h = archerHeight(lv);
+  if (t.specialization) drawArcherSpecialization(t, x, y);
+  else {
+    if (lv === 1) {
+      masonry(x - 15, y - 4, 30, 14);
+      for (const dx of [-12, 8]) timber(x + dx, y - h, 4, h - 2);
+      line(ctx, x - 10, y - h + 6, x + 10, y - 5, "#7b6244", 2.2);
+      line(ctx, x + 10, y - h + 6, x - 10, y - 5, "#ac8754", 2);
+    } else {
+      masonry(x - 18, y - 16, 36, 27);
+      for (const dx of [-13, 8]) timber(x + dx, y - h, 5, h - 13);
+      if (lv === 3) masonry(x - 12, y - h + 18, 24, h - 32);
+      else line(ctx, x - 10, y - h + 5, x + 10, y - 15, "#8c714d", 3);
+      insetWindow(x - 3, y - 25, 6, 9);
+    }
+    for (const dx of [-3, 2]) line(ctx, x + dx, y - h + 3, x + dx, y - 5, "#b89966", 1);
+    for (let i = 0; i < 6; i++) line(ctx, x - 3, y - 8 - i * 5.5, x + 2, y - 8 - i * 5.5, "#d3b681", 0.9);
+    timber(x - 22, y - h - 6, 44, 6);
+    for (const dx of [-19, 19]) timber(x + dx - 1, y - h - 15, 2, 9);
+    line(ctx, x - 20, y - h - 15, x + 20, y - h - 15, "#c7a36a", 1.3);
+    if (lv === 3) {
+      for (const dx of [-23, 22]) timber(x + dx, y - h - 42, 2.5, 38);
+      tiledRoof(x, y - h - 41, 28, 18, "red");
+      rect(ctx, x - 7, y - h - 7, 14, 2, "#b49c69");
+    }
+    if (lv === 2) pennant(x - 20, y - h - 30, 16, "#a86144", x);
+    lantern(x + 18, y - h - 2, x, 22);
+  }
+  const dir = Math.cos(t.angle) >= 0 ? 1 : -1, idle = state.time - (t.lastShot ?? -99) > 2.5;
+  const looks = [["#5d4037", "#2e7d32"], ["#f9a825", "#c62828"], ["#3e2723", "#1565c0"]];
+  archerSlots(lv).forEach((s, i) => drawArcherGirl(x + s.dx, y - h - 6 + s.dy, dir, t.shooter === i ? t.anim : 0, looks[i][0], looks[i][1], t.angle, lv === 3, idle, i * 2.1 + x * 0.01));
+}
+
+// A small archer girl standing with her feet at (px, py). anim > 0 = just fired.
+// When idle she shifts her weight, glances around and lets her bow hang loose.
+function drawArcherGirl(px, py, dir, anim, hair, dress, angle, fire = false, idle = false, seed = 0) {
+  const T = state.time + seed;
+  const bob = idle ? Math.sin(T * 2) * 0.6 : 0;
+  const glance = idle ? Math.sin(T * 0.9) * 0.8 : 0;
+  const hairSway = Math.sin(T * 2.6) * 0.6;
+  ctx.save();
+  ctx.translate(px, py - bob);
+  ctx.scale(dir, 1);
+  line(ctx, -2, 0, -2, -5 + bob, "#5d4037", 2);
+  line(ctx, 2, 0, 2, -5 + bob, "#5d4037", 2);
+  poly(ctx, [[-4.5, -5], [4.5, -5], [3, -12], [-3, -12]], dress, "#1b1b1b", 1);
+  rect(ctx, -3, -15, 6, 3.5, dress);
+  rect(ctx, -3.5, -12, 7, 1.5, "#4e342e");
+  rect(ctx, -5.5, -16, 2.5, 7, "#6d4c41");
+  line(ctx, -4.5, -16, -4.5, -19, "#eeeeee", 1);
+  circle(ctx, -0.5, -19, 4.4, hair);
+  ellipse(ctx, -5 + hairSway, -16.5, 2, 3.5, hair);
+  circle(ctx, 0, -18.5, 3.8, "#ffcc80");
+  ctx.fillStyle = hair; ctx.beginPath(); ctx.arc(0, -18.5, 3.9, Math.PI * 1.05, Math.PI * 1.95); ctx.fill();
+  circle(ctx, 1.6 + glance, -18.5, 0.7, "#212121");
+  // Bow arm: aimed at the target, or hanging loose and swaying when nothing is about
+  let a;
+  if (idle && anim <= 0) a = 0.75 + Math.sin(T * 1.3) * 0.08;
+  else { a = dir === 1 ? angle : Math.PI - angle; a = Math.max(-0.8, Math.min(0.8, Math.atan2(Math.sin(a), Math.cos(a)))); }
+  ctx.save();
+  ctx.translate(0, -13);
+  ctx.rotate(a);
+  const drawn = anim > 0.25;
+  line(ctx, 0, 0, 7, 0, "#ffcc80", 2);
+  ctx.strokeStyle = "#6d4c41"; ctx.lineWidth = 1.6;
+  ctx.beginPath(); ctx.arc(7, 0, 7, -1.25, 1.25); ctx.stroke();
+  const ex = 7 + 7 * Math.cos(1.25), ey = 7 * Math.sin(1.25);
+  ctx.strokeStyle = "#eeeeee"; ctx.lineWidth = 0.8;
+  ctx.beginPath(); ctx.moveTo(ex, -ey);
+  if (drawn) ctx.lineTo(1, 0); ctx.lineTo(ex, ey); ctx.stroke();
+  if (drawn) {
+    line(ctx, 1, 0, 15, 0, "#cfd8dc", 1.2);
+    if (fire) { circle(ctx, 16, 0, 3, "rgba(255,152,0,0.8)"); circle(ctx, 16, -0.5, 1.5, "#ffeb3b"); addLight(ctx, 16, 0, 9, "flame"); }
+  }
+  ctx.restore();
+  ctx.restore();
+}
+
+function pennant(x, y, length, color, seed) {
+  rect(ctx, x - 1, y, 2, length, "#69533b");
+  const wave = Math.sin(state.time * 5 + seed) * 2;
+  poly(ctx, [[x + 1, y], [x + 11, y + 3 + wave], [x + 7, y + 7 + wave], [x + 1, y + 8]], color, "#70543c", 0.6);
 }
 
 export function drawBramblePatches(tower) {
@@ -141,12 +234,12 @@ export function drawBramblePatches(tower) {
 export function drawArcherAir(tower) {
   if (!tower.falcons?.length && !tower.moonMarks?.size) return;
   ctx.save();
-  for (const bird of tower.falcons || []) {
+  for (const [index, bird] of (tower.falcons || []).entries()) {
     const flying = bird.target || bird.returning;
-    const aim = bird.target || { x: tower.x, y: tower.y - 72 };
+    const aim = bird.target || falconPerch(tower, index);
     const angle = flying ? Math.atan2(aim.y - bird.y, aim.x - bird.x) : 0;
     const wing = flying ? 5 + Math.sin(bird.phase) * 5 : 2;
-    ctx.save(); ctx.translate(bird.x, bird.y); ctx.rotate(angle);
+    ctx.save(); ctx.translate(bird.x, bird.y); ctx.rotate(angle); ctx.scale(ARCHER_ART_SCALE, ARCHER_ART_SCALE);
     poly(ctx, [[-2, -1], [-8, -wing - 2], [2, -4], [5, -1]], "#bd9a65", "#694d37", 0.8);
     poly(ctx, [[-2, 1], [-8, wing + 2], [2, 4], [5, 1]], "#decb9d", "#75583a", 0.8);
     ellipse(ctx, 0, 0, 5, 2.5, "#e4d6b2", "#75583a", 0.7);

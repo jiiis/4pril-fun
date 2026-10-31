@@ -51,6 +51,11 @@ export function trainSkill(t, key) {
 }
 export const visLevel = (t) => Math.min(t.level, 3);                   // ordinary art has three tiers; paths provide their own art
 
+// Archer structures stay close to the build pad width; projectiles use the same visual scale.
+export const ARCHER_ART_SCALE = 0.75;
+export const falconPerch = (t, index) => ({ x: t.x + (index ? 31 : -31) * ARCHER_ART_SCALE, y: t.y - 76 * ARCHER_ART_SCALE });
+export const moonbowOrigin = (t) => ({ x: t.x + 35 * ARCHER_ART_SCALE, y: t.y - 68 * ARCHER_ART_SCALE });
+
 // How tall the ranged towers are (used for drawing and for where shots start).
 export const archerHeight = (lv) => 34 + Math.min(lv, 3) * 6;
 export const mageHeight = (lv) => 36 + Math.min(lv, 3) * 6;
@@ -67,7 +72,7 @@ export const archerSlots = (lv) =>
 export function shotOrigin(t) {
   if (t.def === TOWERS.archer) {
     const slots = archerSlots(t.level), s = slots[t.shooter % slots.length];
-    return { x: t.x + s.dx, y: t.y - archerHeight(t.level) - 20 + s.dy };
+    return { x: t.x + s.dx * ARCHER_ART_SCALE, y: t.y + (-archerHeight(t.level) - 20 + s.dy) * ARCHER_ART_SCALE };
   }
   if (t.def === TOWERS.mage) return { x: t.x + 10, y: t.y - mageHeight(t.level) - 34 };
   if (t.def === TOWERS.ballista) return { x: t.x + Math.cos(t.angle) * 14, y: t.y - ballistaHeight(t.level) + Math.sin(t.angle) * 6 };

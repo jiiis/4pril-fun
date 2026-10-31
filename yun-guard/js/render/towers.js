@@ -1,17 +1,21 @@
 import { ctx, rect, circle, ellipse, poly, line, shadow, SHADOW_STYLE } from "./gfx.js";
 import { TOWERS } from "../config.js";
 import { state } from "../state.js";
-import { drawArcherSpecialization } from "./archer.js";
+import { drawArcherTower } from "./archer.js";
 import { addLight } from "./lights.js";
 import { masonry, timber, tiledRoof, lantern, insetWindow } from "./tower-materials.js";
 import { drawSummoningHall } from "./barracks.js";
-import { archerHeight, mageHeight, teslaHeight, ballistaHeight, archerSlots, visLevel } from "../towers.js";
+import { archerHeight, mageHeight, teslaHeight, ballistaHeight, visLevel, ARCHER_ART_SCALE } from "../towers.js";
 
 // Simple structural shapes gain material shading, equipment and detail at each tier.
 // (x, y) is the centre of its build spot, t.angle points at the last target,
 // t.anim counts down after a shot, t.lastShot is when the crew last fired.
 export function drawTower(t) {
   const { x, y } = t;
+  ctx.save();
+  if (t.def === TOWERS.archer) {
+    ctx.translate(x, y); ctx.scale(ARCHER_ART_SCALE, ARCHER_ART_SCALE); ctx.translate(-x, -y);
+  }
   const lv = visLevel(t);                                      // specializations supply their own buildings; legacy abilities add ornaments
   // Taller towers cast longer shadows toward the lower right.
   const tall = t.def === TOWERS.archer ? archerHeight(lv) : t.def === TOWERS.mage ? mageHeight(lv) : t.def === TOWERS.tesla ? teslaHeight(lv) : t.def === TOWERS.ballista ? ballistaHeight(lv) + 8 : 30;
@@ -24,13 +28,14 @@ export function drawTower(t) {
   ctx.fillStyle = sg; ctx.beginPath(); ctx.ellipse(0, -tall * 0.4, 20 * SHADOW_STYLE.scale, reach, 0, 0, Math.PI * 2); ctx.fill();
   ctx.restore();
   shadow(ctx, x, y + 10, 22, 8, 40);
-  if (t.def === TOWERS.archer) drawArcher(t, x, y, lv);
+  if (t.def === TOWERS.archer) drawArcherTower(t, x, y, lv);
   else if (t.def === TOWERS.mage) drawMage(t, x, y, lv);
   else if (t.def === TOWERS.barracks) drawBarracks(t, x, y, lv);
   else if (t.def === TOWERS.tesla) drawTesla(t, x, y, lv);
   else if (t.def === TOWERS.ballista) drawBallista(t, x, y, lv);
   else drawCannon(t, x, y, lv);
   if (t.ability) drawAbility(t, x, y);
+  ctx.restore();
 }
 
 // Level-4 ornaments: each ability dresses the tower differently so you can tell them apart at a glance
@@ -117,88 +122,6 @@ function smokeColumn(px, py, seed = 0) {
     circle(ctx, px + Math.sin(state.time + i * 2) * 2 + k * 4, py - k * 22, 2.5 + k * 4, "#cfd8dc");
   }
   ctx.globalAlpha = 1;
-}
-
-// =====================================================================
-//  ARCHER TOWER
-// =====================================================================
-function drawArcher(t, x, y, lv) {
-  const h = archerHeight(lv);
-  if (t.specialization) drawArcherSpecialization(t, x, y);
-  else {
-    if (lv === 1) {
-      masonry(x - 15, y - 4, 30, 14);
-      for (const dx of [-12, 8]) timber(x + dx, y - h, 4, h - 2);
-      line(ctx, x - 10, y - h + 6, x + 10, y - 5, "#7b6244", 2.2);
-      line(ctx, x + 10, y - h + 6, x - 10, y - 5, "#ac8754", 2);
-    } else {
-      masonry(x - 18, y - 16, 36, 27);
-      for (const dx of [-13, 8]) timber(x + dx, y - h, 5, h - 13);
-      if (lv === 3) masonry(x - 12, y - h + 18, 24, h - 32);
-      else line(ctx, x - 10, y - h + 5, x + 10, y - 15, "#8c714d", 3);
-      insetWindow(x - 3, y - 25, 6, 9);
-    }
-    for (const dx of [-3, 2]) line(ctx, x + dx, y - h + 3, x + dx, y - 5, "#b89966", 1);
-    for (let i = 0; i < 6; i++) line(ctx, x - 3, y - 8 - i * 5.5, x + 2, y - 8 - i * 5.5, "#d3b681", 0.9);
-    timber(x - 22, y - h - 6, 44, 6);
-    for (const dx of [-19, 19]) timber(x + dx - 1, y - h - 15, 2, 9);
-    line(ctx, x - 20, y - h - 15, x + 20, y - h - 15, "#c7a36a", 1.3);
-    if (lv === 3) {
-      for (const dx of [-23, 22]) timber(x + dx, y - h - 42, 2.5, 38);
-      tiledRoof(x, y - h - 41, 28, 18, "red");
-      rect(ctx, x - 7, y - h - 7, 14, 2, "#b49c69");
-    }
-    if (lv === 2) flag(x - 20, y - h - 30, 16, "#a86144", x);
-    lantern(x + 18, y - h - 2, x, 22);
-  }
-  const dir = facing(t), idle = relaxed(t);
-  const looks = [["#5d4037", "#2e7d32"], ["#f9a825", "#c62828"], ["#3e2723", "#1565c0"]];
-  archerSlots(lv).forEach((s, i) => drawArcherGirl(x + s.dx, y - h - 6 + s.dy, dir, t.shooter === i ? t.anim : 0, looks[i][0], looks[i][1], t.angle, lv === 3, idle, i * 2.1 + x * 0.01));
-}
-
-// A small archer girl standing with her feet at (px, py). anim > 0 = just fired.
-// When idle she shifts her weight, glances around and lets her bow hang loose.
-function drawArcherGirl(px, py, dir, anim, hair, dress, angle, fire = false, idle = false, seed = 0) {
-  const T = state.time + seed;
-  const bob = idle ? Math.sin(T * 2) * 0.6 : 0;
-  const glance = idle ? Math.sin(T * 0.9) * 0.8 : 0;
-  const hairSway = Math.sin(T * 2.6) * 0.6;
-  ctx.save();
-  ctx.translate(px, py - bob);
-  ctx.scale(dir, 1);
-  line(ctx, -2, 0, -2, -5 + bob, "#5d4037", 2);
-  line(ctx, 2, 0, 2, -5 + bob, "#5d4037", 2);
-  poly(ctx, [[-4.5, -5], [4.5, -5], [3, -12], [-3, -12]], dress, "#1b1b1b", 1);
-  rect(ctx, -3, -15, 6, 3.5, dress);
-  rect(ctx, -3.5, -12, 7, 1.5, "#4e342e");
-  rect(ctx, -5.5, -16, 2.5, 7, "#6d4c41");
-  line(ctx, -4.5, -16, -4.5, -19, "#eeeeee", 1);
-  circle(ctx, -0.5, -19, 4.4, hair);
-  ellipse(ctx, -5 + hairSway, -16.5, 2, 3.5, hair);
-  circle(ctx, 0, -18.5, 3.8, "#ffcc80");
-  ctx.fillStyle = hair; ctx.beginPath(); ctx.arc(0, -18.5, 3.9, Math.PI * 1.05, Math.PI * 1.95); ctx.fill();
-  circle(ctx, 1.6 + glance, -18.5, 0.7, "#212121");
-  // Bow arm: aimed at the target, or hanging loose and swaying when nothing is about
-  let a;
-  if (idle && anim <= 0) a = 0.75 + Math.sin(T * 1.3) * 0.08;
-  else { a = dir === 1 ? angle : Math.PI - angle; a = Math.max(-0.8, Math.min(0.8, Math.atan2(Math.sin(a), Math.cos(a)))); }
-  ctx.save();
-  ctx.translate(0, -13);
-  ctx.rotate(a);
-  const drawn = anim > 0.25;
-  line(ctx, 0, 0, 7, 0, "#ffcc80", 2);
-  ctx.strokeStyle = "#6d4c41"; ctx.lineWidth = 1.6;
-  ctx.beginPath(); ctx.arc(7, 0, 7, -1.25, 1.25); ctx.stroke();
-  const ex = 7 + 7 * Math.cos(1.25), ey = 7 * Math.sin(1.25);
-  ctx.strokeStyle = "#eeeeee"; ctx.lineWidth = 0.8;
-  ctx.beginPath(); ctx.moveTo(ex, -ey);
-  if (drawn) ctx.lineTo(1, 0); ctx.lineTo(ex, ey); ctx.stroke();
-  if (drawn) {
-    line(ctx, 1, 0, 15, 0, "#cfd8dc", 1.2);
-    if (fire) { circle(ctx, 16, 0, 3, "rgba(255,152,0,0.8)"); circle(ctx, 16, -0.5, 1.5, "#ffeb3b"); addLight(ctx, 16, 0, 9, "flame"); }
-  }
-  ctx.restore();
-  ctx.restore();
 }
 
 // =====================================================================
