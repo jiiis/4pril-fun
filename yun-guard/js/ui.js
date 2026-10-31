@@ -11,6 +11,7 @@ import { icon, applyIcons } from "./icons.js";
 import { clamp } from "./util.js";
 import { sfx } from "./audio.js";
 import { t, language, translateMarkup } from "./i18n.js";
+import { shortcutLabel } from "./input-hints.js";
 
 const $ = (id) => document.getElementById(id);
 const MENU_STYLE_KEY = "yunguard.menuStyle";
@@ -81,7 +82,9 @@ export function setWaveButton(mode, seconds) {
   const b = $("next"), face = b.querySelector(".face"), badge = $("nextBadge");
   b.classList.toggle("ready", mode === "ready" || mode === "start");
   b.disabled = mode === "busy" || mode === "over" || state.paused;
-  b.title = t(mode === "start" ? "Start the first wave (N)" : mode === "ready" ? "Call the next wave now for bonus gold (N)" : mode === "busy" ? "Wave in progress" : "Game over");
+  b.title = mode === "start" || mode === "ready"
+    ? shortcutLabel(mode === "start" ? "Start the first wave" : "Call the next wave now for bonus gold", "N")
+    : t(mode === "busy" ? "Wave in progress" : "Game over");
   face.innerHTML = icon(mode === "start" ? "swords" : mode === "ready" ? "forward" : mode === "busy" ? "hourglass" : "x");
   const showCount = mode === "ready" && seconds !== undefined && seconds <= 10;              // the number only appears for the last 10 seconds
   badge.classList.toggle("on", showCount);

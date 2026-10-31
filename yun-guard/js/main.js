@@ -17,6 +17,7 @@ import { unlockAudio, toggleMute, isMuted, sfx } from "./audio.js";
 import { initWeather } from "./weather.js";
 import { MAX_LEVEL, clampLevel, savedLevel, saveLevel, levelConfig, levelSeed, carryFor, clearProgress, reshuffleMaps, mapOptionsFor } from "./levels.js";
 import { t, initLocalization } from "./i18n.js";
+import { initInputHints, shortcutLabel } from "./input-hints.js";
 
 // Which level? ?level=N in the URL, else the last one played on this device. Each level has its own map
 // (add ?seed=1234 to force a particular map instead).
@@ -82,7 +83,7 @@ async function startLevel({ level: L, seed, hero, debounce = false }) {
   setBackground(generated.background, generated.res, generated.scenery);
   initCritters(); initWeather();
   resetUiForLevel();
-  pauseBtn.innerHTML = icon("pause"); pauseBtn.title = t("Pause (P)");
+  pauseBtn.innerHTML = icon("pause"); pauseBtn.title = shortcutLabel("Pause", "P");
   draw();                                                       // paint the new preview before enabling the level's controls
   loadingMap = false;
   heroPick.setAttribute("aria-busy", "false");
@@ -104,6 +105,7 @@ window.addEventListener("hashchange", () => {
 });
 
 initLocalization();
+initInputHints();
 initUi();
 initTouch();
 
@@ -322,7 +324,7 @@ if (touchDevice && document.documentElement.requestFullscreen) {
 }
 fsBtn.addEventListener("click", toggleFullscreen);
 document.addEventListener("fullscreenchange", () => {
-  fsBtn.innerHTML = icon(fsOn() ? "shrink" : "expand"); fsBtn.title = t(fsOn() ? "Exit full screen (F)" : "Full screen (F)");
+  fsBtn.innerHTML = icon(fsOn() ? "shrink" : "expand"); fsBtn.title = shortcutLabel(fsOn() ? "Exit full screen" : "Full screen", "F");
   // Keep Escape for closing menus instead of leaving full screen (Chromium only; Safari always exits on Escape)
   if (fsOn()) navigator.keyboard?.lock?.(["Escape"]).catch(() => {}); else navigator.keyboard?.unlock?.();
 });
@@ -333,7 +335,7 @@ const pauseBtn = document.getElementById("pause");
 function setPaused(on) {
   state.paused = on;
   pauseBtn.innerHTML = icon(on ? "play" : "pause");
-  pauseBtn.title = t(on ? "Resume (P)" : "Pause (P)");
+  pauseBtn.title = shortcutLabel(on ? "Resume" : "Pause", "P");
   document.getElementById("paused").style.display = on ? "flex" : "none";
   const next = document.getElementById("next");
   if (on) { next.dataset.wasDisabled = next.disabled ? "1" : ""; next.disabled = true; }     // no calling waves while paused
@@ -350,8 +352,8 @@ window.addEventListener("languagechange", () => {
     : t(mapFailed ? "Map generation failed. Try another level." : "Choose your legend");
   resetLbl.textContent = t(resetArmed ? "Tap again to reset" : "Reset progress");
   showLegendBadge(state.hero?.kind);
-  pauseBtn.title = t(state.paused ? "Resume (P)" : "Pause (P)");
-  fsBtn.title = t(fsOn() ? "Exit full screen (F)" : "Full screen (F)");
+  pauseBtn.title = shortcutLabel(state.paused ? "Resume" : "Pause", "P");
+  fsBtn.title = shortcutLabel(fsOn() ? "Exit full screen" : "Full screen", "F");
 });
 
 // Main loop

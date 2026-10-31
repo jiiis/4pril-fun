@@ -3,6 +3,7 @@ import { TOWERS, ARMOR_CLASSES, DAMAGE_TYPES, ABILITIES } from "./config.js";
 import { SPECIALIZATIONS } from "./specializations.js";
 import { towerRange, towerDamage, towerRate, upgradeCost, sellValue, canUpgrade, canSpecialise, abilityCost, abilityDef, soldierCount, soldierHp, soldierDamage, specializationDef, skillRank, skillCost } from "./towers.js";
 import { icon } from "./icons.js";
+import { inputHint, shortcutLabel } from "./input-hints.js";
 
 const ATTACK_ICONS = { physical: "sword", arrow: "bow", pierce: "ballista", siege: "bomb", magic: "sparkles" };
 const ARMOR_ICONS = { light: "armorLight", plated: "armorPlated", fortified: "armorFortified", warded: "armorWarded" };
@@ -16,9 +17,9 @@ const armorBadge = (key, value = "") => `<span class="armor-badge armor-${key}">
 function panel(title, subtitle, emblem, meta, body, actions = "") {
   return `<header class="inspector-header"><span class="inspector-emblem">${icon(emblem)}</span>
     <div class="inspector-identity"><small>${subtitle}</small><h2>${title}</h2></div>${meta}
-    <button class="inspector-close" data-action="close" aria-label="Close inspector" title="Close (Esc)">${icon("x")}</button></header>
+    <button class="inspector-close" data-action="close" aria-label="Close inspector" title="${shortcutLabel("Close", "Esc")}">${icon("x")}</button></header>
     <div class="inspector-content">${body}</div>
-    <footer class="inspector-actions">${actions || `<span class="inspector-tip">Select the map to close · Esc</span>`}</footer>`;
+    <footer class="inspector-actions">${actions || `<span class="inspector-tip">${inputHint("Select the map to close · Esc", "Tap the map to close")}</span>`}</footer>`;
 }
 
 function armorGuide() {

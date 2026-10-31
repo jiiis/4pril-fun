@@ -24,6 +24,7 @@ Player-facing text lives in the shared translation catalog at `js/locales/zh-CN.
 ## How to play
 
 - The world is bigger than the screen and always shown at its natural size: drag with the mouse or a finger to look around. The HUD stays put.
+- Keyboard badges and shortcut hints hide on touch-capable devices, independently of screen size. Keyboard shortcuts still work with an attached keyboard.
 - The UI has a minimum layout width of 360px. Narrower windows scroll horizontally instead of squeezing the controls and legend cards; swipe sideways or use the mouse wheel/trackpad. Rotate a phone for more room. The legend picker can still scroll vertically when needed.
 - The top-right corner shows the language switch on the home page and the map hash during gameplay. Below 420px, the top stats become compact. The game-view logo hides below 440px; the full home-page logo remains visible.
 - Every game starts on a brand new random map. Roads can enter and leave from any edge of the map, not just left to right. Most maps have two routes: a side road that forks off and rejoins, a second entrance that merges in, a fork that leads to its own exit, or a completely separate road with its own entrance and exit. Monsters pick a route when they appear, so cover both. When the routes leave by different exits, each exit has its own castle to defend (a grey stone keep and a sandstone palace). The map number is shown in the top bar; add `?seed=NUMBER` to the URL (for example `http://localhost:8123/?seed=234833`) to play that same map again.

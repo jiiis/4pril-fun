@@ -44,22 +44,22 @@
       <div class="hud-logo"><img src="icon-192.png" alt="Yun Guard"/><span class="words"><span class="brand">4pril<em>.fun</em></span><span class="title">Yun Guard</span></span></div>
       <div class="hud-right">
         <button id="legendBadge" type="button" title="Find your legend" aria-label="Find your legend" aria-pressed="false" data-i18n-title="Find your legend" data-i18n-aria-label="Find your legend"></button>
-        <button id="mute" class="round" title="Sound on/off (M)" data-icon="volume" data-i18n-title="Sound on/off (M)"></button>
-        <button id="fullscreen" class="round" title="Full screen (F)" data-icon="expand" data-i18n-title="Full screen (F)"></button>
-        <button id="restart-level" class="round" title="New map, same level (R)" data-icon="restart" data-i18n-title="New map, same level (R)"></button>
-        <button id="pause" class="round" title="Pause (P)" data-icon="pause" data-i18n-title="Pause (P)"></button>
-        <button id="next" class="round big" title="Next wave (N)" data-i18n-title="Next wave (N)"><span class="face" data-icon="play"></span><span class="badge" id="nextBadge"></span></button>
+        <button id="mute" class="round" title="Sound on/off" data-icon="volume" data-i18n-title="Sound on/off" data-shortcut="M"></button>
+        <button id="fullscreen" class="round" title="Full screen" data-icon="expand" data-i18n-title="Full screen" data-shortcut="F"></button>
+        <button id="restart-level" class="round" title="New map, same level" data-icon="restart" data-i18n-title="New map, same level" data-shortcut="R"></button>
+        <button id="pause" class="round" title="Pause" data-icon="pause" data-i18n-title="Pause" data-shortcut="P"></button>
+        <button id="next" class="round big" title="Next wave" data-i18n-title="Next wave" data-shortcut="N"><span class="face" data-icon="play"></span><span class="badge" id="nextBadge"></span></button>
       </div>
     </header>
 
-    <div id="paused"><div class="resumeChoice"><span data-icon="play" title="Resume" data-i18n-title="Resume"></span><small class="overlay-button-label"><span data-i18n="RESUME">RESUME</span></small></div><small><span data-i18n="paused · tap or press P to resume">paused · tap or press P to resume</span></small></div>
+    <div id="paused"><div class="resumeChoice"><span data-icon="play" title="Resume" data-i18n-title="Resume"></span><small class="overlay-button-label"><span data-i18n="RESUME">RESUME</span></small></div><small><span data-i18n="paused · tap to resume" data-shortcut-text="paused · tap or press P to resume">paused · tap to resume</span></small></div>
 
     <div id="confirm">
       <div class="actions">
         <button id="confirmSame" class="choice"><span class="big" data-icon="restart"></span><small class="overlay-button-label"><span data-i18n="same map">same map</span></small></button>
         <button id="confirmNew" class="choice alt"><span class="big" data-icon="map"></span><small class="overlay-button-label"><span data-i18n="new map">new map</span></small></button>
       </div>
-      <small class="cap"><span data-i18n="restart level">restart level</span> <span id="confirmLevel">1</span> <span data-i18n="· tap outside or press Esc to cancel">· tap outside or press Esc to cancel</span></small>
+      <small class="cap"><span data-i18n="restart level">restart level</span> <span id="confirmLevel">1</span> <span data-i18n="· tap outside to cancel" data-shortcut-text="· tap outside or press Esc to cancel">· tap outside to cancel</span></small>
     </div>
 
     <div id="overlay">
@@ -129,7 +129,7 @@
     </div>
 
     <dialog id="settings" aria-labelledby="settingsTitle">
-      <button id="settings-close" class="settingsIcon" type="button" title="Close (Esc)" aria-label="Close (Esc)" data-icon="x" data-i18n-title="Close (Esc)" data-i18n-aria-label="Close (Esc)"></button>
+      <button id="settings-close" class="settingsIcon" type="button" title="Close" aria-label="Close" data-icon="x" data-i18n-title="Close" data-shortcut="Esc" data-i18n-aria-label="Close"></button>
       <div class="settings-content">
         <h1 id="settingsTitle" data-i18n="Settings">Settings</h1>
         <h2 id="towerControlsTitle" data-i18n="Tower menu style">Tower menu style</h2>
