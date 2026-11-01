@@ -34,9 +34,9 @@ export const SPECIALIZATIONS = {
   },
   barracks: {
     cloud: {
-      name: "Cloud Monastery", icon: "waves", cost: 210, type: "arrow", escorts: 3,
-      desc: "Three veteran guards hold the road while two spear spirits intercept ground and air targets, then retreat to recover. Spirits do not block; plating resists their spears.",
-      count: 2, hp: 110, damage: 34, rate: 0.9, speed: 180, engage: 90, respawn: 10, armor: 0, regen: 6,
+      name: "Cloud Monastery", icon: "waves", cost: 210, type: "arrow",
+      desc: "Three spear spirits replace the guards, intercept ground and air targets, then retreat to recover. Spirits do not block; plating resists their spears.",
+      count: 3, hp: 190, damage: 34, rate: 0.9, speed: 180, engage: 90, respawn: 10, armor: 0, regen: 6,
       skills: {
         cloudstep: { name: "Cloudstep", costs: [120, 180, 240], descriptions: ["Speed 210; recovery 0.75s; interception radius 100.", "Speed 240; recovery 0.6s; interception radius 110.", "Speed 270; recovery 0.45s; interception radius 120."], speed: [180, 210, 240, 270], recovery: [0.9, 0.75, 0.6, 0.45], engage: [90, 100, 110, 120] },
         skyspears: { name: "Sky Spears", costs: [150, 220, 300], descriptions: ["+12 damage against flyers (46 total).", "+26 damage against flyers (60 total).", "+42 damage against flyers (76 total)."], airDamage: [0, 12, 26, 42] },
@@ -44,7 +44,8 @@ export const SPECIALIZATIONS = {
     },
     brood: {
       name: "Brood Nursery", icon: "leaf", cost: 260, type: "physical",
-      desc: "Three armored beetles hold the road and hatch temporary helpers while an adult lives. Stronger bites and chitin improve the veteran defense. No anti-air; plating resists bites.",
+      desc: "Three armored beetles replace the guards, block ground enemies and spit short-range barbs at flyers. Adults hatch temporary ground helpers. Plating resists their attacks.",
+      airRange: 72, airDamage: 14,
       count: 3, hp: 300, damage: 22, rate: 1.16, speed: 90, engage: 50, respawn: 8, armor: 0.25, regen: 6,
       hatchling: { hp: 45, damage: 7, rate: 1.2, speed: 120, lifetime: 10 },
       skills: {
@@ -54,8 +55,9 @@ export const SPECIALIZATIONS = {
       },
     },
     colossus: {
-      name: "Jade Colossus", icon: "shieldCheck", cost: 300, type: "siege", escorts: 2,
-      desc: "A jade guardian and two veteran guards hold the road. The guardian crushes ground groups with Siege damage. Slow movement and scattered runners remain weaknesses; no anti-air.",
+      name: "Jade Colossus", icon: "shieldCheck", cost: 300, type: "siege",
+      desc: "One jade guardian replaces the squad, holds up to three nearby ground enemies and crushes groups with Siege damage. Slow to reposition; no anti-air.",
+      blockTargets: 3,
       count: 1, hp: 900, damage: 70, rate: 0.55, speed: 60, engage: 50, respawn: 12, armor: 0.15, regen: 8,
       skills: {
         stoneheart: { name: "Stoneheart", costs: [190, 260, 340], descriptions: ["1100 HP; 11s respawn; 12 HP/s while resting.", "1350 HP; 10s respawn; 16 HP/s while resting.", "1650 HP; 9s respawn; 20 HP/s while resting."], hp: [900, 1100, 1350, 1650], respawn: [12, 11, 10, 9], regen: [8, 12, 16, 20] },

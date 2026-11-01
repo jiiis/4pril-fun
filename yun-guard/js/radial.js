@@ -1,7 +1,7 @@
 import { state } from "./state.js";
 import { TOWERS, ABILITIES, W, H } from "./config.js";
 import { SPECIALIZATIONS } from "./specializations.js";
-import { canUpgrade, canSpecialise, upgradeCost, abilityCost, sellValue, specializationDef, abilityDef, skillRank, skillCost, towerDamage, towerRange, towerRate, soldierDamage, soldierHp, soldierCount, escortCount, foundationDamage, foundationRate, foundationRange } from "./towers.js";
+import { canUpgrade, canSpecialise, upgradeCost, abilityCost, sellValue, specializationDef, abilityDef, skillRank, skillCost, towerDamage, towerRange, towerRate, soldierDamage, soldierHp, soldierCount, foundationDamage, foundationRate, foundationRange } from "./towers.js";
 import { icon } from "./icons.js";
 import { attackProfile } from "./inspector.js";
 
@@ -59,7 +59,6 @@ function towerSummary(tower) {
   const stats = tower.def.soldiers ? [["Damage", soldierDamage(tower)], ["Health", soldierHp(tower)], ["Units", soldierCount(tower)]]
     : [["Damage", towerDamage(tower)], ["Range", towerRange(tower)], ["Rate", `${towerRate(tower).toFixed(2)}/s`]];
   const armor = spec?.skills.chitin?.armor[skillRank(tower, "chitin")] ?? spec?.armor ?? 0;
-  if (escortCount(tower)) stats.push(["Guards", escortCount(tower)]);
   const crew = tower.type === "archer" && spec ? `<p><strong>Veteran fire arrows</strong></p><div class="radial-stats"><span><small>Damage</small><b>${foundationDamage(tower)}</b></span><span><small>Range</small><b>${foundationRange(tower)}</b></span><span><small>Rate</small><b>${foundationRate(tower).toFixed(2)}/s</b></span></div>` : "";
   return `<div class="radial-stats">${stats.map(([label, value]) => `<span><small>${label}</small><b>${value}</b></span>`).join("")}</div>
     ${crew}${attackProfile(type, escape(spec?.desc || tower.def.desc))}<div class="radial-facts">

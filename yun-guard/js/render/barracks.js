@@ -2,7 +2,14 @@ import { ctx, rect, circle, ellipse, poly, line } from "./gfx.js";
 import { state } from "../state.js";
 import { skillRank } from "../towers.js";
 import { addLight } from "./lights.js";
-import { shaded, masonry, timber, tiledRoof, lantern, insetWindow } from "./tower-materials.js";
+import { masonry as stonework, timber as woodwork, tiledRoof as roofTiles, lantern, insetWindow } from "./tower-materials.js";
+
+export const BARRACKS_ART_SCALE = 0.72;
+export const BARRACKS_MATERIAL_STYLE = { flat: true };
+const FLAT = BARRACKS_MATERIAL_STYLE;
+const masonry = (x, y, w, h, jade) => stonework(x, y, w, h, jade, FLAT);
+const timber = (x, y, w, h) => woodwork(x, y, w, h, FLAT);
+const tiledRoof = (x, y, w, h, color) => roofTiles(x, y, w, h, color, FLAT);
 
 export function drawSummoningHall(t, x, y) {
   ctx.save();
@@ -31,7 +38,7 @@ function drawMonastery(t, x, y) {
   const sway = Math.sin(state.time * 1.4 + x) * 0.07;
   ctx.save(); ctx.translate(x + 25, y - 23); ctx.rotate(sway);
   line(ctx, 0, 0, 0, 5, "#887d60", 0.8);
-  poly(ctx, [[-3, 5], [3, 5], [4, 11], [-4, 11]], shaded(-4, 5, 8, 6, "#dbcca0", "#ae9561", "#756347"));
+  poly(ctx, [[-3, 5], [3, 5], [4, 11], [-4, 11]], "#ae9561");
   line(ctx, -4, 11, 4, 11, "#e4d4a4", 0.8); circle(ctx, 0, 12, 1, "#8e754f");
   ctx.restore();
   for (let i = 0; i < steps; i++) {
@@ -50,10 +57,10 @@ function drawNursery(t, x, y) {
   const chitin = skillRank(t, "chitin"), hatchery = skillRank(t, "hatchery"), last = skillRank(t, "lastbrood");
   masonry(x - 29, y + 3, 58, 9);
   // Curved shell shingles shelter a real framed entrance, with a warm incubation room inside.
-  const shell = shaded(x - 25, y - 39, 50, 44, "#a8b18a", "#75865d", "#3d5946");
+  const shell = "#75865d";
   ctx.fillStyle = shell; ctx.beginPath(); ctx.moveTo(x - 26, y + 3);
   ctx.bezierCurveTo(x - 30, y - 38, x + 4, y - 48, x + 21, y - 24);
-  ctx.quadraticCurveTo(x + 29, y - 12, x + 27, y + 4); ctx.closePath(); ctx.fill();
+  ctx.quadraticCurveTo(x + 29, y - 12, x + 27, y + 4); ctx.closePath(); ctx.fill(); ctx.strokeStyle = "#455d3e"; ctx.lineWidth = 1; ctx.stroke();
   for (let row = 0; row < 5; row++) {
     const yy = y - 28 + row * 6, hw = 12 + row * 2.6;
     ctx.strokeStyle = "rgba(36,60,39,0.38)"; ctx.lineWidth = 0.8;
@@ -63,7 +70,7 @@ function drawNursery(t, x, y) {
   for (const dx of [-21, 18]) timber(x + dx, y - 16, 3, 21);
   masonry(x - 11, y - 10, 22, 17);
   rect(ctx, x - 8, y - 8, 16, 15, "#283d2b");
-  rect(ctx, x - 7, y - 7, 14, 10, shaded(x - 7, y - 7, 14, 10, "#b69e61", "#81754b", "#49543a"));
+  rect(ctx, x - 7, y - 7, 14, 10, "#81754b");
   for (let i = 0; i < 3; i++) ellipse(ctx, x - 4 + i * 4, y, 2, 3.2, i % 2 ? "#c4bc87" : "#ded3a4");
   timber(x - 12, y - 12, 24, 3);
   lantern(x + 17, y - 5, x, 22);
@@ -94,14 +101,14 @@ function drawJadeHall(t, x, y) {
       line(ctx, x + dx + 2, y - 23 + i * 7, x + dx + 6, y - 26 + i * 7, "rgba(214,221,178,0.5)", 0.65);
     }
   }
-  rect(ctx, x - 15, y - 26, 30, 28, shaded(x - 15, y - 26, 30, 28, "#46594f", "#2c443d", "#1f3632"));
+  rect(ctx, x - 15, y - 26, 30, 28, "#2c443d");
   masonry(x - 13, y - 3, 26, 5, true);
   tiledRoof(x, y - 35, 31, 17);
   masonry(x - 9, y - 48, 18, 5, true);
   // A fixed jade heart powers the guardian; only its inner luminance breathes.
   const pulse = 0.8 + Math.sin(state.time * 1.5 + x) * 0.06;
   ctx.globalAlpha = pulse;
-  poly(ctx, [[x, y - 25], [x + 6, y - 15], [x, y - 7], [x - 6, y - 15]], shaded(x - 6, y - 25, 12, 18, "#e3e7ba", "#a6d0b0", "#5d9f91"));
+  poly(ctx, [[x, y - 25], [x + 6, y - 15], [x, y - 7], [x - 6, y - 15]], "#a6d0b0");
   poly(ctx, [[x, y - 24], [x, y - 8], [x - 4, y - 15]], "rgba(248,244,192,0.45)");
   ctx.globalAlpha = 1;
   addLight(ctx, x, y - 15, 25 + heart * 2, "green");

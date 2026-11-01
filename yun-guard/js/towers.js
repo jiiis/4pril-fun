@@ -12,8 +12,6 @@ const hpAt = (t, level) => Math.round(t.def.soldierHp * (1 + 0.6 * (level - 1)))
 export const foundationDamage = (t) => Math.round(damageAt(t, 3));
 export const foundationRate = (t) => rateAt(t, 3);
 export const foundationRange = (t) => rangeAt(t, 3);
-export const foundationHp = (t) => hpAt(t, 3);
-export const escortCount = (t) => specializationDef(t)?.escorts || 0;
 
 // Ordinary tiers scale base stats; specializations can define their own attack loop.
 const FINAL = (t) => (t.level >= MAX_LEVEL ? 1 : 0);
@@ -33,10 +31,11 @@ export function specialize(t, key) {
   const def = SPECIALIZATIONS[t.type]?.[key];
   if (!def || !canSpecialise(t)) return false;
   t.specialization = key; t.skills = {}; t.level = MAX_LEVEL;
-  // Promote units in place: no teleport, free revive, lost wounds or gap in blocking.
-  t.soldiers.forEach((soldier, index) => {
-    soldier.escort = !!def.escorts && (key === "cloud" || index >= def.count);
-  });
+  // Replace the squad in place; retain wounds, cooldowns and fallen-unit respawn timers.
+  if (t.def.soldiers) {
+    t.soldiers = t.soldiers.filter((soldier) => !soldier.hatchling).sort((a, b) => Number(b.hp > 0) - Number(a.hp > 0)).slice(0, def.count);
+    for (const soldier of t.soldiers) soldier.specialization = key;
+  }
   t.hatchCd = null;
   t.cd = 0;
   t.spent += def.cost;

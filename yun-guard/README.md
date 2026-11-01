@@ -73,9 +73,9 @@ Archer specializations retain tier-3 fire arrows and add a specialist attack. Sp
 
 | Barracks specialization | Role | Skills |
 |---|---|---|
-| **Cloud Monastery** | Three veteran guards hold the road while two fragile spear spirits intercept ground and air, then retreat to recover. Spirits never block; Piercing attacks struggle with plating. | **Cloudstep:** faster interception and recovery. **Sky Spears:** extra damage to flyers. |
-| **Brood Nursery** | Three armored beetles block ground enemies and hatch temporary helpers, with a strict population cap. Cannot hit flyers. | **Chitin:** adult durability. **Hatchery:** faster hatching and a larger cap. **Last Brood:** hatchlings released when adults fall. |
-| **Jade Colossus** | One jade guardian and two veteran guards hold the road. The guardian crushes groups with Siege damage, countering Fortified enemies. Slow to reposition; no anti-air. | **Stoneheart:** health, rest healing and respawn. **Earthbreaker:** wider, harder crushing attacks without losing attack speed. |
+| **Cloud Monastery** | Three spear spirits replace the guards, intercept ground and air, then retreat to recover. Spirits never block; Piercing attacks struggle with plating. | **Cloudstep:** faster interception and recovery. **Sky Spears:** extra damage to flyers. |
+| **Brood Nursery** | Three armored beetles block ground enemies and hatch temporary helpers, with a strict population cap. Adults spit short-range barbs at flyers; hatchlings remain ground-only. | **Chitin:** adult durability. **Hatchery:** faster hatching and a larger cap. **Last Brood:** hatchlings released when adults fall. |
+| **Jade Colossus** | One jade guardian replaces the squad and holds up to three nearby ground enemies. The guardian crushes groups with Siege damage, countering Fortified enemies. Slow to reposition; no anti-air. | **Stoneheart:** health, rest healing and respawn. **Earthbreaker:** wider, harder crushing attacks without losing attack speed. |
 
 Barracks specializations promote the existing defense in place, preserving wounds and respawn timers. Cloud keeps three guards, Colossus keeps two alongside its guardian, and Brood promotes all three soldiers into armored adults; rally orders still work. Skills can be purchased in any order. Exact costs, ranks and initial balance values are in [BALANCE.md](BALANCE.md).
 
@@ -83,7 +83,7 @@ Barracks specializations promote the existing defense in place, preserving wound
 |---|---|
 | Goblin | Weak and plentiful. |
 | Wolf | Very fast. |
-| Bat | Light flyer; passes over ground blockers. Archers, mages, spires, ballistas, Cloud Monastery spirits and aerial companions can hit it. |
+| Bat | Light flyer; passes over ground blockers. Archers, mages, spires, ballistas, Cloud Monastery spirits, Brood adults and aerial companions can hit it. |
 | Orc | Armoured: arrows and cannonballs do less. |
 | Skeleton | Heavily armoured but crumbles to magic. Can't be chilled. |
 | Shaman | Warded healer; physical attacks counter it. |
@@ -92,7 +92,7 @@ Barracks specializations promote the existing defense in place, preserving wound
 | Slime | Bursts into two bouncy slimelings when killed. |
 | Thief | Very fast. Costs no lives, but runs off with 25 gold if it reaches the castle. Drops good loot when caught. |
 | Necromancer | Warded; raises a skeleton from a nearby fallen monster every few seconds. Physical attacks counter it. |
-| Wyvern | A big Plated flying dragon; ranged towers, Cloud Monastery spirits and aerial companions can hit it. Arcane counters its plating; Cloud spears remain resisted. |
+| Wyvern | A big Plated flying dragon; ranged towers, Cloud Monastery spirits, Brood adults and aerial companions can hit it. Arcane counters its plating; Cloud spears remain resisted. |
 
 ## Project layout
 

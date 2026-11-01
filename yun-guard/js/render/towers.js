@@ -4,7 +4,7 @@ import { state } from "../state.js";
 import { drawArcherTower } from "./archer.js";
 import { addLight } from "./lights.js";
 import { masonry, timber, tiledRoof, lantern, insetWindow } from "./tower-materials.js";
-import { drawSummoningHall } from "./barracks.js";
+import { drawSummoningHall, BARRACKS_ART_SCALE, BARRACKS_MATERIAL_STYLE } from "./barracks.js";
 import { archerHeight, mageHeight, teslaHeight, ballistaHeight, visLevel, ARCHER_ART_SCALE } from "../towers.js";
 
 // Simple structural shapes gain material shading, equipment and detail at each tier.
@@ -15,6 +15,9 @@ export function drawTower(t) {
   ctx.save();
   if (t.def === TOWERS.archer) {
     ctx.translate(x, y); ctx.scale(ARCHER_ART_SCALE, ARCHER_ART_SCALE); ctx.translate(-x, -y);
+  }
+  if (t.def === TOWERS.barracks) {
+    ctx.translate(x, y); ctx.scale(BARRACKS_ART_SCALE, BARRACKS_ART_SCALE); ctx.translate(-x, -y);
   }
   const lv = visLevel(t);                                      // specializations supply their own buildings; legacy abilities add ornaments
   // Taller towers cast longer shadows toward the lower right.
@@ -390,30 +393,31 @@ function drawCannon(t, x, y, lv) {
 // =====================================================================
 function drawBarracks(t, x, y, lv) {
   if (t.specialization) { drawSummoningHall(t, x, y); return; }
+  const flat = BARRACKS_MATERIAL_STYLE;
   // The same hall gains dressed stone, buttresses and a second roof tier as it develops.
-  masonry(x - 23, y + 4, 46, 8);
+  masonry(x - 23, y + 4, 46, 8, false, flat);
   if (lv === 1) {
-    timber(x - 19, y - 18, 38, 23);
-    for (const dx of [-19, 16]) timber(x + dx, y - 20, 3, 27);
+    timber(x - 19, y - 18, 38, 23, flat);
+    for (const dx of [-19, 16]) timber(x + dx, y - 20, 3, 27, flat);
   } else {
-    masonry(x - 20, y - 23, 40, 30);
-    for (const dx of [-24, 19]) masonry(x + dx, y - (lv === 3 ? 31 : 16), 6, lv === 3 ? 40 : 25);
+    masonry(x - 20, y - 23, 40, 30, false, flat);
+    for (const dx of [-24, 19]) masonry(x + dx, y - (lv === 3 ? 31 : 16), 6, lv === 3 ? 40 : 25, false, flat);
     insetWindow(x - 16, y - 14, 6, 9);
     insetWindow(x + 10, y - 14, 6, 9);
   }
   rect(ctx, x - 6, y - 6, 12, 14, "#2b3730");
   rect(ctx, x - 5, y - 5, 4, 12, "#795e3d");
   line(ctx, x - 5, y + 2, x - 1, y + 2, "#b08c56", 0.8);
-  masonry(x - 9, y + 8, 18, 3);
-  tiledRoof(x, y - (lv === 1 ? 18 : 23), lv === 3 ? 29 : 25, lv === 1 ? 16 : 19, lv === 1 ? "straw" : "red");
+  masonry(x - 9, y + 8, 18, 3, false, flat);
+  tiledRoof(x, y - (lv === 1 ? 18 : 23), lv === 3 ? 29 : 25, lv === 1 ? 16 : 19, lv === 1 ? "straw" : "red", flat);
   if (lv === 3) {
-    masonry(x - 8, y - 42, 16, 13);
-    tiledRoof(x, y - 42, 14, 12);
+    masonry(x - 8, y - 42, 16, 13, false, flat);
+    tiledRoof(x, y - 42, 14, 12, "blue", flat);
     flag(x + 23, y - 48, 21, "#bda05c", x);
   } else if (lv === 2) flag(x + 23, y - 39, 19, "#657d83", x);
   lantern(x + 7, y - 3, x, 21);
   // A fixed chimney vents the kitchen; no unsupported smoke through a solid roof.
-  if (lv >= 2) { masonry(x - 14, y - 37, 5, 12); smokeColumn(x - 11, y - 38, x * 0.01); }
+  if (lv >= 2) { masonry(x - 14, y - 37, 5, 12, false, flat); smokeColumn(x - 11, y - 38, x * 0.01); }
   for (let i = 0; i < lv; i++) {
     line(ctx, x - 28 + i * 3, y + 7, x - 28 + i * 3, y - 8, "#938367", 1);
     poly(ctx, [[x - 29 + i * 3, y - 8], [x - 28 + i * 3, y - 12], [x - 27 + i * 3, y - 8]], "#b5c3bd");

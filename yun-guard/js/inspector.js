@@ -1,7 +1,7 @@
 import { state } from "./state.js";
 import { TOWERS, ARMOR_CLASSES, DAMAGE_TYPES, ABILITIES } from "./config.js";
 import { SPECIALIZATIONS } from "./specializations.js";
-import { towerRange, towerDamage, towerRate, upgradeCost, sellValue, canUpgrade, canSpecialise, abilityCost, abilityDef, soldierCount, soldierHp, soldierDamage, specializationDef, skillRank, skillCost, escortCount, foundationDamage, foundationHp, foundationRange, foundationRate } from "./towers.js";
+import { towerRange, towerDamage, towerRate, upgradeCost, sellValue, canUpgrade, canSpecialise, abilityCost, abilityDef, soldierCount, soldierHp, soldierDamage, specializationDef, skillRank, skillCost, foundationDamage, foundationRange, foundationRate } from "./towers.js";
 import { icon } from "./icons.js";
 import { inputHint, shortcutLabel } from "./input-hints.js";
 
@@ -57,7 +57,6 @@ export function towerInspector(tower, tab) {
   let overview = (tower.type === "archer" && spec ? heading("Specialist attack") : "") + `<div class="stats">` + (def.soldiers
     ? stat("Damage", soldierDamage(tower)) + stat("Health", soldierHp(tower)) + stat(unitLabel, soldierCount(tower))
     : stat("Damage", towerDamage(tower)) + stat("Range", towerRange(tower)) + stat("Rate", `${towerRate(tower).toFixed(2)}/s`)) + `</div>`;
-  if (escortCount(tower)) overview += heading("Veteran guard detail") + `<div class="stats">${stat("Guards", escortCount(tower))}${stat("Damage", foundationDamage(tower))}${stat("Health", foundationHp(tower))}</div>`;
   if (tower.type === "archer" && spec) overview += heading("Veteran fire arrows") + `<div class="stats">${stat("Damage", foundationDamage(tower))}${stat("Range", foundationRange(tower))}${stat("Rate", `${foundationRate(tower).toFixed(2)}/s`)}</div>`;
   overview += attackProfile(spec?.type || def.type, spec?.desc || def.desc);
   if (def.soldiers) overview += unitArmor(tower, spec);
