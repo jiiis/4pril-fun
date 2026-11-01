@@ -5,8 +5,10 @@ import { masonry as stonework, timber as woodwork, tiledRoof as roofTiles, lante
 import { specializationDef, skillRank, archerHeight, archerSlots, ARCHER_ART_SCALE, falconPerch } from "../towers.js";
 
 const FLAT = { flat: true };
-const masonry = (x, y, w, h, jade) => stonework(x, y, w, h, jade, FLAT);
+const MOSS = { flat: true, tone: "moss" };
+const masonry = (x, y, w, h, jade) => stonework(x, y, w, h, jade, jade ? MOSS : FLAT);
 const timber = (x, y, w, h) => woodwork(x, y, w, h, FLAT);
+const livingTimber = (x, y, w, h) => woodwork(x, y, w, h, MOSS);
 const tiledRoof = (x, y, w, h, color) => roofTiles(x, y, w, h, color, FLAT);
 
 function crescent(x, y, radius, color) {
@@ -19,13 +21,14 @@ function crescent(x, y, radius, color) {
 
 function drawArcherSpecialization(t, x, y) {
   ctx.save();
+  const frame = t.specialization === "thorn" ? livingTimber : timber;
   // All paths keep the veteran archers' deck and firing positions.
   masonry(x - 20, y - 15, 40, 27, t.specialization === "thorn");
-  for (const dx of [-16, 11]) timber(x + dx, y - 57, 5, 44);
+  for (const dx of [-16, 11]) frame(x + dx, y - 57, 5, 44);
   masonry(x - 12, y - 32, 24, 18, t.specialization === "thorn");
   insetWindow(x - 3, y - 26, 6, 9);
-  timber(x - 24, y - 58, 48, 6);
-  for (const dx of [-22, 20]) timber(x + dx, y - 69, 2, 11);
+  frame(x - 24, y - 58, 48, 6);
+  for (const dx of [-22, 20]) frame(x + dx, y - 69, 2, 11);
   line(ctx, x - 22, y - 69, x + 22, y - 69, "#c5ab7c", 1.1);
   if (t.specialization === "falcon") drawRoost(t, x, y);
   else if (t.specialization === "thorn") drawWeavers(t, x, y);
@@ -63,7 +66,7 @@ function drawRoost(t, x, y) {
 
 function drawWeavers(t, x, y) {
   const roots = skillRank(t, "deeproots"), barbs = skillRank(t, "barbedgrowth"), drift = skillRank(t, "seeddrift");
-  for (const dx of [-27, 24]) timber(x + dx, y - 91, 3, 37);
+  for (const dx of [-27, 24]) livingTimber(x + dx, y - 91, 3, 37);
   tiledRoof(x, y - 92, 33, 19, "green");
   // Living vines climb the fixed trellis; leaves move lightly in the wind, never the load-bearing frame.
   for (const side of [-1, 1]) {
@@ -78,7 +81,7 @@ function drawWeavers(t, x, y) {
       if (barbs && i % 2 === 0) poly(ctx, [[xx, yy + 2], [xx + side * (3 + barbs), yy - 1], [xx + side, yy + 4]], "#b9ab7c");
     }
   }
-  timber(x - 16, y + 5, 32, 6);
+  livingTimber(x - 16, y + 5, 32, 6);
   for (let i = 0; i < 3 + roots; i++) {
     const xx = x - 12 + i * 5;
     ellipse(ctx, xx, y + 4, 3, 1.4, "#45543a");

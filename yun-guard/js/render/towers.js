@@ -409,10 +409,10 @@ function drawBarracks(t, x, y, lv) {
   rect(ctx, x - 5, y - 5, 4, 12, "#795e3d");
   line(ctx, x - 5, y + 2, x - 1, y + 2, "#b08c56", 0.8);
   masonry(x - 9, y + 8, 18, 3, false, flat);
-  tiledRoof(x, y - (lv === 1 ? 18 : 23), lv === 3 ? 29 : 25, lv === 1 ? 16 : 19, lv === 1 ? "straw" : "red", flat);
+  tiledRoof(x, y - (lv === 1 ? 18 : 23), lv === 3 ? 29 : 25, lv === 1 ? 16 : 19, lv === 1 ? "straw" : lv === 3 ? "stone" : "red", flat);
   if (lv === 3) {
     masonry(x - 8, y - 42, 16, 13, false, flat);
-    tiledRoof(x, y - 42, 14, 12, "blue", flat);
+    tiledRoof(x, y - 42, 14, 12, "stone", flat);
     flag(x + 23, y - 48, 21, "#bda05c", x);
   } else if (lv === 2) flag(x + 23, y - 39, 19, "#657d83", x);
   lantern(x + 7, y - 3, x, 21);

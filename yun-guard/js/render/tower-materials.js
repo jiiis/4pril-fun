@@ -11,29 +11,31 @@ export function shaded(x, y, w, h, light, mid, dark) {
 
 export function masonry(x, y, w, h, jade = false, style) {
   const colors = jade ? ["#a6c3ad", "#6e9784", "#405f57"] : ["#c5bbaa", "#9b9587", "#656d68"];
-  rect(ctx, x, y, w, h, style?.flat ? colors[1] : shaded(x, y, w, h, ...colors), style?.flat ? colors[2] : null, 1);
+  const moss = style?.tone === "moss";
+  rect(ctx, x, y, w, h, style?.flat ? (moss ? "#859865" : jade ? "#55927b" : "#b7aa8d") : shaded(x, y, w, h, ...colors), style?.flat ? (moss ? "#60744a" : colors[2]) : null, 1);
   if (!style?.flat) {
     poly(ctx, [[x, y], [x + 3, y - 3], [x + w + 3, y - 3], [x + w, y]], jade ? "#b7cbb4" : "#d2caba");
     rect(ctx, x + w - 3, y, 3, h, "rgba(24,38,33,0.16)");
   }
-  const rows = Math.ceil(h / 7), step = h / rows;
+  const rows = Math.ceil(h / (style?.flat ? 9 : 7)), step = h / rows;
   for (let i = 1; i < rows; i++) {
     const yy = y + i * step;
-    line(ctx, x + 0.5, yy, x + w - 1, yy, "rgba(42,49,39,0.24)", 0.65);
-    line(ctx, x + 1, yy + 0.8, x + w - 2, yy + 0.8, "rgba(255,244,210,0.2)", 0.55);
+    line(ctx, x + 0.5, yy, x + w - 1, yy, style?.flat ? (jade ? "#3c725f" : "#8e8169") : "rgba(42,49,39,0.24)", 0.65);
+    if (!style?.flat) line(ctx, x + 1, yy + 0.8, x + w - 2, yy + 0.8, "rgba(255,244,210,0.2)", 0.55);
   }
   for (let row = 0; row < rows; row++) for (let xx = x + (row % 2 ? 5 : 11); xx < x + w - 2; xx += 13) {
-    line(ctx, xx, y + row * step + 0.7, xx, y + (row + 1) * step - 0.7, "rgba(36,44,34,0.2)", 0.6);
+    line(ctx, xx, y + row * step + 0.7, xx, y + (row + 1) * step - 0.7, style?.flat ? (jade ? "#3c725f" : "#8e8169") : "rgba(36,44,34,0.2)", 0.6);
   }
 }
 
 export function timber(x, y, w, h, style) {
-  rect(ctx, x, y, w, h, style?.flat ? "#a17d50" : shaded(x, y, w, h, "#c29c68", "#987246", "#594735"), style?.flat ? "#69523a" : null, 0.9);
-  for (let i = 1; i <= 3; i++) {
-    const xx = x + w * i / 4;
-    line(ctx, xx, y + 2, xx + Math.sin(i * 3 + x) * 0.7, y + h - 2, "rgba(67,43,25,0.28)", 0.55);
+  const moss = style?.tone === "moss";
+  rect(ctx, x, y, w, h, style?.flat ? (moss ? "#7d8a53" : "#b7894d") : shaded(x, y, w, h, "#c29c68", "#987246", "#594735"), style?.flat ? (moss ? "#626e42" : "#69523a") : null, 0.9);
+  for (let i = 1; i <= (style?.flat ? 2 : 3); i++) {
+    const xx = x + w * i / (style?.flat ? 3 : 4);
+    line(ctx, xx, y + 2, xx + Math.sin(i * 3 + x) * 0.7, y + h - 2, style?.flat ? (moss ? "#667144" : "#89623b") : "rgba(67,43,25,0.28)", 0.55);
   }
-  line(ctx, x + 0.6, y + 1, x + 0.6, y + h - 1, "rgba(250,222,170,0.45)", 0.7);
+  line(ctx, x + 0.6, y + 1, x + 0.6, y + h - 1, style?.flat ? (moss ? "#aab484" : "#d6b373") : "rgba(250,222,170,0.45)", 0.7);
   if (h > 18) { rect(ctx, x, y + 5, w, 2, "#66706a"); rect(ctx, x, y + h - 7, w, 2, "#66706a"); }
 }
 
@@ -44,8 +46,18 @@ const ROOF_COLORS = {
   green: ["#a2b17a", "#6f874e", "#455d36"],
 };
 
+// Stronger flat palettes keep small Archer/Barracks roofs distinct from grass and stone.
+const FLAT_ROOF_COLORS = {
+  stone: ["#d2c49b", "#95886a", "#796b51"],
+  red: ["#d99568", "#b76143", "#884d38"],
+  straw: ["#e1c383", "#c69e4c", "#92733e"],
+  blue: ["#8fbdc5", "#3d7384", "#325d69"],
+  green: ["#9fbd72", "#4b7b45", "#3e663a"],
+};
+
 export function tiledRoof(x, y, halfWidth, height, color = "blue", style) {
-  const colors = ROOF_COLORS[color] || ROOF_COLORS.blue;
+  const palette = style?.flat ? FLAT_ROOF_COLORS : ROOF_COLORS;
+  const colors = palette[color] || palette.blue;
   const fill = style?.flat ? colors[1] : shaded(x - halfWidth, y - height, halfWidth * 2, height, ...colors);
   if (style?.flat) {
     // A filled gable with a soft peak and swept eaves, rather than an open chevron.
@@ -59,20 +71,22 @@ export function tiledRoof(x, y, halfWidth, height, color = "blue", style) {
   } else {
     poly(ctx, [[x - halfWidth, y], [x - halfWidth * 0.8, y - 3], [x, y - height], [x + halfWidth * 0.8, y - 3], [x + halfWidth, y], [x + halfWidth * 0.7, y + 3], [x, y - height * 0.66], [x - halfWidth * 0.7, y + 3]], fill);
   }
-  for (let row = 1; row < 5; row++) {
-    const f = row / 5, yy = y - height + height * f, hw = halfWidth * f * 0.93;
-    line(ctx, x - hw, yy, x + hw, yy, "rgba(28,42,40,0.27)", 0.7);
-    for (let xx = -hw + 3 + row % 2 * 2; xx < hw - 1; xx += 6) line(ctx, x + xx, yy - 2, x + xx + 1, yy, "rgba(246,239,210,0.24)", 0.55);
+  const tileRows = style?.flat ? (height > 14 ? 4 : 3) : 5;
+  for (let row = 1; row < tileRows; row++) {
+    const f = row / tileRows, yy = y - height + height * f, hw = halfWidth * f * 0.93;
+    line(ctx, x - hw, yy, x + hw, yy, style?.flat ? colors[2] : "rgba(28,42,40,0.27)", 0.7);
+    for (let xx = -hw + 3 + row % 2 * 2; xx < hw - 1; xx += style?.flat ? 10 : 6) line(ctx, x + xx, yy - 2, x + xx + 1, yy, style?.flat ? colors[0] : "rgba(246,239,210,0.24)", 0.55);
   }
   if (style?.flat) {
-    ctx.strokeStyle = colors[0]; ctx.lineWidth = 0.8;
-    ctx.beginPath(); ctx.moveTo(x - halfWidth + 1, y + 0.5);
-    ctx.quadraticCurveTo(x, y + 3, x + halfWidth - 1, y + 0.5); ctx.stroke();
+    // One clear eave edge; a nearby pale highlight made this boundary look soft.
+    ctx.strokeStyle = colors[2]; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.moveTo(x - halfWidth, y);
+    ctx.quadraticCurveTo(x, y + 4, x + halfWidth, y); ctx.stroke();
   } else {
     line(ctx, x - halfWidth, y, x - halfWidth * 0.7, y + 2, colors[0], 1);
     line(ctx, x - halfWidth * 0.7, y + 2, x, y - height * 0.66, "rgba(236,219,173,0.45)", 0.65);
   }
-  line(ctx, x, y - height, x + halfWidth * 0.8, y - 3, colors[2], 1);
+  if (!style?.flat) line(ctx, x, y - height, x + halfWidth * 0.8, y - 3, colors[2], 1);
 }
 
 export function lantern(x, y, seed = 0, radius = 22) {

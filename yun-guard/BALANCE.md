@@ -180,7 +180,7 @@ Total build + upgrades + specialization + all skills: Falcon **2,366**, Thorn **
 
 - Simple structural geometry with shaded material faces, grain, joints, roof tiles, inset openings and restrained wear. Avoid heavy silhouette borders and floating decorative mockups.
 - Every tower tier has at least one visible, plausible night light: enclosed oil lanterns for the crew/hall, an illuminated Moonbow crystal or the jade guardian's power core. Keep light pools restrained and registered through the existing night-light collector.
-- Animation follows function: fixed structures stay still; lantern flames flicker at their wick, suspended bells sway, leaves move in the wind, the Moonbow string recoils on its own launch, spears thrust, beetle legs articulate and the guardian's striking arm recovers after impact.
+- Animation follows function: fixed structures stay still; lantern flames flicker at their wick, suspended bells sway, leaves move in the wind, the Moonbow string recoils on its own launch, spears thrust, beetle legs articulate and the jade temple beast's striking forepaw recoils after impact.
 - Independent skill ranks change actual equipment or architecture: perches, falcon fittings, planters, seed pods, silver bindings, spear racks, reinforced shell plates, incubation trays and jade inlays. Avoid generic rank dots on buildings.
 - This revision refines Archer and Barracks tiers 1–3, all six implemented branch buildings and the three summon designs. Ballista also gains an enclosed deck lantern so all current tower families have a visible light source; other families remain pending the full artwork treatment.
 

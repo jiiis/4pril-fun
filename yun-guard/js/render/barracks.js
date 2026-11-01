@@ -57,15 +57,15 @@ function drawNursery(t, x, y) {
   const chitin = skillRank(t, "chitin"), hatchery = skillRank(t, "hatchery"), last = skillRank(t, "lastbrood");
   masonry(x - 29, y + 3, 58, 9);
   // Curved shell shingles shelter a real framed entrance, with a warm incubation room inside.
-  const shell = "#75865d";
+  const shell = "#527346";
   ctx.fillStyle = shell; ctx.beginPath(); ctx.moveTo(x - 26, y + 3);
   ctx.bezierCurveTo(x - 30, y - 38, x + 4, y - 48, x + 21, y - 24);
   ctx.quadraticCurveTo(x + 29, y - 12, x + 27, y + 4); ctx.closePath(); ctx.fill(); ctx.strokeStyle = "#455d3e"; ctx.lineWidth = 1; ctx.stroke();
   for (let row = 0; row < 5; row++) {
     const yy = y - 28 + row * 6, hw = 12 + row * 2.6;
-    ctx.strokeStyle = "rgba(36,60,39,0.38)"; ctx.lineWidth = 0.8;
+    ctx.strokeStyle = "#3c5937"; ctx.lineWidth = 0.8;
     ctx.beginPath(); ctx.ellipse(x, yy, hw, 5, 0, 0.1, Math.PI - 0.1); ctx.stroke();
-    line(ctx, x - hw + 1, yy + 1, x - hw + 7, yy + 3, "rgba(222,223,169,0.3)", 0.7);
+    line(ctx, x - hw + 1, yy + 1, x - hw + 7, yy + 3, "#9eb472", 0.7);
   }
   for (const dx of [-21, 18]) timber(x + dx, y - 16, 3, 21);
   masonry(x - 11, y - 10, 22, 17);
@@ -101,14 +101,14 @@ function drawJadeHall(t, x, y) {
       line(ctx, x + dx + 2, y - 23 + i * 7, x + dx + 6, y - 26 + i * 7, "rgba(214,221,178,0.5)", 0.65);
     }
   }
-  rect(ctx, x - 15, y - 26, 30, 28, "#2c443d");
+  rect(ctx, x - 15, y - 26, 30, 28, "#244e43");
   masonry(x - 13, y - 3, 26, 5, true);
   tiledRoof(x, y - 35, 31, 17);
   masonry(x - 9, y - 48, 18, 5, true);
   // A fixed jade heart powers the guardian; only its inner luminance breathes.
   const pulse = 0.8 + Math.sin(state.time * 1.5 + x) * 0.06;
   ctx.globalAlpha = pulse;
-  poly(ctx, [[x, y - 25], [x + 6, y - 15], [x, y - 7], [x - 6, y - 15]], "#a6d0b0");
+  poly(ctx, [[x, y - 25], [x + 6, y - 15], [x, y - 7], [x - 6, y - 15]], "#d5e3aa");
   poly(ctx, [[x, y - 24], [x, y - 8], [x - 4, y - 15]], "rgba(248,244,192,0.45)");
   ctx.globalAlpha = 1;
   addLight(ctx, x, y - 15, 25 + heart * 2, "green");

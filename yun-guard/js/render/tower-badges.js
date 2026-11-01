@@ -11,7 +11,7 @@ export function drawTowerBadge(tower) {
   const x = tower.x - width / 2, y = tower.y + 14;
   ctx.save();
   ctx.beginPath(); ctx.roundRect(x, y, width, height, 5);
-  ctx.fillStyle = "rgba(29, 40, 36, 0.78)"; ctx.fill();
+  ctx.fillStyle = "rgba(29, 40, 36, 0.75)"; ctx.fill();
   ctx.strokeStyle = "rgba(205, 181, 123, 0.7)"; ctx.lineWidth = 0.8; ctx.stroke();
   ctx.strokeStyle = "#dfc88e";
   if (path) drawIcon(ctx, path.icon, x + (skills.length ? 4 : 5), y + 2, 10);
