@@ -21,14 +21,27 @@ let radialPage = "main", radialPreview = null;
 
 function initSettings() {
   const dialog = $("settings"), toggle = $("settings-toggle");
-  toggle.addEventListener("click", () => {
-    if (!document.body.classList.contains("home") || isOverlayVisible("settings")) return;
-    setOverlayVisible("settings", true);
-    toggle.setAttribute("aria-expanded", "true");
-  });
+  const toggleSettings = () => {
+    if (!document.body.classList.contains("home")) return;
+    const visible = !isOverlayVisible("settings");
+    setOverlayVisible("settings", visible);
+    toggle.setAttribute("aria-expanded", String(visible));
+  };
+  const onShortcut = (ev) => {
+    if (ev.code !== "KeyS" || ev.repeat || ev.isComposing || ev.metaKey || ev.ctrlKey || ev.altKey) return;
+    if (ev.target.closest("input, textarea, select, [contenteditable]:not([contenteditable='false'])")) return;
+    if (!document.body.classList.contains("home")) return;
+    ev.preventDefault();
+    toggleSettings();
+  };
+  toggle.addEventListener("click", toggleSettings);
+  window.addEventListener("keydown", onShortcut);
   $("settings-close").addEventListener("click", () => setOverlayVisible("settings", false));
   dialog.addEventListener("click", (ev) => { if (ev.target === dialog) setOverlayVisible("settings", false); });
-  dialog.addEventListener("keydown", (ev) => ev.stopPropagation()); // keep game shortcuts behind the modal
+  dialog.addEventListener("keydown", (ev) => {
+    onShortcut(ev);
+    ev.stopPropagation(); // keep game shortcuts behind the modal
+  });
   dialog.addEventListener("close", () => toggle.setAttribute("aria-expanded", "false"));
 }
 
