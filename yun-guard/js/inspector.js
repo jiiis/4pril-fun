@@ -29,15 +29,13 @@ function armorGuide() {
     <p>Impaling ignores half of armor amount; Siege ignores 75%; Arcane bypasses armor amount. Class resistance still applies.</p></div></details>`;
 }
 
-function attackProfile(type) {
+export function attackProfile(type, description) {
   const matchups = Object.entries(ARMOR_CLASSES);
   const badges = (entries) => entries.map(([key, def]) => armorBadge(key, `×${def.multipliers[type]}`)).join("");
   const strong = matchups.filter(([, def]) => def.multipliers[type] > 1);
   const weak = matchups.filter(([, def]) => def.multipliers[type] < 1);
-  const factor = DAMAGE_TYPES[type].armorFactor;
-  const penetration = factor === 0 ? "Bypasses armor amount" : factor === 1 ? "Full armor amount applies" : `${Math.round((1 - factor) * 100)}% armor penetration`;
   return `<details class="combat-profile"><summary><span class="attack-symbol attack-${type}">${icon(ATTACK_ICONS[type])}</span><span class="attack-title"><small>Primary attack</small><strong>${DAMAGE_TYPES[type].name}</strong></span><span class="combat-disclosure">Matchups</span>${icon("chevronRight")}</summary>
-    <div class="attack-details"><p class="matchup-note">${penetration}</p>
+    <div class="attack-details"><p class="tower-description">${description}</p>
     ${strong.length ? `<div class="matchup-row favorable"><small>Effective vs</small><div>${badges(strong)}</div></div>` : ""}
     ${weak.length ? `<div class="matchup-row unfavorable"><small>Resisted by</small><div>${badges(weak)}</div></div>` : ""}
     <p class="matchup-note">Class multipliers, before armor amount.</p>${armorGuide()}</div></details>`;
@@ -59,10 +57,9 @@ export function towerInspector(tower, tab) {
   let overview = (tower.type === "archer" && spec ? heading("Specialist attack") : "") + `<div class="stats">` + (def.soldiers
     ? stat("Damage", soldierDamage(tower)) + stat("Health", soldierHp(tower)) + stat(unitLabel, soldierCount(tower))
     : stat("Damage", towerDamage(tower)) + stat("Range", towerRange(tower)) + stat("Rate", `${towerRate(tower).toFixed(2)}/s`)) + `</div>`;
-  overview += `<p class="tower-description">${spec?.desc || def.desc}</p>`;
   if (escortCount(tower)) overview += heading("Veteran guard detail") + `<div class="stats">${stat("Guards", escortCount(tower))}${stat("Damage", foundationDamage(tower))}${stat("Health", foundationHp(tower))}</div>`;
   if (tower.type === "archer" && spec) overview += heading("Veteran fire arrows") + `<div class="stats">${stat("Damage", foundationDamage(tower))}${stat("Range", foundationRange(tower))}${stat("Rate", `${foundationRate(tower).toFixed(2)}/s`)}</div>`;
-  overview += attackProfile(spec?.type || def.type);
+  overview += attackProfile(spec?.type || def.type, spec?.desc || def.desc);
   if (def.soldiers) overview += unitArmor(tower, spec);
   const tabs = `<div class="inspector-tabs" role="tablist" aria-label="Tower details">${["overview", "upgrades"].map((key) => `<button role="tab" id="inspector-tab-${key}" aria-controls="inspector-panel-${key}" aria-selected="${tab === key}" data-action="tab" data-tab="${key}">${key === "overview" ? "Overview" : "Upgrades"}</button>`).join("")}</div>`;
   let body = journey(tower) + tabs + `<section id="inspector-panel-overview" role="tabpanel" aria-labelledby="inspector-tab-overview" data-panel="overview" ${tab !== "overview" ? "hidden" : ""}>${overview}</section>`;
@@ -73,7 +70,7 @@ export function towerInspector(tower, tab) {
     actions += `<button class="pill primary" data-action="upgrade" data-cost="${cost}" ${disabled(cost)}>${icon("plus")} Upgrade ${price(cost)}</button>`;
   } else if (canSpecialise(tower)) {
     const choices = SPECIALIZATIONS[tower.type] || ABILITIES[tower.type];
-    development += heading("Choose your path", "One specialization") + `<p class="section-note">${SPECIALIZATIONS[tower.type] ? "Each path has its own independently upgradeable skills." : "Choose how this tower will fight at level 4."}</p><div class="specializations">`;
+    development += heading("Choose your path", "One specialization") + (SPECIALIZATIONS[tower.type] ? "" : `<p class="section-note">Choose how this tower will fight at level 4.</p>`) + `<div class="specializations">`;
     for (const [key, choice] of Object.entries(choices)) {
       const cost = choice.cost ?? abilityCost(tower), action = SPECIALIZATIONS[tower.type] ? "specialize" : "ability";
       development += `<button class="specialization ${action === "ability" ? "tile" : ""}" data-action="${action}" data-${action === "ability" ? "ability" : "specialization"}="${key}" data-cost="${cost}" ${disabled(cost)}>

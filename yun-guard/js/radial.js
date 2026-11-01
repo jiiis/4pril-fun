@@ -1,8 +1,9 @@
 import { state } from "./state.js";
-import { TOWERS, ABILITIES, ARMOR_CLASSES, DAMAGE_TYPES, W, H } from "./config.js";
+import { TOWERS, ABILITIES, W, H } from "./config.js";
 import { SPECIALIZATIONS } from "./specializations.js";
 import { canUpgrade, canSpecialise, upgradeCost, abilityCost, sellValue, specializationDef, abilityDef, skillRank, skillCost, towerDamage, towerRange, towerRate, soldierDamage, soldierHp, soldierCount, escortCount, foundationDamage, foundationRate, foundationRange } from "./towers.js";
 import { icon } from "./icons.js";
+import { attackProfile } from "./inspector.js";
 
 const SIZE = 300, REACH = 108;
 const SKILL_ICONS = { cloudstep: "waves", skyspears: "ballista", chitin: "shield", hatchery: "people", lastbrood: "burst", stoneheart: "heart", earthbreaker: "bomb" };
@@ -57,14 +58,11 @@ function towerSummary(tower) {
   const spec = specializationDef(tower), ability = abilityDef(tower), type = spec?.type || tower.def.type;
   const stats = tower.def.soldiers ? [["Damage", soldierDamage(tower)], ["Health", soldierHp(tower)], ["Units", soldierCount(tower)]]
     : [["Damage", towerDamage(tower)], ["Range", towerRange(tower)], ["Rate", `${towerRate(tower).toFixed(2)}/s`]];
-  const strong = Object.values(ARMOR_CLASSES).filter((c) => c.multipliers[type] > 1).map((c) => c.name).join(", ");
-  const weak = Object.values(ARMOR_CLASSES).filter((c) => c.multipliers[type] < 1).map((c) => c.name).join(", ");
   const armor = spec?.skills.chitin?.armor[skillRank(tower, "chitin")] ?? spec?.armor ?? 0;
   if (escortCount(tower)) stats.push(["Guards", escortCount(tower)]);
   const crew = tower.type === "archer" && spec ? `<p><strong>Veteran fire arrows</strong></p><div class="radial-stats"><span><small>Damage</small><b>${foundationDamage(tower)}</b></span><span><small>Range</small><b>${foundationRange(tower)}</b></span><span><small>Rate</small><b>${foundationRate(tower).toFixed(2)}/s</b></span></div>` : "";
   return `<div class="radial-stats">${stats.map(([label, value]) => `<span><small>${label}</small><b>${value}</b></span>`).join("")}</div>
-    ${crew}<p>${escape(spec?.desc || tower.def.desc)}</p><div class="radial-facts"><strong>${DAMAGE_TYPES[type].name} · primary attack</strong>
-    ${strong ? `<span>Effective vs ${strong}</span>` : ""}${weak ? `<span>Resisted by ${weak}</span>` : ""}<small>Class matchups apply before armor amount.</small>
+    ${crew}${attackProfile(type, escape(spec?.desc || tower.def.desc))}<div class="radial-facts">
     ${tower.def.soldiers ? `<span>${icon("shield")} ${tower.specialization === "brood" ? "Adult" : "Unit"} armor: ${Math.round(armor * 100)}%</span>` : ""}</div>
     ${ability ? `<p><strong>${ability.name}</strong> · ${escape(ability.desc)}</p>` : ""}`;
 }
