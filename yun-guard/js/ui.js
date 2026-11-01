@@ -140,10 +140,56 @@ export function endGame(won) {
 let endTimer = null;
 
 // ---------- Tower / monster inspector ----------
+function collapseFloatingItems(menu) {
+  for (const button of menu.querySelectorAll(".build-card, .specialization, .skill")) {
+    const item = document.createElement("div"), row = document.createElement("div");
+    const content = document.createElement("div"), expand = document.createElement("button");
+    const inner = document.createElement("div"), description = document.createElement("div");
+    const key = button.dataset.type || button.dataset.specialization || button.dataset.ability || button.dataset.skill;
+    item.className = "purchase-disclosure";
+    row.className = "purchase-disclosure-row";
+    content.className = "purchase-disclosure-content";
+    content.id = `purchase-description-${button.dataset.action}-${key}`;
+    content.inert = true;
+    content.setAttribute("aria-hidden", "true");
+    inner.className = "purchase-disclosure-inner";
+    description.className = "purchase-disclosure-description";
+    const cost = button.querySelector(".purchase-price")?.cloneNode(true);
+    for (const child of [...button.children]) {
+      if (!child.matches(".build-card-top, .nm, .build-attack, .skill-heading")) description.append(child);
+    }
+    if (cost && !button.querySelector(".purchase-price")) button.append(cost);
+    button.classList.add("disclosure-purchase");
+    expand.type = "button";
+    expand.className = "purchase-disclosure-toggle";
+    expand.setAttribute("aria-label", t("Details"));
+    expand.setAttribute("aria-controls", content.id);
+    expand.setAttribute("aria-expanded", "false");
+    expand.innerHTML = icon("chevronRight");
+    expand.addEventListener("click", (ev) => {
+      ev.stopPropagation();
+      const open = item.classList.toggle("expanded");
+      content.inert = !open;
+      content.setAttribute("aria-hidden", String(!open));
+      expand.setAttribute("aria-expanded", String(open));
+      placeMenu();
+    });
+    content.addEventListener("transitionend", (ev) => {
+      if (ev.target === content && ev.propertyName === "grid-template-rows") placeMenu();
+    });
+    button.replaceWith(item);
+    row.append(button, expand);
+    inner.append(description);
+    content.append(inner);
+    item.append(row, content);
+  }
+}
+
 function showInspector(html, label, preserveScroll = false) {
   const menu = $("menu"), scroll = preserveScroll ? menu.querySelector(".inspector-content")?.scrollTop || 0 : 0;
   const outerScroll = preserveScroll ? menu.scrollTop : 0;
   menu.innerHTML = translateMarkup(html);
+  if (menuStyle === "floating") collapseFloatingItems(menu);
   menu.classList.remove("radial");
   menu.setAttribute("role", "region");
   menu.setAttribute("aria-label", t(label));

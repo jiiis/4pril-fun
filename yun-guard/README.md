@@ -52,7 +52,7 @@ Player-facing text lives in the shared translation catalog at `js/locales/zh-CN.
 | Cannon | Siege blasts counter Fortified groups; cannot hit flyers. |
 | Barracks | Soldiers stand on the road and hold monsters in place. |
 | Lightning Spire | Arcane lightning chains through nearby enemies and reaches flyers; Warded and Fortified enemies resist. |
-| Ballista | Heavy piercing bolts hit a line and ignore half of armor amount; slow and dependent on alignment. Reaches flyers. |
+| Ballista | Impaling bolts hit a line and ignore half of armor amount; slow and dependent on alignment. Reaches flyers. |
 
 | Tower | Level 4 ability A | Level 4 ability B |
 |---|---|---|

@@ -27,9 +27,9 @@ Initial values for iteration, not a claim that the game is fully balanced. All c
 
 ### Class multipliers
 
-These percentages apply before armor amount and Curse. Heavy piercing shares the piercing class matchup, but penetrates more armor amount.
+These percentages apply before armor amount and Curse. Impaling shares the piercing class matchup, but penetrates more armor amount.
 
-| Armor class | Steel | Piercing | Heavy piercing | Siege | Arcane |
+| Armor class | Steel | Piercing | Impaling | Siege | Arcane |
 |---|---:|---:|---:|---:|---:|
 | Light | 100% | 120% | 120% | 100% | 100% |
 | Plated | 85% | 80% | 80% | 100% | 140% |
@@ -48,7 +48,7 @@ Armor amount is clamped to 0–100%. Penetration does not remove class resistanc
 |---|---|---:|---|
 | Steel | `physical` | 1 | Barracks, hero melee/cleaves/charges, companions' physical attacks |
 | Piercing | `arrow` | 1 | Archer arrows, falcons, bramble pulses, Moonbow arrows, Avril's arrows |
-| Heavy piercing | `pierce` | 0.5 | Ballista bolts, including Executioner and Harpoons |
+| Impaling | `pierce` | 0.5 | Ballista bolts, including Executioner and Harpoons |
 | Siege | `siege` | 0.25 | Cannon shells and Cluster Bomb bomblets |
 | Arcane | `magic` | 0 | Mage bolts, lightning, Static Field, hero fireballs, fire/burn, poison, Napalm |
 
@@ -88,7 +88,7 @@ Archer and Barracks each have three playable specializations with separately ran
 | Mage | Arcane, single-target | 100 | 400 | Arcane Storm / Curse | Warded and Fortified enemies |
 | Cannon | Siege, ground-area blast | 125 | 500 | Cluster Bombs / Napalm | Cannot hit flyers; slow against dispersed enemies |
 | Spire | Arcane, diminishing chain | 140 | 560 | Overcharge / Static Field | Isolated targets; Warded and Fortified enemies |
-| Ballista | Heavy piercing, line | 170 | 680 | Executioner / Harpoons | Slow; needs alignment; Fortified class resistance remains |
+| Ballista | Impaling, line | 170 | 680 | Executioner / Harpoons | Slow; needs alignment; Fortified class resistance remains |
 | Barracks | Steel, blocking ground units before specialization | 90 | 462–552 before skills | Cloud Monastery / Brood Nursery / Jade Colossus | Specialization determines targeting, damage profile and coverage |
 
 Upgrade prices: level 1→2 = 0.6× build cost; 2→3 = 1.2×. Archer costs 196 and Barracks 252 total at level 3, then pays the chosen specialization's price below. The other four towers' level-four ability costs 1.2× build cost, for a fully developed total of 4× build cost. Selling returns 70% of all spent gold, including specialization and skill purchases, rounded. All prices are integer gold.

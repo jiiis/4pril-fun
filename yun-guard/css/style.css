@@ -322,6 +322,19 @@ canvas { display: block; }
   max-height: var(--floating-height, calc(100vh - 144px)); animation-name: floating-arrive;
 }
 @keyframes floating-arrive { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+#menu.floating .build-grid { align-items: start; }
+#menu .purchase-disclosure { min-width: 0; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; background: rgba(255, 255, 255, 0.035); }
+#menu .purchase-disclosure-row { display: flex; align-items: stretch; }
+#menu .disclosure-purchase { flex: 1; min-width: 0; border: 0; border-radius: 12px 0 0 12px; }
+#menu .purchase-disclosure-toggle { display: grid; place-items: center; flex: 0 0 36px; padding: 6px; border-radius: 0 12px 12px 0; border-left: 1px solid rgba(255, 255, 255, 0.08); background: transparent; color: var(--muted); }
+#menu .purchase-disclosure-toggle:hover { background: rgba(255, 255, 255, 0.06); color: var(--text); }
+#menu .purchase-disclosure-toggle .ico { width: 14px; height: 14px; transition: transform 0.15s; }
+#menu .purchase-disclosure-toggle[aria-expanded="true"] .ico { transform: rotate(90deg); }
+#menu .purchase-disclosure-content { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows 0.16s ease-out, opacity 0.16s ease-out; }
+#menu .purchase-disclosure.expanded .purchase-disclosure-content { grid-template-rows: 1fr; opacity: 1; }
+#menu .purchase-disclosure-inner { min-height: 0; overflow: hidden; }
+#menu .purchase-disclosure-description { padding: 6px 12px 12px; }
+#menu .purchase-disclosure-content .skill-desc:first-child, #menu .purchase-disclosure-content .skill-current:first-child { margin-top: 0; }
 #menu.radial {
   inset: 0; width: 100%; height: 100%; max-width: none; max-height: none; min-height: 0;
   padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none;
@@ -437,7 +450,10 @@ canvas { display: block; }
   #menu.radial .radial-hint { display: none; }
 }
 @keyframes radial-arrive { from { opacity: 0; } to { opacity: 1; } }
-@media (prefers-reduced-motion: reduce) { #menu, #menu.radial { animation: none; } }
+@media (prefers-reduced-motion: reduce) {
+  #menu, #menu.radial { animation: none; }
+  #menu .purchase-disclosure-content, #menu .purchase-disclosure-toggle .ico { transition: none; }
+}
 
 /* ---------- Legend pick (start of each round) ---------- */
 #heroPick {

@@ -33,7 +33,7 @@ export const ROWS = Math.floor(H / CELL); // 13 whole rows; center the grid with
 export const DAMAGE_TYPES = {
   physical: { name: "Steel", armorFactor: 1 },
   arrow:    { name: "Piercing", armorFactor: 1 },
-  pierce:   { name: "Heavy piercing", armorFactor: 0.5 },
+  pierce:   { name: "Impaling", armorFactor: 0.5 },
   siege:    { name: "Siege", armorFactor: 0.25 },
   magic:    { name: "Arcane", armorFactor: 0 },
 };
@@ -65,7 +65,7 @@ export const TOWERS = {
   tesla:    { name: "Lightning Spire", short: "Spire", icon: "zap", cost: 140, range: 143, damage: 24, rate: 0.6, type: "magic", color: "#4fc3f7", desc: "Arcane lightning chains through groups. Warded and fortified enemies resist.", chain: 3, chainRange: 70, chainFalloff: 0.75 },
   // Ballista: slow and very long-ranged. One huge bolt flies through the target and on, hitting every monster along the line,
   // and punches through most armour. Reaches flyers.
-  ballista: { name: "Ballista",     short: "Ballista", icon: "ballista", cost: 170, range: 192, damage: 62, rate: 0.25, type: "pierce", color: "#a1887f", desc: "Heavy piercing bolts hit a line and ignore half of armor amount. Slow.", line: true, lineWidth: 9 },
+  ballista: { name: "Ballista",     short: "Ballista", icon: "ballista", cost: 170, range: 192, damage: 62, rate: 0.25, type: "pierce", color: "#a1887f", desc: "Impaling bolts hit a line and ignore half of armor amount. Slow.", line: true, lineWidth: 9 },
   // Barracks: range = how far away the soldiers' rally point can be. damage/rate = each soldier's attack.
   barracks: { name: "Barracks",     short: "Barracks", icon: "shield", cost: 90,  range: 117,  damage: 6,  rate: 1,    type: "physical", color: "#ef9a9a", desc: "Soldiers block ground enemies. Steel counters wards; plating resists.", soldiers: 2, soldierHp: 80 },
 };

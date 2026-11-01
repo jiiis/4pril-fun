@@ -26,7 +26,7 @@ function armorGuide() {
   return `<details class="combat-guide"><summary>${icon("shield")} Armor & damage guide ${icon("chevronRight")}</summary>
     <div class="combat-guide-content"><p>Class matchups apply first. Armor amount then reduces damage according to penetration. Skills can use a different attack type.</p>
     ${Object.entries(ARMOR_CLASSES).map(([key, def]) => `<div>${armorBadge(key)}<span>${def.desc}</span></div>`).join("")}
-    <p>Heavy piercing ignores half of armor amount; Siege ignores 75%; Arcane bypasses armor amount. Class resistance still applies.</p></div></details>`;
+    <p>Impaling ignores half of armor amount; Siege ignores 75%; Arcane bypasses armor amount. Class resistance still applies.</p></div></details>`;
 }
 
 function attackProfile(type) {
