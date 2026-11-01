@@ -63,6 +63,27 @@ export function icon(name, cls = "") {
   const d = P[name] || P.star;
   return `<svg class="ico ${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
 }
+const canvasPaths = new Map();
+// Canvas badges reuse the UI's vector icons; build each path only once.
+export function drawIcon(c, name, x, y, size) {
+  if (!canvasPaths.has(name)) {
+    const svg = new DOMParser().parseFromString(icon(name), "image/svg+xml");
+    const path = new Path2D();
+    for (const shape of svg.documentElement.children) {
+      if (shape.tagName === "path") path.addPath(new Path2D(shape.getAttribute("d")));
+      else if (shape.tagName === "circle") {
+        const cx = Number(shape.getAttribute("cx")), cy = Number(shape.getAttribute("cy")), r = Number(shape.getAttribute("r"));
+        path.moveTo(cx + r, cy); path.arc(cx, cy, r, 0, Math.PI * 2);
+      } else if (shape.tagName === "rect") {
+        path.roundRect(Number(shape.getAttribute("x")), Number(shape.getAttribute("y")), Number(shape.getAttribute("width")), Number(shape.getAttribute("height")), Number(shape.getAttribute("rx") || 0));
+      }
+    }
+    canvasPaths.set(name, path);
+  }
+  c.save(); c.translate(x, y); c.scale(size / 24, size / 24);
+  c.lineWidth = 2; c.lineCap = "round"; c.lineJoin = "round";
+  c.stroke(canvasPaths.get(name)); c.restore();
+}
 // Fill every element with a data-icon attribute
 export function applyIcons(root = document) {
   for (const el of root.querySelectorAll("[data-icon]")) el.innerHTML = icon(el.dataset.icon);

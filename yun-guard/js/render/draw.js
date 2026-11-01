@@ -6,6 +6,7 @@ import { SPOT_RADIUS, W, H, TOWERS } from "../config.js";
 import { towerRange, abilityDef } from "../towers.js";
 import { buildBackground, drawSign, CASTLE_STYLES, gatePillars, lairStakes, drawDecoItem, drawCastleAt, drawCastleDamage, drawGateStructure, gateAnchorY, drawLairStructure, lairAnchorY, lairParts, cherryToneOf } from "./background.js";
 import { drawTower, flag } from "./towers.js";
+import { drawTowerBadge } from "./tower-badges.js";
 import { drawBramblePatches, drawArcherAir, drawMoonShot } from "./archer.js";
 import { drawEnemy, drawCorpse } from "./creatures.js";
 import { drawSoldier } from "./soldiers.js";
@@ -39,10 +40,7 @@ function drawActor(actor) {
 }
 function drawTowerWithLevel(t) {
   drawTower(t);
-  if (t.level > 1) {
-    ctx.fillStyle = "#ffd54f"; ctx.font = "11px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-    ctx.fillText("★".repeat(t.level), t.x, t.y + 34);
-  }
+  drawTowerBadge(t);
 }
 function drawScenery(actor) {
   if (fullMapVisible || sceneryCache?.res !== res || !actor.bounds || inView(...actor.bounds)) actor.draw();

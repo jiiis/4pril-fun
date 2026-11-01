@@ -83,17 +83,18 @@ const DRAW = {
   deer(phase, moving) {
     const sw = moving ? Math.sin(phase) * 4 : 0;
     const nod = moving ? 0 : Math.sin(phase) * 2.5;                 // head bobs while grazing
-    const edge = "#8a5a2a";                                          // a soft outline a shade darker than the coat
+    const edge = "#986b38";                                          // a soft outline a shade darker than the coat
     for (const [lx, d] of [[-8, 1], [-4, -1], [6, 1], [10, -1]]) line(ctx, lx, -12, lx + sw * d, 0, "#9c6a35", 2.5);
     line(ctx, -9, -16, -16, -13, "#b07a3b", 3);                     // tail, rooted inside the body
-    ellipse(ctx, 0, -15, 12, 7, "#b07a3b", "rgba(0,0,0,0.12)", 0.6);   // body, a whisper of an outline
+    line(ctx, 10, -19, 15, -27 + nod, edge, 6.1);                  // neck outline sits behind the body
+    ellipse(ctx, 0, -15, 12, 7, "#b07a3b", edge, 0.55);             // body
     for (const [sx, sy] of [[-5, -16], [0, -19], [4, -14], [-1, -12]]) circle(ctx, sx, sy, 1.2, "#efdcc3");   // spots
     line(ctx, 10, -19, 15, -27 + nod, "#b07a3b", 5);                // neck
-    ellipse(ctx, 17, -29 + nod, 5.5, 4, "#b07a3b", "rgba(0,0,0,0.12)", 0.6);   // head
-    ellipse(ctx, 21.5, -28 + nod, 2.5, 1.8, "#c9a06a");             // muzzle, a lighter shade of the coat
+    ellipse(ctx, 17, -29 + nod, 5.5, 4, "#b07a3b", edge, 0.55);     // head
+    ellipse(ctx, 21.5, -28 + nod, 2.5, 1.8, "#c9a06a", edge, 0.45); // muzzle, a lighter shade of the coat
     circle(ctx, 23, -28.5 + nod, 0.9, "#212121");                   // nose
     circle(ctx, 18, -30.5 + nod, 1, "#212121");                     // eye
-    poly(ctx, [[13, -32 + nod], [11, -37 + nod], [15, -33 + nod]], "#b07a3b", edge, 0.8);   // ear
+    poly(ctx, [[13, -32 + nod], [11, -37 + nod], [15, -33 + nod]], "#b07a3b", edge, 0.55);   // ear
     line(ctx, 15, -33 + nod, 13, -41 + nod, "#5d4037", 1.5);        // antlers
     line(ctx, 14, -38 + nod, 11, -40 + nod, "#5d4037", 1.5);
     line(ctx, 15, -33 + nod, 18, -40 + nod, "#5d4037", 1.5);
