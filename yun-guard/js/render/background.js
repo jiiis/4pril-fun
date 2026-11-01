@@ -501,11 +501,19 @@ function drawPond(c, p) {
 }
 
 // ---------- Small plants (shared by road edges, water banks and open grass) ----------
+const SMALL_PLANT_SCALE = 0.7; // keep ground plants subordinate to animals and buildings
+function beginSmallPlant(c, x, y) {
+  c.save();
+  c.translate(x, y);
+  c.scale(SMALL_PLANT_SCALE, SMALL_PLANT_SCALE);
+  c.translate(-x, -y);
+}
 const GREENS = ["#4f8a34", "#5f9e3d", "#3e7a2c", "#6aa845", "#487a30"];
 const pick = (arr, r) => arr[Math.floor(r() * arr.length)];
 export const TUFT_KINDS = 4, WEED_KINDS = 4;
 // Grass tufts: 0 a fan of curved blades, 1 a seeding grass with tiny golden heads, 2 a low dense clump, 3 a clover patch
 function drawTuft(c, x, y, s, v, r) {
+  beginSmallPlant(c, x, y);
   const col = pick(GREENS, r);
   if (v === 0) {
     const blades = 4 + Math.floor(r() * 4), h = (5 + r() * 6) * s;
@@ -524,9 +532,11 @@ function drawTuft(c, x, y, s, v, r) {
       for (let k = 0; k < 3; k++) { const a = -Math.PI / 2 + (k - 1) * 0.9; circle(c, px + Math.cos(a) * 1.7 * s, py - 3 * s + Math.sin(a) * 1.7 * s, 1.5 * s, k === 1 ? "#6aa845" : "#58a03c"); }
     }
   }
+  c.restore();
 }
 // Weeds: 0 tall and leafy, sometimes flowering; 1 a fern with arching fronds; 2 a thistle with a purple head; 3 a dandelion with its seed puff
 function drawWeed(c, x, y, s, v, r) {
+  beginSmallPlant(c, x, y);
   const col = pick(GREENS, r);
   if (v === 0) {
     const h = (10 + r() * 9) * s, lean = (r() - 0.5) * 6;
@@ -554,6 +564,7 @@ function drawWeed(c, x, y, s, v, r) {
     if (r() < 0.55) { circle(c, x + lean, y - h, 2.3 * s, "#ffd600"); for (let k = 0; k < 8; k++) { const a = k * 0.785; line(c, x + lean, y - h, x + lean + Math.cos(a) * 3.3 * s, y - h + Math.sin(a) * 3.3 * s, "#ffeb3b", 1); } }
     else { circle(c, x + lean, y - h, 2.8 * s, "rgba(255,255,255,0.75)"); for (let k = 0; k < 9; k++) { const a = k * 0.7; line(c, x + lean, y - h, x + lean + Math.cos(a) * 3.8 * s, y - h + Math.sin(a) * 3.8 * s, "rgba(255,255,255,0.8)", 0.8); } }
   }
+  c.restore();
 }
 
 // How crowded plants are along a stretch of bank or verge: bunched into clumps with bare gaps between, never even.
@@ -1000,6 +1011,7 @@ const DRAW_DECO = {
     else if (berry < 0.75) for (let i = 0; i < 5; i++) { const fx = x + (r() - 0.5) * 14 * s, fy = y - 3 * s + (r() - 0.5) * 8 * s; for (let k = 0; k < 4; k++) circle(c, fx + Math.cos(k * 1.57) * 1.4 * s, fy + Math.sin(k * 1.57) * 1.4 * s, 1 * s, "#fff"); circle(c, fx, fy, 0.8 * s, "#ffeb3b"); }   // white blossom
   },
   flower(c, x, y, s, v, r) {
+    beginSmallPlant(c, x, y);
     const palette = [["#f48fb1", "#ffeb3b"], ["#ffffff", "#ffb300"], ["#ffeb3b", "#ff8f00"], ["#b39ddb", "#ffeb3b"], ["#64b5f6", "#fff176"], ["#ff8a65", "#6d4c41"]][Math.floor(r() * 6)];
     const count = 1 + Math.floor(r() * 3);
     for (let k = 0; k < count; k++) {
@@ -1010,6 +1022,7 @@ const DRAW_DECO = {
       for (let i = 0; i < petals; i++) { const a = rot + (i / petals) * Math.PI * 2; circle(c, fx + Math.cos(a) * 3.5 * fs, fy + Math.sin(a) * 3.5 * fs, 2.6 * fs, palette[0]); }
       circle(c, fx, fy, 2.2 * fs, palette[1]);
     }
+    c.restore();
   },
   tuft(c, x, y, s, v, r) { drawTuft(c, x, y, s, v % TUFT_KINDS, r); },
   weed(c, x, y, s, v, r) { drawWeed(c, x, y, s, v % WEED_KINDS, r); },
