@@ -1,3 +1,5 @@
+import { TOTAL_WAVES } from "./config.js";
+
 // Levels 1 to 100. Each level has its own fixed map and a difficulty that climbs steadily:
 // more waves, tougher and faster monsters, bigger crowds, and the nastier kinds showing up sooner.
 // The last level played is remembered on this device.
@@ -65,7 +67,7 @@ export function levelConfig(L) {
   L = clampLevel(L);
   return {
     level: L,
-    waves: Math.min(15, 9 + Math.floor((L - 1) / 4)),      // 9 waves at level 1, 15 from level 25
+    waves: Math.min(TOTAL_WAVES, 7 + Math.floor((TOTAL_WAVES - 7) * (L - 1) / 80)), // 7 at level 1, rising evenly to 21 at level 81
     // Monsters themselves never change between levels; only who turns up, and how many
     count: Math.min(1, 0.62 + (L - 1) * 0.004),              // crowd size: thin early on, filling out to 1× by level 96
     shift: Math.floor((L - 1) / 8),                          // the tougher kinds arrive this many waves earlier (up to 12)

@@ -201,7 +201,7 @@ Every Earthbreaker rank now increases damage/area/target cap without reducing ra
 
 ## Audit: progression and economy concerns
 
-Starting gold = 360 + 7× level. Kill reward multiplier = 1 + 0.012× (level − 1), with individual rewards rounded. Winning carries 75% of remaining gold plus 10 per remaining life to the next level, capped at 600. Early wave calls also award gold. Waves rise from 9 to 15; enemy stats do not scale.
+Starting gold = 360 + 7× level. Kill reward multiplier = 1 + 0.012× (level − 1), with individual rewards rounded. Winning carries 75% of remaining gold plus 10 per remaining life to the next level, capped at 600. Early wave calls also award gold. Waves start at 7 at level 1 and rise evenly to 21 at level 81, remaining at 21 thereafter: `min(21, 7 + floor(14 × (level − 1) / 80))`. Counts increase by one every 5–6 levels. This shortens introductory levels and spreads longer battles across progression, replacing the old 9-wave start and 15-wave cap from level 25. Added waves follow the existing wave-composition and reward formulas, extending later-level duration, pressure and earning opportunities. Enemy stats do not scale.
 
 Potential starting gold plus all scheduled kill rewards, including Slimelings but excluding carryover, early calls, hunting, and resurrected monsters: level 1 ≈2,375; level 30 ≈12,485; level 100 ≈49,526. Actual earned gold depends on kills and escapes. Before specialization work, twenty fully upgraded towers cost 5,600–13,600; the other four families still have that original spending ceiling. This mismatch is a major candidate explanation for reaching full development long before a level ends.
 

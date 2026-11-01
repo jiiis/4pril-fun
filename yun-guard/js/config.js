@@ -7,7 +7,7 @@ export const H = 810;                   // 16:9 world, with the existing world-u
 
 export const START_GOLD = 400;
 export const START_LIVES = 20;
-export const TOTAL_WAVES = 15;
+export const TOTAL_WAVES = 21;
 export const WAVE_BREAK = 26;          // seconds until the next wave comes by itself, counting from when the current wave has fully appeared
 export const CALL_AT = 0.6;            // the next wave may be called once this share of the current wave has entered
 export const SOLDIER_RESPAWN = 8;      // seconds for a fallen soldier to come back

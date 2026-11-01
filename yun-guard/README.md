@@ -43,7 +43,7 @@ Player-facing text lives in the shared translation catalog at `js/locales/zh-CN.
 - Monsters walk the road from the signpost to the castle. Each one that gets through costs lives.
 - Killing monsters earns gold. The next wave counts down as soon as the current one has finished appearing, and calling it early earns bonus gold.
 - Tap/click a monster to inspect its armor class and counters. Light favors piercing attacks; Plated is weak to Arcane; Fortified is weak to Siege; Warded resists Arcane but is weak to physical attacks. Armor amount and class are separate. Hero movement and rally orders take precedence over inspection.
-- Survive all 15 waves to win.
+- Survive every wave to win: 7 at level 1, increasing gradually to a maximum of 21 from level 81.
 
 | Tower | Good for |
 |---|---|
