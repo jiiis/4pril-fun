@@ -3,7 +3,7 @@
 // ============================================================
 
 export const W = 1440;                  // a bigger world than the screen: you pan around it
-export const H = 840;
+export const H = 810;                   // 16:9 world, with the existing world-unit scale
 
 export const START_GOLD = 400;
 export const START_LIVES = 20;
@@ -26,7 +26,7 @@ export const SPOT_RADIUS = 19;          // size of the stone build pads
 // The road, build spots, scenery and animals all come from that generator.
 export const CELL = 60;                 // grid cell size in pixels
 export const COLS = W / CELL;           // 24
-export const ROWS = H / CELL;           // 14
+export const ROWS = Math.floor(H / CELL); // 13 whole rows; center the grid within the world
 
 // Armor class determines matchups; armor amount then mitigates the attack according to its penetration.
 // Keep these values and all balance changes documented in ../BALANCE.md.

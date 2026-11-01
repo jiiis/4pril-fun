@@ -6,6 +6,10 @@ Professional, balanced, and fun for hours. Preserve clear feedback, gradual diff
 
 Update this file whenever balance changes. Record the actual values and rationale in the same change as the code. Separate implemented mechanics from proposals; design approval does not mean a mechanic is playable. Configuration is in `js/config.js`, upgrade formulas in `js/towers.js`, level progression in `js/levels.js`, and enemy damage resolution in `js/damage.js` and `js/combat.js`.
 
+## Implemented: world dimensions
+
+The world is 1440 × 810 (16:9), previously 1440 × 840. World-unit sizes are unchanged. Display scale and rendering resolution are each capped at 2.2× (previously 2×), allowing up to 3168 × 1782 displayed CSS pixels and buffer pixels respectively. The larger caps reduce borders on large screens and permit more detail, with up to 21% more buffer pixels; the minimum scale and relative zoom range are unchanged. The 60-pixel road grid uses 24 columns and 13 whole rows, centered with 15 pixels of vertical remainder on each side. The shorter world changes generated layouts and can affect route lengths and tower coverage; combat stats, costs and road-placement buffers are unchanged.
+
 ## Implemented: road geometry
 
 Roads have a base surface width of 84 world pixels (previously 90), with smooth variation within ±10% (75.6–92.4 pixels). The narrower surface keeps all existing bank widths, ragged-edge extents, placement buffers and generation caps unchanged. Road-relative placements and enemy lateral movement limits follow the reduced width through the existing shared constants; tower stats, costs and enemy stats are unchanged.

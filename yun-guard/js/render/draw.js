@@ -18,7 +18,7 @@ import { depthScale } from "./scenery.js";
 export { depthScale } from "./scenery.js";
 
 let background = null;   // received from the worker along with the generated map
-// Resolution: the canvas keeps its 1440×840 world size on screen, but its pixel buffer follows the
+// Resolution: the canvas keeps its 1440×810 world size on screen, but its pixel buffer follows the
 // device pixel ratio and the current zoom (in quarter steps, capped) so nothing goes soft when zoomed in.
 // The static background is re-rasterized to match, a moment after the zoom settles.
 let res = 0, bgRes = 0, resChangedAt = 0;
@@ -58,7 +58,7 @@ function updateDrawBounds() {
 function inView(left, top, right, bottom) {
   return right >= drawBounds.left && bottom >= drawBounds.top && left <= drawBounds.right && top <= drawBounds.bottom;
 }
-const MAX_RES = 2;                                        // crisp enough on 2× screens; above this the fill cost per frame climbs fast
+const MAX_RES = 2.2;                                      // cap pixel-buffer cost while supporting larger fitted views
 export const backgroundResolution = () => Math.min(MAX_RES, Math.ceil((window.devicePixelRatio || 1) * view.k * 4) / 4);
 export function setBackground(image, resolution, scenery = null) {
   backgroundRequest++; requestedRes = null;

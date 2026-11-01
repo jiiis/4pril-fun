@@ -295,7 +295,7 @@ export const view = { k: 1, fit: 1, panX: 0, panY: 0, mobile: false };
 let cameraMove = null;
 const CAMERA_FOCUS_MS = 240;
 export const viewport = { left: 0, top: 0, right: W, bottom: H };
-const MAX_ZOOM = 2, MIN_ZOOM = 0.6;                              // keep the fitted board usable on short screens
+const MAX_ZOOM = 2.2, MIN_ZOOM = 0.6;                              // keep the fitted board usable on short screens
 const hudH = () => 0;                                           // the HUD floats over the board, so the whole window is for the map
 // The page (html/body) is sized to the dynamic viewport; measure it rather than window.innerHeight, which
 // phones report late and inconsistently while their toolbars slide

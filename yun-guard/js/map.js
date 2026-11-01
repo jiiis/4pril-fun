@@ -360,7 +360,7 @@ function makePonds(rand) {
 // ---------- Roads ----------
 // Roads enter and leave through any of the four edges. Each route is a chain of grid cells: two straight
 // margin cells at the entry, a winding walk through the middle, and two straight margin cells at the exit.
-const center = (cell) => ({ x: cell.c * CELL + CELL / 2, y: cell.r * CELL + CELL / 2 });
+const center = (cell) => ({ x: cell.c * CELL + CELL / 2, y: cell.r * CELL + CELL / 2 + (H - ROWS * CELL) / 2 });
 const key = (c, r) => c * 100 + r;
 const NEIGHBOURS = [[1, 0], [-1, 0], [0, 1], [0, -1]];
 const STEPS = [...NEIGHBOURS, [1, 1], [1, -1], [-1, 1], [-1, -1]];       // roads may also run diagonally
