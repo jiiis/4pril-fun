@@ -1,5 +1,5 @@
 import { state } from "./state.js";
-import { TOWERS, W, H } from "./config.js";
+import { TOWERS, W, H, SPOT_RADIUS } from "./config.js";
 import { MAX_LEVEL, saveLevel, saveCarry } from "./levels.js";
 import { map } from "./map.js";
 import { upgradeCost, sellValue, canUpgrade, canSpecialise, abilityCost, createTower, skillCost, specialize, trainSkill } from "./towers.js";
@@ -13,10 +13,12 @@ import { sfx } from "./audio.js";
 import { t, language, translateMarkup } from "./i18n.js";
 import { shortcutLabel } from "./input-hints.js";
 import { isOverlayVisible, setOverlayVisible } from "./overlays.js";
+import { depthScale } from "./render/scenery.js";
 
 const $ = (id) => document.getElementById(id);
 const MENU_STYLE_KEY = "yunguard.menuStyle";
 let menuStyle = "inspector";
+let floatingAnchor = null;
 let radialPage = "main", radialPreview = null;
 
 function initSettings() {
@@ -52,6 +54,7 @@ function initMenuStyle() {
   } catch (e) { /* private mode: use the default */ }
   const buttons = document.querySelectorAll("button[data-menu-style]");
   const apply = () => {
+    floatingAnchor = null;
     $("menu").classList.toggle("floating", menuStyle === "floating");
     $("menu").classList.remove("radial");
     for (const button of buttons) button.setAttribute("aria-pressed", button.dataset.menuStyle === menuStyle);
@@ -249,16 +252,37 @@ export function placeMenu() {
     const r = $("c").getBoundingClientRect(), k = r.width / W;
     const sx = r.left - origin.left + point.x * k, sy = r.top - origin.top + point.y * k;
     const minTop = Math.max(12, top), maxBottom = vh - Math.max(12, bottom);
-    menu.style.setProperty("--floating-height", `${Math.max(72, Math.min(540, maxBottom - minTop))}px`);
-    const width = menu.offsetWidth, height = menu.offsetHeight;
-    let y = sy + 30 * k;
-    if (y + height > maxBottom) y = sy - height - 34 * k;
-    menu.style.setProperty("--floating-left", `${clamp(sx - width / 2, 12, pageW() - width - 12)}px`);
-    menu.style.setProperty("--floating-top", `${clamp(y, minTop, Math.max(minTop, maxBottom - height))}px`);
+    const artScale = depthScale(point.y) * k;
+    const tower = state.inspectedEnemy ? null : state.towers.find((t) => t.spot === state.selected);
+    const bottomExtent = state.inspectedEnemy ? 14 : tower ? 14 : SPOT_RADIUS * 0.62;
+    const towerBottom = sy + bottomExtent * artScale + 24;
+    const halfWidth = state.inspectedEnemy ? 24 : tower ? 32 : SPOT_RADIUS;
+    const width = menu.offsetWidth, sideGap = halfWidth * artScale + 24;
+    if (floatingAnchor?.point !== point) {
+      menu.style.setProperty("--floating-height", `${Math.max(72, Math.min(540, maxBottom - minTop))}px`);
+      const height = menu.offsetHeight;
+      const below = maxBottom - towerBottom;
+      let side = "below";
+      const left = sx - sideGap - 12, right = pageW() - 12 - sx - sideGap;
+      const sideY = clamp(sy - height / 2, minTop, Math.max(minTop, maxBottom - height));
+      if (pageW() >= 720 && Math.max(left, right) >= width && maxBottom - sideY >= Math.min(height, below)) {
+        side = right >= left ? "right" : "left";
+      }
+      floatingAnchor = { point, side, offsetY: (sideY - sy) / k };
+    }
+    const beside = floatingAnchor.side === "left" || floatingAnchor.side === "right";
+    const edge = clamp(beside ? sy + floatingAnchor.offsetY * k : towerBottom, minTop, Math.max(minTop, maxBottom - 72));
+    // Keep the chosen position stable; excess content scrolls at the viewport boundary.
+    const available = maxBottom - edge;
+    menu.style.setProperty("--floating-height", `${Math.max(72, Math.min(540, available))}px`);
+    const x = beside ? (floatingAnchor.side === "left" ? sx - sideGap - width : sx + sideGap) : sx - width / 2;
+    menu.style.setProperty("--floating-left", `${clamp(x, 12, pageW() - width - 12)}px`);
+    menu.style.setProperty("--floating-top", `${edge}px`);
   }
 }
 
 export function closeMenu() {
+  floatingAnchor = null;
   radialPage = "main"; radialPreview = null;
   state.selected = null;
   state.inspectedEnemy = null;
