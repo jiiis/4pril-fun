@@ -15,6 +15,7 @@ import { shortcutLabel } from "./input-hints.js";
 import { isOverlayVisible, setOverlayVisible } from "./overlays.js";
 import { depthScale } from "./render/scenery.js";
 import { isWeatherEnabled, setWeatherEnabled } from "./weather.js";
+import { isBatterySaver, setBatterySaver } from "./power.js";
 
 const $ = (id) => document.getElementById(id);
 const MENU_STYLE_KEY = "yunguard.menuStyle";
@@ -28,6 +29,9 @@ function initSettings() {
     input.checked = isWeatherEnabled(input.dataset.weather);
     input.addEventListener("change", () => setWeatherEnabled(input.dataset.weather, input.checked));
   }
+  const batterySaver = $("batterySaver");
+  batterySaver.checked = isBatterySaver();
+  batterySaver.addEventListener("change", () => setBatterySaver(batterySaver.checked));
   const toggleSettings = () => {
     if (!document.body.classList.contains("home")) return;
     const visible = !isOverlayVisible("settings");

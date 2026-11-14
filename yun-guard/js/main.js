@@ -19,6 +19,7 @@ import { MAX_LEVEL, clampLevel, savedLevel, saveLevel, levelConfig, levelSeed, c
 import { t, initLocalization } from "./i18n.js";
 import { initInputHints, shortcutLabel } from "./input-hints.js";
 import { isOverlayVisible, setOverlayVisible } from "./overlays.js";
+import { isBatterySaver } from "./power.js";
 
 // Which level? ?level=N in the URL, else the last one played on this device. Each level has its own map
 // (add ?seed=1234 to force a particular map instead).
@@ -357,13 +358,22 @@ window.addEventListener("languagechange", () => {
 });
 
 // Main loop
-let last = performance.now();
+// Battery saver draws every Nth display frame, about 30 FPS, so pacing stays even at any refresh rate.
+// Rounding up from a quarter keeps N steady on displays between multiples, such as 75 Hz.
+const BATTERY_SAVER_INTERVAL_MS = 1000 / 30;
+let last = performance.now(), lastTick = last, displayInterval = 1000 / 60, skipped = 0;
 function frame(now) {
-  const dt = Math.min((now - last) / 1000, 0.05);
+  const tick = now - lastTick;
+  lastTick = now;
+  if (tick > 2 && tick < 50) displayInterval += (tick - displayInterval) * 0.1;      // smoothed refresh interval
+  if (isBatterySaver() && ++skipped < Math.ceil(BATTERY_SAVER_INTERVAL_MS / displayInterval - 0.25)) { requestAnimationFrame(frame); return; }
+  skipped = 0;
+  // Long frames advance the game in steps of at most 0.05s, so a slow device keeps real-time speed down to 10 FPS.
+  const elapsed = Math.min((now - last) / 1000, 0.1), steps = Math.max(1, Math.ceil(elapsed / 0.05));
   last = now;
   if (map.paths.length) {
     updateCamera(now);
-    update(dt);
+    for (let i = 0; i < steps; i++) update(elapsed / steps);
     const selected = !!(state.hero?.selected && state.hero.hp > 0);
     if (selected !== legendBadgeSelected) {
       legendBadgeSelected = selected;
