@@ -3,7 +3,7 @@ import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
 
 const fromRoot = (path) => new URL(path, import.meta.url);
-const pages = ["index.html", "yun-guard/index.html", "gore-pot/index.html", "shoo-shoo/index.html"];
+const pages = ["index.html", "yun-guard/index.html"];
 // Preserve installed-app and shared asset URLs alongside Vite's hashed HTML asset references.
 const staticFiles = [
   "CNAME", ".nojekyll", "yun-guard/manifest.webmanifest",

@@ -8,18 +8,6 @@
       "port": 8123
     },
     {
-      "name": "gore-pot",
-      "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "8125", "--directory", "gore-pot"],
-      "port": 8125
-    },
-    {
-      "name": "shoo-shoo",
-      "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "8127", "--directory", "shoo-shoo"],
-      "port": 8127
-    },
-    {
       "name": "site-root",
       "runtimeExecutable": "python3",
       "runtimeArgs": ["-m", "http.server", "8129"],

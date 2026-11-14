@@ -1,6 +1,6 @@
 # 4pril.fun
 
-Browser games written in plain JavaScript, CSS, and Canvas. Vite provides the development server and production builds; it does not add a game framework.
+Yun Guard is a browser game written in plain JavaScript, CSS, and Canvas. Vite provides the development server and production builds; it does not add a game framework.
 
 ## Development
 
@@ -14,8 +14,6 @@ npm run dev
 Open http://127.0.0.1:5173/. Available pages:
 
 - `/` and `/yun-guard/`: Yun Guard.
-- `/gore-pot/`: Gore Pot.
-- `/shoo-shoo/`: Shoo Shoo.
 
 The source files remain readable and editable. Vite reloads the page as JavaScript changes and updates styles during development. To choose another port:
 
@@ -38,7 +36,7 @@ The build bundles and minifies JavaScript/CSS, hashes processed asset filenames,
 
 Write WebKit-prefixed backdrop filters before their standard declarations. The production CSS optimizer can discard the standard declaration when the prefixed version comes last, removing glass/blur effects in Chrome. Verify both declarations survive in built CSS and check effects in production preview, not only the development server.
 
-All four HTML pages are explicit build entries. Original game directories and source URLs remain available when serving the source tree. The built site retains stable manifest, app-icon, brand-image, and custom-domain files for installed apps and existing links. The HTML manifest links use `vite-ignore` to preserve the manifest's original URL, launch scope, and relative icon paths. A static-assets Vite hook copies only the explicit public files and `brand/` files; it does not copy source code or project metadata into `dist/`.
+Both HTML pages are explicit build entries for Yun Guard. Original game directories and source URLs remain available when serving the source tree. The built site retains stable manifest, app-icon, brand-image, and custom-domain files for installed apps and existing links. The HTML manifest links use `vite-ignore` to preserve the manifest's original URL, launch scope, and relative icon paths. A static-assets Vite hook copies only the explicit public files and `brand/` files; it does not copy source code or project metadata into `dist/`.
 
 ## GitHub Pages deployment
 
@@ -51,5 +49,3 @@ The Vite base currently targets the custom-domain root. Hosting beneath a reposi
 ## Game documentation
 
 - [Yun Guard](yun-guard/README.md) and [balance / specialization roadmap](yun-guard/BALANCE.md).
-- [Gore Pot](gore-pot/README.md).
-- [Shoo Shoo](shoo-shoo/README.md).
