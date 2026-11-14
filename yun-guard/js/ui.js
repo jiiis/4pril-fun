@@ -14,6 +14,7 @@ import { t, language, translateMarkup } from "./i18n.js";
 import { shortcutLabel } from "./input-hints.js";
 import { isOverlayVisible, setOverlayVisible } from "./overlays.js";
 import { depthScale } from "./render/scenery.js";
+import { isWeatherEnabled, setWeatherEnabled } from "./weather.js";
 
 const $ = (id) => document.getElementById(id);
 const MENU_STYLE_KEY = "yunguard.menuStyle";
@@ -23,6 +24,10 @@ let radialPage = "main", radialPreview = null;
 
 function initSettings() {
   const dialog = $("settings"), toggle = $("settings-toggle");
+  for (const input of dialog.querySelectorAll("input[data-weather]")) {
+    input.checked = isWeatherEnabled(input.dataset.weather);
+    input.addEventListener("change", () => setWeatherEnabled(input.dataset.weather, input.checked));
+  }
   const toggleSettings = () => {
     if (!document.body.classList.contains("home")) return;
     const visible = !isOverlayVisible("settings");

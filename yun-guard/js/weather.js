@@ -8,6 +8,29 @@ import { lights, LIGHT_TINT } from "./render/lights.js";
 const CLEAR_MIN = 35, CLEAR_MAX = 80;      // seconds of clear sky between spells
 const SPELL_MIN = 18, SPELL_MAX = 40;      // how long a spell lasts
 const FADE = 4;                            // seconds to fade in / out
+const WEATHER_KEY = "yunguard.weather";
+const weatherEnabled = { rain: true, snow: true, night: true };
+try {
+  const saved = JSON.parse(localStorage.getItem(WEATHER_KEY) || "{}");
+  for (const type of Object.keys(weatherEnabled)) {
+    if (typeof saved?.[type] === "boolean") weatherEnabled[type] = saved[type];
+  }
+} catch { /* unavailable storage or invalid preferences: keep defaults */ }
+
+export const isWeatherEnabled = (type) => weatherEnabled[type] === true;
+export function setWeatherEnabled(type, enabled) {
+  if (!Object.prototype.hasOwnProperty.call(weatherEnabled, type)) return;
+  weatherEnabled[type] = enabled;
+  try { localStorage.setItem(WEATHER_KEY, JSON.stringify(weatherEnabled)); } catch { /* keep the choice for this session */ }
+  const w = state.weather;
+  if (!enabled && w) {
+    if (type === "snow") w.cover = 0;
+    if (w.type === type) Object.assign(w, {
+      type: null, intensity: 0, ending: false, drops: [], splashes: [], fireflies: [],
+      timer: CLEAR_MIN + Math.random() * (CLEAR_MAX - CLEAR_MIN),
+    });
+  }
+}
 
 export function initWeather() {
   state.weather = { type: null, intensity: 0, timer: CLEAR_MIN * 0.3 + Math.random() * 20, ending: false, drops: [], cover: 0, splashes: [] };
@@ -20,7 +43,12 @@ export function updateWeather(dt) {
   if (!w.type) {
     if (w.timer <= 0) {                                      // a spell begins
       const roll = Math.random();
-      w.type = roll < 0.42 ? "rain" : roll < 0.7 ? "snow" : "night";
+      const type = roll < 0.42 ? "rain" : roll < 0.7 ? "snow" : "night";
+      if (!isWeatherEnabled(type)) {
+        w.timer = CLEAR_MIN + Math.random() * (CLEAR_MAX - CLEAR_MIN);
+        return;
+      }
+      w.type = type;
       w.timer = SPELL_MIN + Math.random() * (SPELL_MAX - SPELL_MIN);
       if (w.type === "night") w.timer += 20;                 // a night lingers a little longer
       w.ending = false;

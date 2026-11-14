@@ -494,11 +494,17 @@ canvas { display: block; }
 #heroPick .cards { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; max-width: 100%; }
 #heroPick > * { flex-shrink: 0; }                            /* overflow scrolls instead of compressing the picker sections */
 #heroPick { touch-action: pan-x pan-y; }
-#settings { --overlay-shade: 0.82; width: 100%; min-width: var(--ui-min-width); height: 100%; max-width: none; max-height: none; margin: 0; padding: 48px 18px; border: 0; }
+#settings { --overlay-shade: 0.82; width: 100%; min-width: var(--ui-min-width); height: 100%; max-width: none; max-height: none; margin: 0; padding: 48px 18px; border: 0; justify-content: flex-start; overflow-y: auto; touch-action: pan-y; }
 #settings::backdrop { background: transparent; }
-#settings .settings-content { width: 100%; max-width: 480px; text-align: center; }
+#settings .settings-content { width: 100%; max-width: 480px; flex-shrink: 0; margin-block: auto; text-align: center; }
 #settings h1 { margin: 0 0 36px; color: var(--accent); font-family: Cinzel, Outfit, "Avenir Next", Georgia, serif; font-size: var(--home-heading-size); font-weight: 500; }
 #settings h2 { margin: 0 0 18px; color: var(--muted); font-size: 18px; font-weight: 400; }
+.weatherSettings { max-width: 336px; margin: 30px auto 0; padding: 24px 0 0; border-top: 1px solid rgba(255, 255, 255, 0.12); }
+.settingsToggle { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 36px; margin: 0; padding: 6px 0; color: var(--text); font-size: 14px; cursor: pointer; }
+.settingsToggle input { appearance: none; -webkit-appearance: none; position: relative; flex-shrink: 0; width: 36px; height: 20px; margin: 0; padding: 0; border: 1px solid #65716b; border-radius: 12px; background: #34403a; cursor: pointer; transition: background 0.15s, border-color 0.15s; }
+.settingsToggle input::before { content: ""; position: absolute; top: 3px; left: 3px; width: 12px; height: 12px; border-radius: 50%; background: #b8c3b9; transition: transform 0.15s, background 0.15s; }
+.settingsToggle input:checked { background: #6a5730; border-color: var(--accent); }
+.settingsToggle input:checked::before { transform: translateX(16px); background: var(--accent); }
 .settingsIcon { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; padding: 6px; background: transparent; color: var(--muted); }
 .settingsIcon .ico { width: 18px; height: 18px; }
 #settings-toggle { font-size: inherit; }

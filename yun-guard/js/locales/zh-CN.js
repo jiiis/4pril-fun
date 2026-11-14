@@ -2,6 +2,10 @@
 export default {
   "Language": "语言",
   "Settings": "设置",
+  "Weather & atmosphere": "天气与氛围",
+  "Rain": "下雨",
+  "Snow": "下雪",
+  "Nighttime": "夜晚",
   "English (US)": "英语（美国）",
   "Simplified Chinese": "简体中文",
   "Lv": "等级",
